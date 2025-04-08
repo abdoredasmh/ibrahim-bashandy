@@ -23,6 +23,8 @@ interface _GlobalComponents {
     'PdfViewerModal': typeof import("../components/PdfViewerModal.vue")['default']
     'ReplyItem': typeof import("../components/ReplyItem.vue")['default']
     'UserAvatar': typeof import("../components/UserAvatar.vue")['default']
+    'AdminLessonModal': typeof import("../components/admin/AdminLessonModal.vue")['default']
+    'AdminSidebar': typeof import("../components/admin/AdminSidebar.vue")['default']
     'NuxtWelcome': typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
     'NuxtLayout': typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
     'NuxtErrorBoundary': typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']
@@ -34,7 +36,7 @@ interface _GlobalComponents {
     'NuxtRouteAnnouncer': typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
     'NuxtImg': typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
     'NuxtPicture': typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
-    'Icon': typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
+    'ColorScheme': typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']
     'NuxtPage': typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']
     'NoScript': typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']
     'Link': typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -58,6 +60,8 @@ interface _GlobalComponents {
     'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
     'LazyReplyItem': LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
     'LazyUserAvatar': LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
+    'LazyAdminLessonModal': LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
+    'LazyAdminSidebar': LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
     'LazyNuxtWelcome': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
     'LazyNuxtLayout': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
     'LazyNuxtErrorBoundary': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']>
@@ -69,7 +73,7 @@ interface _GlobalComponents {
     'LazyNuxtRouteAnnouncer': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
     'LazyNuxtImg': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
     'LazyNuxtPicture': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
-    'LazyIcon': LazyComponent<typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
+    'LazyColorScheme': LazyComponent<typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']>
     'LazyNuxtPage': LazyComponent<typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']>
     'LazyNoScript': LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
     'LazyLink': LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']>
@@ -99,6 +103,8 @@ export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['
 export const PdfViewerModal: typeof import("../components/PdfViewerModal.vue")['default']
 export const ReplyItem: typeof import("../components/ReplyItem.vue")['default']
 export const UserAvatar: typeof import("../components/UserAvatar.vue")['default']
+export const AdminLessonModal: typeof import("../components/admin/AdminLessonModal.vue")['default']
+export const AdminSidebar: typeof import("../components/admin/AdminSidebar.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']
@@ -110,7 +116,7 @@ export const NuxtLoadingIndicator: typeof import("../node_modules/nuxt/dist/app/
 export const NuxtRouteAnnouncer: typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
 export const NuxtImg: typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
 export const NuxtPicture: typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
-export const Icon: typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']
+export const ColorScheme: typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']
 export const NuxtPage: typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']
 export const NoScript: typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']
 export const Link: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']
@@ -134,6 +140,8 @@ export const LazyLoadingSpinner: LazyComponent<typeof import("../components/Load
 export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
 export const LazyReplyItem: LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
 export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
+export const LazyAdminLessonModal: LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
+export const LazyAdminSidebar: LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']>
@@ -145,7 +153,7 @@ export const LazyNuxtLoadingIndicator: LazyComponent<typeof import("../node_modu
 export const LazyNuxtRouteAnnouncer: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
 export const LazyNuxtImg: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
 export const LazyNuxtPicture: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
-export const LazyIcon: LazyComponent<typeof import("../node_modules/@nuxt/icon/dist/runtime/components/index")['default']>
+export const LazyColorScheme: LazyComponent<typeof import("../node_modules/@nuxtjs/color-mode/dist/runtime/component.vue3.vue")['default']>
 export const LazyNuxtPage: LazyComponent<typeof import("../node_modules/nuxt/dist/pages/runtime/page")['default']>
 export const LazyNoScript: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
 export const LazyLink: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Link']>

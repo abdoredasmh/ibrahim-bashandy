@@ -109,11 +109,11 @@
       "pinia": [
         "../node_modules/pinia/dist/pinia"
       ],
+      "#color-mode-options": [
+        "./color-mode-options.mjs"
+      ],
       "#unhead/composables": [
         "../node_modules/nuxt/dist/head/runtime/composables/v3"
-      ],
-      "#nuxt-icon-server-bundle": [
-        "./nuxt-icon-server-bundle"
       ],
       "#supabase/server": [
         "../node_modules/@nuxtjs/supabase/dist/runtime/server/services"
@@ -135,8 +135,8 @@
     "./types/nitro-nuxt.d.ts",
     "../node_modules/@nuxtjs/tailwindcss/runtime/server",
     "../node_modules/@nuxtjs/supabase/runtime/server",
-    "../node_modules/@nuxt/icon/runtime/server",
     "../node_modules/@pinia/nuxt/runtime/server",
+    "../node_modules/@nuxtjs/color-mode/runtime/server",
     "../node_modules/@nuxt/devtools/runtime/server",
     "../node_modules/@nuxt/telemetry/runtime/server",
     "./types/nitro.d.ts",
@@ -148,8 +148,8 @@
     "../node_modules/nuxt/node_modules",
     "../node_modules/@nuxtjs/tailwindcss/node_modules",
     "../node_modules/@nuxtjs/supabase/node_modules",
-    "../node_modules/@nuxt/icon/node_modules",
     "../node_modules/@pinia/nuxt/node_modules",
+    "../node_modules/@nuxtjs/color-mode/node_modules",
     "../node_modules/@nuxt/devtools/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
     "../dist"

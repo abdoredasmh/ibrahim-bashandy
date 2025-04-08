@@ -2,15 +2,13 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  
-
   modules: [
     '@nuxtjs/tailwindcss',
     '@nuxtjs/supabase',
-    '@nuxt/icon', // ✅ النسخة الجديدة بدل "nuxt-icon"
-    '@pinia/nuxt'
+    // '@nuxt/icon', // افترضنا إزالته
+    '@pinia/nuxt',
+    '@nuxtjs/color-mode'
   ],
-
 
   css: ['~/assets/css/tailwind.css'],
 
@@ -23,12 +21,20 @@ export default defineNuxtConfig({
     }
   },
 
+  colorMode: {
+    preference: 'system',
+    fallback: 'light',
+    classSuffix: '', // مهم لـ Tailwind
+    storageKey: 'nuxt-color-mode'
+  },
+
   supabase: {
     redirectOptions: {
-      login: '/login',         // تحويل غير المسجّلين لصفحة تسجيل الدخول
-      callback: '/confirm',    // بعد تسجيل الدخول أو التأكيد
-      exclude: [               // صفحات عامة لا تحتاج تسجيل دخول
+      login: '/login',
+      callback: '/confirm',
+      exclude: [ // الصفحات العامة فقط هنا
         '/',
+        // --- لا تضع /admin/** هنا ---
         '/lessons',
         '/lessons/*',
         '/books',
@@ -42,11 +48,17 @@ export default defineNuxtConfig({
         '/forgot-password',
         '/reset-password',
       ],
-      cookieRedirect: false    // نستخدم fragment بدلاً من cookies للتحويل
+      cookieRedirect: false
     }
   },
 
- 
-  // تأكد أن نسختك من Nuxt تدعم هذا التاريخ (اختياري)
-  compatibilityDate: '2025-04-07'
+  // --- هذا هو المكان الصحيح لتعطيل SSR ---
+  // --------------------------------------
+  // compatibilityDate: '2025-04-08' // يمكنك الاحتفاظ به أو إزالته
+  routeRules: {
+    // تعطيل SSR لجميع المسارات التي تبدأ بـ /admin/
+    '/admin/**': { ssr: false },
+  },
+
+  compatibilityDate: '2025-04-09'
 })
