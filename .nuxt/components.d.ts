@@ -15,12 +15,14 @@ interface _GlobalComponents {
       'AppFooter': typeof import("../components/AppFooter.vue")['default']
     'AppHeader': typeof import("../components/AppHeader.vue")['default']
     'BookCard': typeof import("../components/BookCard.vue")['default']
+    'CommentActions': typeof import("../components/CommentActions.vue")['default']
     'CommentItem': typeof import("../components/CommentItem.vue")['default']
     'CommentSection': typeof import("../components/CommentSection.vue")['default']
     'LessonCard': typeof import("../components/LessonCard.vue")['default']
     'LoadingSpinner': typeof import("../components/LoadingSpinner.vue")['default']
     'PdfViewerModal': typeof import("../components/PdfViewerModal.vue")['default']
     'ReplyItem': typeof import("../components/ReplyItem.vue")['default']
+    'UserAvatar': typeof import("../components/UserAvatar.vue")['default']
     'NuxtWelcome': typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
     'NuxtLayout': typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
     'NuxtErrorBoundary': typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']
@@ -48,12 +50,14 @@ interface _GlobalComponents {
       'LazyAppFooter': LazyComponent<typeof import("../components/AppFooter.vue")['default']>
     'LazyAppHeader': LazyComponent<typeof import("../components/AppHeader.vue")['default']>
     'LazyBookCard': LazyComponent<typeof import("../components/BookCard.vue")['default']>
+    'LazyCommentActions': LazyComponent<typeof import("../components/CommentActions.vue")['default']>
     'LazyCommentItem': LazyComponent<typeof import("../components/CommentItem.vue")['default']>
     'LazyCommentSection': LazyComponent<typeof import("../components/CommentSection.vue")['default']>
     'LazyLessonCard': LazyComponent<typeof import("../components/LessonCard.vue")['default']>
     'LazyLoadingSpinner': LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
     'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
     'LazyReplyItem': LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
+    'LazyUserAvatar': LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
     'LazyNuxtWelcome': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
     'LazyNuxtLayout': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
     'LazyNuxtErrorBoundary': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']>
@@ -87,12 +91,14 @@ declare module 'vue' {
 export const AppFooter: typeof import("../components/AppFooter.vue")['default']
 export const AppHeader: typeof import("../components/AppHeader.vue")['default']
 export const BookCard: typeof import("../components/BookCard.vue")['default']
+export const CommentActions: typeof import("../components/CommentActions.vue")['default']
 export const CommentItem: typeof import("../components/CommentItem.vue")['default']
 export const CommentSection: typeof import("../components/CommentSection.vue")['default']
 export const LessonCard: typeof import("../components/LessonCard.vue")['default']
 export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['default']
 export const PdfViewerModal: typeof import("../components/PdfViewerModal.vue")['default']
 export const ReplyItem: typeof import("../components/ReplyItem.vue")['default']
+export const UserAvatar: typeof import("../components/UserAvatar.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']
@@ -120,12 +126,14 @@ export const NuxtRouteAnnouncer: IslandComponent<typeof import("../node_modules/
 export const LazyAppFooter: LazyComponent<typeof import("../components/AppFooter.vue")['default']>
 export const LazyAppHeader: LazyComponent<typeof import("../components/AppHeader.vue")['default']>
 export const LazyBookCard: LazyComponent<typeof import("../components/BookCard.vue")['default']>
+export const LazyCommentActions: LazyComponent<typeof import("../components/CommentActions.vue")['default']>
 export const LazyCommentItem: LazyComponent<typeof import("../components/CommentItem.vue")['default']>
 export const LazyCommentSection: LazyComponent<typeof import("../components/CommentSection.vue")['default']>
 export const LazyLessonCard: LazyComponent<typeof import("../components/LessonCard.vue")['default']>
 export const LazyLoadingSpinner: LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
 export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
 export const LazyReplyItem: LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
+export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']>

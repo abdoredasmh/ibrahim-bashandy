@@ -108,9 +108,10 @@
       </div>
 
       
+           <!-- عرض قسم التعليقات فقط إذا كان lessonId صالحاً وتم تحميل الدرس -->
       <CommentSection
-        :content-id="lessonId"
-        content-type="lesson"
+        v-if="lessonId !== -1 && lesson"
+        :lesson-id="lessonId"
       />
 
     </div>

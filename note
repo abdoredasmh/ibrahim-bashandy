@@ -556,3 +556,18 @@ CommentItem يتضمن وظيفة إضافة الرد (addReply).
 المطلوب منك الآن: تأكيد القسم التالي الذي ترغب في العمل عليه (الكتب أم الدراسة؟).
 
 (عند بدء جلسة جديدة، يرجى نسخ هذا القسم الأخير وإرساله لي لنعرف من أين نبدأ)
+SELECT
+    table_name,         -- اسم الجدول
+    column_name,        -- اسم العمود
+    ordinal_position,   -- ترتيب العمود داخل الجدول
+    data_type,          -- نوع البيانات العام (مثل text, bigint, uuid, timestamp with time zone)
+    udt_name,           -- نوع البيانات الأساسي (أكثر تحديداً أحياناً مثل _text, int8, timestamptz)
+    is_nullable,        -- هل يقبل القيمة NULL؟ ('YES' أو 'NO')
+    column_default      -- القيمة الافتراضية للعمود (إن وجدت)
+FROM
+    information_schema.columns
+WHERE
+    table_schema = 'public'  -- فلترة لعرض جداول الـ schema العام فقط
+ORDER BY
+    table_name,              -- ترتيب النتائج حسب اسم الجدول
+    ordinal_position;        -- ثم حسب ترتيب العمود داخل الجدول
