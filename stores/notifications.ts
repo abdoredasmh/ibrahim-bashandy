@@ -1,0 +1,1 @@
+export const useNotifications = defineStore('notifications', { state: () => ({ messages: [] }) })
