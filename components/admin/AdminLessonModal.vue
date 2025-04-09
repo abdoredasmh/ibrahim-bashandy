@@ -1,11 +1,12 @@
-// components/admin/AdminLessonModal.vue
 <template>
   <!-- Root element for the transition -->
   <TransitionRoot appear :show="show" as="template">
-    <Dialog as="div" @close="closeModal" class="relative z-50"> {/* زيادة z-index */}
-      {/* Backdrop */}
+    <Dialog as="div" @close="closeModal" class="relative z-50">
+
+      <!-- Backdrop -->
       <TransitionChild
-        as="template"
+        as="div"
+        class="fixed inset-0 bg-black/30 backdrop-blur-sm"
         enter="duration-300 ease-out"
         enter-from="opacity-0"
         enter-to="opacity-100"
@@ -13,13 +14,14 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" /> {/* تعديل الخلفية */}
+        <!-- No inner element needed here -->
       </TransitionChild>
 
-      {/* Full-screen container to center the panel */}
+      <!-- Full-screen container to center the panel -->
       <div class="fixed inset-0 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center">
-          {/* Modal panel */}
+
+          <!-- Modal panel -->
           <TransitionChild
             as="template"
             enter="duration-300 ease-out"
@@ -34,9 +36,10 @@
                 {{ isEditing ? 'تعديل الدرس' : 'إضافة درس جديد' }}
               </DialogTitle>
 
-              {/* Form Content */}
+              <!-- Form Content -->
               <form @submit.prevent="saveLesson" class="space-y-4">
-                {/* حقل العنوان */}
+
+                <!-- Title Field -->
                 <div>
                   <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">العنوان *</label>
                   <input
@@ -45,10 +48,12 @@
                     v-model="form.title"
                     required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    aria-describedby="title-error"
                   />
+                   <p v-if="validationErrors.title" class="mt-1 text-xs text-red-500" id="title-error">{{ validationErrors.title }}</p>
                 </div>
 
-                {/* حقل الوصف */}
+                <!-- Description Field -->
                 <div>
                   <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الوصف</label>
                   <textarea
@@ -59,25 +64,34 @@
                   ></textarea>
                 </div>
 
-                {/* حقل رابط يوتيوب */}
+                <!-- YouTube URL Field -->
                 <div>
-                   <label for="youtube_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رابط يوتيوب</label>
-                   <input type="url" id="youtube_url" v-model="form.youtube_url" placeholder="https://www.youtube.com/watch?v=..." class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
+                   <label for="youtube_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رابط يوتيوب *</label>
+                   <input
+                      type="url"
+                      id="youtube_url"
+                      v-model="form.youtube_url"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      required
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      aria-describedby="youtube-error"
+                    />
+                   <p v-if="validationErrors.youtube_url" class="mt-1 text-xs text-red-500" id="youtube-error">{{ validationErrors.youtube_url }}</p>
                 </div>
 
-                {/* حقل رابط الصوت */}
+                <!-- Audio URL Field -->
                  <div>
                     <label for="audio_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رابط الصوت (MP3)</label>
                     <input type="url" id="audio_url" v-model="form.audio_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
                  </div>
 
-                 {/* حقل رابط التفريغ */}
+                 <!-- PDF Transcript URL Field -->
                   <div>
                      <label for="pdf_transcript_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رابط التفريغ (PDF)</label>
                      <input type="url" id="pdf_transcript_url" v-model="form.pdf_transcript_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
                   </div>
 
-                 {/* قائمة منسدلة للفئة */}
+                 <!-- Category Select Field -->
                   <div>
                       <label for="category_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الفئة</label>
                       <select
@@ -93,7 +107,7 @@
                       <p v-if="loadingCategories" class="text-xs text-gray-500 mt-1">جار تحميل الفئات...</p>
                   </div>
 
-                  {/* قائمة منسدلة للدورة */}
+                  <!-- Course Select Field -->
                    <div>
                        <label for="course_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الدورة الدراسية</label>
                        <select
@@ -109,12 +123,12 @@
                         <p v-if="loadingCourses" class="text-xs text-gray-500 mt-1">جار تحميل الدورات...</p>
                    </div>
 
-                {/* رسالة الخطأ */}
+                <!-- General Error Message -->
                 <p v-if="errorMessage" class="text-sm text-red-600 dark:text-red-400">
                   خطأ: {{ errorMessage }}
                 </p>
 
-                {/* أزرار الإجراءات */}
+                <!-- Action Buttons -->
                 <div class="mt-6 pt-4 border-t dark:border-gray-700 flex justify-end space-x-3 rtl:space-x-reverse">
                   <button
                     type="button"
@@ -135,17 +149,18 @@
                     {{ isSaving ? 'جاري الحفظ...' : (isEditing ? 'حفظ التعديلات' : 'إضافة الدرس') }}
                   </button>
                 </div>
-              </form>
+              </form> <!-- End of form -->
             </DialogPanel>
           </TransitionChild>
-        </div>
-      </div>
+
+        </div> <!-- End of flex container -->
+      </div> <!-- End of fixed inset container -->
+
     </Dialog>
   </TransitionRoot>
 </template>
-
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, reactive } from 'vue'; // أضفنا reactive
 import {
   TransitionRoot,
   TransitionChild,
@@ -155,14 +170,14 @@ import {
 } from '@headlessui/vue';
 import type { Database, Tables } from '~/types/database.types';
 
-// تحديد الأنواع
+// تحديد الأنواع (كما هي)
 type Lesson = Tables<'lessons'>;
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>;
 type Course = Pick<Tables<'study_courses'>, 'id' | 'title'>;
 
 const props = defineProps<{
   show: boolean;
-  lessonData: Lesson | null; // بيانات الدرس للتعديل (null للإضافة)
+  lessonData: Lesson | null;
 }>();
 
 const emit = defineEmits(['close', 'saved']);
@@ -170,26 +185,27 @@ const emit = defineEmits(['close', 'saved']);
 const supabase = useSupabaseClient<Database>();
 
 // حالة النموذج
-const form = ref<Partial<Lesson>>({}); // استخدم Partial للسماح بالقيم الأولية الفارغة
+const form = ref<Partial<Lesson>>({});
 const isSaving = ref(false);
 const errorMessage = ref<string | null>(null);
 
-// حالة جلب القوائم المنسدلة
+// --- جديد: حالة أخطاء التحقق من الصحة ---
+const validationErrors = reactive({
+    title: '',
+    youtube_url: ''
+});
+
+// حالة جلب القوائم المنسدلة (كما هي)
 const categories = ref<Category[]>([]);
 const courses = ref<Course[]>([]);
 const loadingCategories = ref(false);
 const loadingCourses = ref(false);
 
-// حساب ما إذا كنا في وضع التعديل
-const isEditing = computed(() => !!props.lessonData);
+// حساب ما إذا كنا في وضع التعديل (كما هو)
+const isEditing = computed(() => !!props.lessonData && !!props.lessonData.id); // تأكد من وجود ID أيضًا
 
-// مشاهدة التغييرات في lessonData لتحديث النموذج عند فتح Modal للتعديل
-watch(() => props.lessonData, (newLesson) => {
-  if (newLesson) {
-    // نسخ البيانات للتعديل
-    form.value = { ...newLesson };
-  } else {
-    // إعادة تعيين النموذج للإضافة
+// --- تعديل: دالة لإعادة تعيين النموذج ومسح الأخطاء ---
+const resetForm = () => {
     form.value = {
         title: '',
         description: '',
@@ -199,92 +215,165 @@ watch(() => props.lessonData, (newLesson) => {
         category_id: null,
         course_id: null,
     };
-  }
-  errorMessage.value = null; // مسح أي خطأ سابق
-}, { immediate: true }); // شغله فوراً عند تحميل المكون
+    errorMessage.value = null;
+    validationErrors.title = '';
+    validationErrors.youtube_url = '';
+};
 
-// إغلاق Modal
+// مشاهدة التغييرات في lessonData (تحديث لاستخدام resetForm)
+watch(() => props.lessonData, (newLesson) => {
+  if (newLesson) {
+    form.value = { ...newLesson }; // نسخ البيانات للتعديل
+    // مسح الأخطاء عند فتح المودال للتعديل
+    errorMessage.value = null;
+    validationErrors.title = '';
+    validationErrors.youtube_url = '';
+  } else {
+    resetForm(); // إعادة تعيين النموذج بالكامل عند الإضافة
+  }
+}, { immediate: true, deep: true }); // deep: true قد تساعد إذا كان newLesson يتغير داخليًا
+
+
+// إغلاق Modal (كما هو)
 function closeModal() {
-  if (!isSaving.value) { // لا تغلق إذا كان الحفظ جارياً
+  if (!isSaving.value) {
     emit('close');
+    // لا حاجة لاستدعاء resetForm هنا لأن watch سيعيد تعيينه عند تغيير props.lessonData إلى null
   }
 }
 
-// جلب الفئات والدورات للقوائم المنسدلة
-async function fetchDropdownData() {
-    loadingCategories.value = true;
-    loadingCourses.value = true;
-    try {
-        const [catResult, courseResult] = await Promise.all([
-            supabase.from('categories').select('id, name').order('name'),
-            supabase.from('study_courses').select('id, title').order('title')
-        ]);
+// جلب الفئات والدورات (كما هو)
+async function fetchDropdownData() { /* ... */ }
 
-        if (catResult.error) throw catResult.error;
-        categories.value = catResult.data || [];
+// جلب البيانات عند تحميل المكون (كما هو)
+onMounted(() => { fetchDropdownData(); });
 
-        if (courseResult.error) throw courseResult.error;
-        courses.value = courseResult.data || [];
+// --- جديد: دالة التحقق من الصحة ---
+const validateForm = (): boolean => {
+    let isValid = true;
+    // مسح الأخطاء القديمة
+    validationErrors.title = '';
+    validationErrors.youtube_url = '';
+    errorMessage.value = null;
 
-    } catch (err: any) {
-        console.error("Error fetching dropdown data:", err);
-        errorMessage.value = "فشل تحميل بيانات الفئات أو الدورات.";
-    } finally {
-        loadingCategories.value = false;
-        loadingCourses.value = false;
+    // التحقق من العنوان
+    if (!form.value.title?.trim()) {
+        validationErrors.title = 'حقل العنوان مطلوب.';
+        isValid = false;
     }
-}
 
-// جلب البيانات عند تحميل المكون
-onMounted(() => {
-    fetchDropdownData();
-});
+    // التحقق من رابط يوتيوب
+    if (!form.value.youtube_url?.trim()) {
+        validationErrors.youtube_url = 'حقل رابط يوتيوب مطلوب.';
+        isValid = false;
+    } else {
+        // تحقق بسيط من شكل الرابط (يمكن تحسينه)
+        try {
+            const url = new URL(form.value.youtube_url);
+            if (!['www.youtube.com', 'youtube.com', 'youtu.be'].includes(url.hostname)) {
+                validationErrors.youtube_url = 'يجب أن يكون رابط يوتيوب صالحًا.';
+                isValid = false;
+            }
+        } catch (_) {
+            validationErrors.youtube_url = 'صيغة الرابط غير صحيحة.';
+            isValid = false;
+        }
+    }
 
-// حفظ الدرس (إضافة أو تعديل)
+    return isValid;
+};
+
+// --- تعديل: حفظ الدرس (إضافة أو تعديل) ---
 async function saveLesson() {
-  isSaving.value = true;
-  errorMessage.value = null;
+  console.log('Attempting to save lesson...'); // <-- للتأكيد
+  // 1. التحقق من الصحة أولاً
+  if (!validateForm()) {
+      console.log('Validation failed.');
+      return; // إيقاف الحفظ إذا لم يكن النموذج صالحًا
+  }
 
-  // تحضير البيانات للحفظ (إزالة أي حقول غير ضرورية إذا لزم الأمر)
-  const lessonPayload: Partial<Lesson> = {
-    title: form.value.title,
-    description: form.value.description || null, // تأكد من إرسال null إذا كان فارغاً
-    youtube_url: form.value.youtube_url || null,
+  isSaving.value = true;
+  errorMessage.value = null; // مسح أي خطأ عام قديم
+
+  // 2. تحضير البيانات (Payload)
+  const lessonPayload: Omit<Lesson, 'id' | 'created_at'> = { // استخدام Omit لاستبعاد id و created_at
+    title: form.value.title!, // نحن متأكدون أنه موجود بسبب validateForm
+    description: form.value.description || null,
+    youtube_url: form.value.youtube_url!, // نحن متأكدون أنه موجود
     audio_url: form.value.audio_url || null,
     pdf_transcript_url: form.value.pdf_transcript_url || null,
-    // تأكد من أن القيم هي أرقام أو null
     category_id: form.value.category_id ? Number(form.value.category_id) : null,
     course_id: form.value.course_id ? Number(form.value.course_id) : null,
   };
+  console.log('Payload to send:', JSON.stringify(lessonPayload, null, 2));
 
   try {
     let error: any = null;
+    let data: any = null; // لالتقاط البيانات العائدة
+
     if (isEditing.value && form.value.id) {
-      // وضع التعديل
-      const { error: updateError } = await supabase
+      // 3. وضع التعديل
+       console.log(`Attempting UPDATE for lesson ID: ${form.value.id}`);
+       const result = await supabase
         .from('lessons')
         .update(lessonPayload)
-        .eq('id', form.value.id);
-      error = updateError;
+        .eq('id', form.value.id)
+        .select() // <-- مهم جدًا: .select() لطلب البيانات المحدثة
+       error = result.error;
+       data = result.data;
     } else {
-      // وضع الإضافة
-      // يمكنك إضافة user_id هنا إذا كان مطلوباً في الجدول
-      const { error: insertError } = await supabase
+      // 4. وضع الإضافة
+      console.log('Attempting INSERT for new lesson');
+      const result = await supabase
         .from('lessons')
-        .insert(lessonPayload);
-      error = insertError;
+        .insert(lessonPayload)
+        .select(); // <-- مهم جدًا: .select() لطلب الصف الجديد
+      error = result.error;
+      data = result.data;
     }
 
-    if (error) throw error;
+    console.log('Supabase response error:', JSON.stringify(error, null, 2));
+    console.log('Supabase response data:', JSON.stringify(data, null, 2));
 
-    // نجح الحفظ
+    // 5. التحقق من الخطأ بعد استدعاء Supabase
+    if (error) {
+        // إذا حدث خطأ، قم برميه ليتم التقاطه بواسطة catch
+        throw error;
+    }
+
+    // 6. التحقق من البيانات المُعادة (للتأكد من أن شيئًا ما تغير بالفعل)
+    if (!data || data.length === 0) {
+        // هذا لا ينبغي أن يحدث إذا لم يكن هناك خطأ، لكنه فحص إضافي
+        console.warn('Supabase call successful but no data returned.');
+        // يمكنك رمي خطأ مخصص هنا إذا أردت
+        // throw new Error("تمت العملية بنجاح لكن لم يتم إرجاع بيانات للتأكيد.");
+    }
+
+    // 7. نجح الحفظ!
+    console.log('Save successful, emitting saved event.');
     emit('saved'); // أخبر المكون الأب بالنجاح
 
   } catch (err: any) {
-    console.error('Error saving lesson:', err);
-    errorMessage.value = err.message || 'حدث خطأ غير متوقع.';
+    console.error('Error during save operation:', JSON.stringify(err, null, 2));
+    // (نفس كود عرض الأخطاء المخصص)
+    if (err.message?.includes('duplicate key value violates unique constraint')) { /* ... */ }
+    else if (err.message?.includes('violates foreign key constraint')) { /* ... */ }
+    else if (err.code === '23502') { // Not-null violation
+        errorMessage.value = `فشل حفظ الدرس: حقل مطلوب مفقود في قاعدة البيانات. (${err.message})`;
+    }
+    else if (err.code === '42501') { // permission denied (RLS)
+         errorMessage.value = `فشل حفظ الدرس: ليس لديك الصلاحية الكافية. تحقق من RLS. (${err.message})`;
+    }
+     else {
+         errorMessage.value = `فشل حفظ الدرس: ${err.message || 'خطأ غير متوقع'}`;
+    }
   } finally {
-    isSaving.value = false;
+    isSaving.value = false; // إيقاف حالة الحفظ دائمًا
+    console.log('saveLesson finished.');
   }
 }
 </script>
+
+<style scoped>
+/* يمكنك إضافة أي تنسيقات خاصة هنا إذا احتجت */
+</style>

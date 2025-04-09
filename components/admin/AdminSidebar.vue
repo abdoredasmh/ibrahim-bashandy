@@ -1,7 +1,7 @@
 // components/admin/AdminSidebar.vue
 <template>
-  <aside class="w-64 flex-shrink-0 bg-gray-800 dark:bg-gray-900 text-gray-100 flex flex-col"> {/* تم تعديل الألوان لتناسب الداش بورد */}
-    <div class="h-16 flex items-center justify-center px-4 bg-gray-900 dark:bg-gray-950"> {/* رأس القائمة */}
+  <aside class="w-64 flex-shrink-0 bg-gray-800 dark:bg-gray-900 text-gray-100 flex flex-col">
+    <div class="h-16 flex items-center justify-center px-4 bg-gray-900 dark:bg-gray-950"> 
       <NuxtLink to="/" class="text-xl font-bold text-white hover:opacity-80 transition-opacity">
         موقع الشيخ بشندي
       </NuxtLink>
@@ -24,7 +24,7 @@
         <span>{{ item.name }}</span>
       </NuxtLink>
     </nav>
-     {/* يمكن إضافة قسم سفلي للقائمة هنا، مثل رابط للخروج */}
+     
      <div class="px-4 py-4 border-t border-gray-700 dark:border-gray-800">
         <button @click="handleLogout" class="w-full flex items-center px-3 py-2 rounded-md text-sm font-medium text-red-400 hover:bg-red-900/50 hover:text-red-300 transition-colors duration-150">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 me-3">
