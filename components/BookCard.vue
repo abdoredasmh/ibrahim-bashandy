@@ -17,11 +17,9 @@
           v-else
           class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800"
         >
-          <NuxtIcon
-            name="heroicons:book-open-solid"
-            class="text-6xl text-gray-400 dark:text-gray-500"
-            aria-hidden="true"
-          />
+          <svg xmlns="http://www.w3.org/2000/svg" class="text-6xl text-gray-400 dark:text-gray-500 w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 4v16c0 .6.4 1 1 1h13v-2H8V5h12V3H7c-.6 0-1 .4-1 1zm3 2h8v2H9V6zm0 4h8v2H9v-2zm0 4h5v2H9v-2z"/>
+          </svg>
         </div>
 
         <!-- Badges -->
@@ -67,18 +65,22 @@
             @click.stop
             class="inline-flex items-center justify-center px-4 py-2 border border-golden-calm text-sm font-medium rounded-md text-golden-calm hover:bg-golden-calm hover:text-white dark:border-golden-calm dark:text-golden-calm dark:hover:bg-golden-calm dark:hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-golden-calm dark:focus:ring-offset-cream-gray transition-colors duration-200"
           >
-            <NuxtIcon name="heroicons:link-20-solid" class="w-5 h-5 me-2" aria-hidden="true" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 me-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M12.293 2.293a1 1 0 011.414 0L18 6.586V16a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2h8.586a1 1 0 01.707.293zM11 6a1 1 0 00-1 1v3.586l-.293-.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l2-2a1 1 0 10-1.414-1.414L12 10.586V7a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
             عرض الدرس الأصلي
           </NuxtLink>
 
-          <!-- Now this opens the book page -->
+          <!-- زر عرض الكتاب -->
           <NuxtLink
             :to="`/books/${book.id}`"
             @click.stop
             class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-cream-gray transition-colors duration-200"
             :style="{ backgroundColor: 'var(--color-olive-green)' }"
           >
-            <NuxtIcon name="heroicons:eye-20-solid" class="w-5 h-5 me-2" aria-hidden="true" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 me-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 3a1 1 0 00-1 1v12a1 1 0 001.707.707l5.586-5.586a1 1 0 000-1.414L11.707 4.293A1 1 0 0010 5v8a1 1 0 11-2 0V4a1 1 0 011-1z" />
+            </svg>
             عرض الكتاب
           </NuxtLink>
 
@@ -90,6 +92,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, type PropType } from 'vue';

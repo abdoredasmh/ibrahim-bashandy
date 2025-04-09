@@ -11,7 +11,6 @@
         <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">
           {{ reply.profiles?.full_name || 'مستخدم' }}
         </span>
-        <!-- تمرير الحدث فقط للتعديل والحذف للردود -->
         <CommentActions
           :item="reply"
           item-type="reply"
@@ -55,7 +54,10 @@
              :disabled="isSavingEdit || !editedContent.trim()"
              class="px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
            >
-             <Icon v-if="isSavingEdit" name="svg-spinners:3-dots-fade" class="w-4 h-4" />
+             <svg v-if="isSavingEdit" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+             </svg>
              <span v-else>حفظ</span>
            </button>
          </div>
@@ -63,6 +65,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'

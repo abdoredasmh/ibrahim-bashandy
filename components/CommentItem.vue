@@ -12,7 +12,6 @@
           <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">
             {{ comment.profiles?.full_name || 'مستخدم' }}
           </span>
-          <!-- تمرير وظائف الرد والتعديل والحذف -->
           <CommentActions
             :item="comment"
             item-type="comment"
@@ -27,12 +26,10 @@
           <span v-if="isCommentEdited" class="mx-1" title="تم تعديل هذا التعليق">(تم التعديل)</span>
         </div>
 
-        <!-- عرض التعليق -->
         <p v-if="!isEditingComment" class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
           {{ comment.content }}
         </p>
 
-        <!-- تعديل التعليق -->
         <div v-else>
           <textarea
             ref="editCommentInputRef"
@@ -42,28 +39,30 @@
             placeholder="تعديل التعليق..."
             @keydown.esc="cancelEditComment"
           ></textarea>
-           <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
-             <span v-if="editCommentError" class="text-xs text-red-500 flex-1 text-right">{{ editCommentError }}</span>
-             <button
-               @click="cancelEditComment"
-                type="button"
-               class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
-             >
-               إلغاء
-             </button>
-             <button
-               @click="saveEditComment"
-                type="button"
-               :disabled="isSavingCommentEdit || !editedCommentContent.trim()"
-               class="px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-             >
-                <Icon v-if="isSavingCommentEdit" name="svg-spinners:3-dots-fade" class="w-4 h-4" />
-                <span v-else>حفظ</span>
-             </button>
-           </div>
+          <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
+            <span v-if="editCommentError" class="text-xs text-red-500 flex-1 text-right">{{ editCommentError }}</span>
+            <button
+              @click="cancelEditComment"
+              type="button"
+              class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+            >
+              إلغاء
+            </button>
+            <button
+              @click="saveEditComment"
+              type="button"
+              :disabled="isSavingCommentEdit || !editedCommentContent.trim()"
+              class="px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+            >
+              <svg v-if="isSavingCommentEdit" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+              </svg>
+              <span v-else>حفظ</span>
+            </button>
+          </div>
         </div>
 
-        <!-- أزرار الرد وعرض عدد الردود (تظهر فقط في وضع العرض) -->
         <div v-if="!isEditingComment" class="mt-2 flex items-center space-x-4 rtl:space-x-reverse text-xs">
           <button
             v-if="user"
@@ -71,9 +70,15 @@
             type="button"
             class="font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
           >
-            <Icon :name="showReplyForm ? 'heroicons:x-mark-20-solid' : 'heroicons:arrow-uturn-left-20-solid'" class="w-4 h-4 inline-block ml-1 rtl:ml-0 rtl:mr-1" />
+            <svg v-if="showReplyForm" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline-block ml-1 rtl:ml-0 rtl:mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline-block ml-1 rtl:ml-0 rtl:mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414-1.414L10.586 9 6.293 4.707a1 1 0 011.414-1.414L12.414 9l-4.707 4.707z" clip-rule="evenodd"/>
+            </svg>
             {{ showReplyForm ? 'إلغاء' : 'رد' }}
           </button>
+
           <button
             v-if="localReplies.length > 0"
             @click="repliesVisible = !repliesVisible"
@@ -81,69 +86,75 @@
             class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center"
             :aria-expanded="repliesVisible.toString()"
           >
-            <Icon :name="repliesVisible ? 'heroicons:chevron-up-20-solid' : 'heroicons:chevron-down-20-solid'" class="w-4 h-4 mr-1 rtl:mr-0 rtl:ml-1" />
+            <svg v-if="repliesVisible" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 rtl:mr-0 rtl:ml-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M14.707 10.707a1 1 0 01-1.414 0L10 7.414 6.707 10.707a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1 rtl:mr-0 rtl:ml-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414L10 13.414 5.293 8.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
             {{ localReplies.length }} {{ localReplies.length === 1 ? 'رد' : (localReplies.length === 2 ? 'ردان' : (localReplies.length <= 10 ? 'ردود' : 'ردًا')) }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- منطقة الردود (نموذج إضافة + قائمة الردود) -->
+    <!-- منطقة الردود -->
     <div class="mt-3 ml-10 rtl:mr-10 rtl:ml-0 pl-3 rtl:pr-3 border-l-2 border-gray-200 dark:border-gray-700 rtl:border-l-0 rtl:border-r-2">
-      <!-- نموذج إضافة رد جديد (يظهر فقط إذا ضغط المستخدم على "رد") -->
       <div v-if="showReplyForm" class="mb-4">
         <div class="flex space-x-3 rtl:space-x-reverse">
-            <UserAvatar
-              :avatar-url="userProfile?.avatar_url"
-              :name="userProfile?.full_name"
-              size="sm"
-              class="mt-1"
-            />
-            <div class="flex-1 min-w-0">
-                  <textarea
-                    ref="replyInputRef"
-                    v-model="newReplyContent"
-                    rows="2"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                    placeholder="إضافة رد عام..."
-                    @keydown.esc="cancelReply"
-                    @keydown.enter.prevent.exact="addReply"
-                  ></textarea>
-                  <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
-                      <span v-if="replyError" class="text-xs text-red-500 flex-1 text-right">{{ replyError }}</span>
-                       <button
-                        @click="cancelReply"
-                        type="button"
-                        class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
-                      >
-                        إلغاء
-                      </button>
-                      <button
-                        @click="addReply"
-                        type="button"
-                        :disabled="isSubmittingReply || !newReplyContent.trim()"
-                        class="px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                      >
-                        <Icon v-if="isSubmittingReply" name="svg-spinners:3-dots-fade" class="w-4 h-4" />
-                        <span v-else>رد</span>
-                      </button>
-                </div>
+          <UserAvatar
+            :avatar-url="userProfile?.avatar_url"
+            :name="userProfile?.full_name"
+            size="sm"
+            class="mt-1"
+          />
+          <div class="flex-1 min-w-0">
+            <textarea
+              ref="replyInputRef"
+              v-model="newReplyContent"
+              rows="2"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              placeholder="إضافة رد عام..."
+              @keydown.esc="cancelReply"
+              @keydown.enter.prevent.exact="addReply"
+            ></textarea>
+            <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
+              <span v-if="replyError" class="text-xs text-red-500 flex-1 text-right">{{ replyError }}</span>
+              <button
+                @click="cancelReply"
+                type="button"
+                class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+              <button
+                @click="addReply"
+                type="button"
+                :disabled="isSubmittingReply || !newReplyContent.trim()"
+                class="px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              >
+                <svg v-if="isSubmittingReply" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                </svg>
+                <span v-else>رد</span>
+              </button>
             </div>
+          </div>
         </div>
       </div>
 
-      <!-- عرض الردود الحالية (تظهر وتختفي حسب repliesVisible) -->
       <Transition name="fade">
-          <div v-if="localReplies.length > 0 && repliesVisible" class="space-y-0">
-            <ReplyItem
-              v-for="reply in sortedReplies"
-              :key="reply.id"
-              :reply="reply"
-              @reply-updated="handleReplyUpdate"
-              @reply-deleted="handleReplyDelete"
-            />
-          </div>
-       </Transition>
+        <div v-if="localReplies.length > 0 && repliesVisible" class="space-y-0">
+          <ReplyItem
+            v-for="reply in sortedReplies"
+            :key="reply.id"
+            :reply="reply"
+            @reply-updated="handleReplyUpdate"
+            @reply-deleted="handleReplyDelete"
+          />
+        </div>
+      </Transition>
     </div>
   </div>
 </template>

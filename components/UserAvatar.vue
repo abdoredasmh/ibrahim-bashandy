@@ -20,6 +20,7 @@
     >
       {{ initial }}
     </div>
+
     <!-- أيقونة افتراضية كخيار أخير -->
     <div
       v-else
@@ -29,10 +30,13 @@
         initialTextColor,
       ]"
     >
-      <Icon name="heroicons:user-20-solid" class="w-2/3 h-2/3" />
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-2/3 h-2/3" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 2a5 5 0 100 10 5 5 0 000-10zM2 16.5A7.5 7.5 0 0110 9a7.5 7.5 0 018 7.5v.25a.25.25 0 01-.25.25H2.25a.25.25 0 01-.25-.25v-.25z" clip-rule="evenodd" />
+      </svg>
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'

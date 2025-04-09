@@ -6,57 +6,72 @@
 
     <!-- نموذج إضافة تعليق جديد -->
     <div v-if="user" class="mb-6">
-       <div class="flex space-x-3 rtl:space-x-reverse">
-           <UserAvatar
-             :avatar-url="userProfile?.avatar_url"
-             :name="userProfile?.full_name"
-             size="md"
-             class="mt-1"
-           />
-           <div class="flex-1 min-w-0">
-                <textarea
-                  v-model="newCommentContent"
-                  rows="3"
-                  class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:opacity-70"
-                  placeholder="إضافة تعليق عام..."
-                  :disabled="isSubmittingComment"
-                ></textarea>
-                <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
-                    <span v-if="commentError" class="text-xs text-red-500 flex-1 text-right">{{ commentError }}</span>
-                    <button
-                      @click="addComment"
-                       type="button"
-                      :disabled="isSubmittingComment || !newCommentContent.trim()"
-                      class="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                    >
-                      <Icon v-if="isSubmittingComment" name="svg-spinners:3-dots-fade" class="w-5 h-5" />
-                      <span v-else>إضافة تعليق</span>
-                    </button>
-              </div>
-           </div>
-       </div>
+      <div class="flex space-x-3 rtl:space-x-reverse">
+        <UserAvatar
+          :avatar-url="userProfile?.avatar_url"
+          :name="userProfile?.full_name"
+          size="md"
+          class="mt-1"
+        />
+        <div class="flex-1 min-w-0">
+          <textarea
+            v-model="newCommentContent"
+            rows="3"
+            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:opacity-70"
+            placeholder="إضافة تعليق عام..."
+            :disabled="isSubmittingComment"
+          ></textarea>
+          <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
+            <span v-if="commentError" class="text-xs text-red-500 flex-1 text-right">{{ commentError }}</span>
+            <button
+              @click="addComment"
+              type="button"
+              :disabled="isSubmittingComment || !newCommentContent.trim()"
+              class="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+            >
+              <svg v-if="isSubmittingComment" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              </svg>
+              <span v-else>إضافة تعليق</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else class="mb-6 p-4 text-center bg-gray-100 dark:bg-gray-800 rounded-md">
       <p class="text-sm text-gray-700 dark:text-gray-300">
-        يرجى <NuxtLink to="/login" class="text-primary-600 hover:underline dark:text-primary-400 font-medium">تسجيل الدخول</NuxtLink>
-        أو <NuxtLink to="/signup" class="text-primary-600 hover:underline dark:text-primary-400 font-medium">إنشاء حساب</NuxtLink> للتعليق.
+        يرجى
+        <NuxtLink to="/login" class="text-primary-600 hover:underline dark:text-primary-400 font-medium">تسجيل الدخول</NuxtLink>
+        أو
+        <NuxtLink to="/signup" class="text-primary-600 hover:underline dark:text-primary-400 font-medium">إنشاء حساب</NuxtLink>
+        للتعليق.
       </p>
     </div>
 
     <!-- عرض التعليقات -->
     <div v-if="isLoading" class="text-center py-10">
-        <Icon name="svg-spinners:3-dots-fade" class="w-10 h-10 text-gray-500 dark:text-gray-400" />
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">جاري تحميل التعليقات...</p>
+      <svg class="w-10 h-10 text-gray-500 dark:text-gray-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"></path>
+      </svg>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">جاري تحميل التعليقات...</p>
     </div>
+
     <div v-else-if="fetchError" class="text-center py-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-md p-4">
-      <Icon name="heroicons:exclamation-triangle-20-solid" class="w-6 h-6 inline-block mb-1" />
+      <svg class="w-6 h-6 inline-block mb-1" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8.257 3.099c.366-.446.998-.533 1.447-.193A8 8 0 1110 18a8 8 0 01-1.743-14.901c.45-.34 1.081-.253 1.447.193zM9 7a1 1 0 112 0v4a1 1 0 11-2 0V7zm1 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clip-rule="evenodd" />
+      </svg>
       <p>حدث خطأ أثناء تحميل التعليقات. يرجى المحاولة مرة أخرى.</p>
       <button @click="fetchComments" class="mt-2 px-3 py-1 text-xs font-medium text-primary-700 dark:text-primary-300 hover:underline">إعادة المحاولة</button>
     </div>
+
     <div v-else-if="topLevelComments.length === 0" class="text-center py-10 text-gray-500 dark:text-gray-400">
-      <Icon name="heroicons:chat-bubble-left-right-20-solid" class="w-8 h-8 mx-auto mb-2" />
+      <svg class="w-8 h-8 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 3C6.48 3 2 6.58 2 11c0 1.9.86 3.63 2.28 5l-1.3 4.22a1 1 0 001.26 1.26l4.22-1.3c1.37 1 3.1 1.56 4.92 1.56 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+      </svg>
       <p>لا توجد تعليقات حتى الآن. كن أول من يعلق!</p>
     </div>
+
     <div v-else class="space-y-4">
       <CommentItem
         v-for="comment in topLevelComments"
@@ -69,10 +84,10 @@
         @reply-added="handleReplyAdded"
         class="border-b border-gray-200 dark:border-gray-700 last:border-b-0 pb-4"
       />
-      <!-- يمكن إضافة زر "تحميل المزيد من التعليقات" هنا لاحقاً -->
     </div>
   </section>
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'

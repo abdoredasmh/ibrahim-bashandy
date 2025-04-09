@@ -3,24 +3,43 @@
     <NuxtLink :to="`/lessons/${lesson.id}`" class="block">
       <!-- منطقة الصورة المصغرة من يوتيوب -->
       <div class="h-40 bg-black flex items-center justify-center relative overflow-hidden">
-        <!-- نعرض صورة يوتيوب المصغرة الافتراضية بناءً على videoId -->
+        <!-- صورة الفيديو -->
         <img
           v-if="videoId"
           :src="`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`"
           :alt="lesson.title"
           class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy" 
+          loading="lazy"
         />
-        <!-- أيقونة احتياطية إذا لم نستطع استخراج videoId -->
-        <Icon v-else name="mdi:youtube-tv" size="60" class="text-gray-400" />
+        <!-- أيقونة احتياطية -->
+        <svg
+          v-else
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          class="w-14 h-14 text-gray-400"
+          fill="currentColor"
+        >
+          <path
+            d="M10,15L15,12L10,9V15M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z"
+          />
+        </svg>
 
-        <!-- أيقونة تشغيل فوق الصورة -->
+        <!-- أيقونة التشغيل -->
         <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 group-hover:bg-opacity-40 transition-all duration-300">
-           <Icon name="mdi:play-circle" size="50" class="text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            class="w-12 h-12 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"
+            />
+          </svg>
         </div>
       </div>
 
-      <!-- منطقة النص -->
+      <!-- النص -->
       <div class="p-4">
         <h3 class="font-semibold text-lg mb-2 line-clamp-2 text-brown-dark group-hover:text-olive-green transition-colors">
           {{ lesson.title }}
@@ -32,6 +51,7 @@
     </NuxtLink>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { computed } from 'vue';
