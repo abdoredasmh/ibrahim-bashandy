@@ -25,6 +25,7 @@ interface _GlobalComponents {
     'UserAvatar': typeof import("../components/UserAvatar.vue")['default']
     'AdminLessonModal': typeof import("../components/admin/AdminLessonModal.vue")['default']
     'AdminSidebar': typeof import("../components/admin/AdminSidebar.vue")['default']
+    'AdminCategoryModal': typeof import("../components/admin/CategoryModal.vue")['default']
     'AdminVideoPreviewModal': typeof import("../components/admin/VideoPreviewModal.vue")['default']
     'NuxtWelcome': typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
     'NuxtLayout': typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -63,6 +64,7 @@ interface _GlobalComponents {
     'LazyUserAvatar': LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
     'LazyAdminLessonModal': LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
     'LazyAdminSidebar': LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
+    'LazyAdminCategoryModal': LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
     'LazyAdminVideoPreviewModal': LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
     'LazyNuxtWelcome': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
     'LazyNuxtLayout': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
@@ -107,6 +109,7 @@ export const ReplyItem: typeof import("../components/ReplyItem.vue")['default']
 export const UserAvatar: typeof import("../components/UserAvatar.vue")['default']
 export const AdminLessonModal: typeof import("../components/admin/AdminLessonModal.vue")['default']
 export const AdminSidebar: typeof import("../components/admin/AdminSidebar.vue")['default']
+export const AdminCategoryModal: typeof import("../components/admin/CategoryModal.vue")['default']
 export const AdminVideoPreviewModal: typeof import("../components/admin/VideoPreviewModal.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -145,6 +148,7 @@ export const LazyReplyItem: LazyComponent<typeof import("../components/ReplyItem
 export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
 export const LazyAdminLessonModal: LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
 export const LazyAdminSidebar: LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
+export const LazyAdminCategoryModal: LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
 export const LazyAdminVideoPreviewModal: LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
