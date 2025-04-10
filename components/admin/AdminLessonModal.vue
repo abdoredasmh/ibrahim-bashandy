@@ -188,7 +188,7 @@ function closeModal() { if (!isSaving.value) emit('close'); }
 
 // Fetch Categories AND Courses
 async function fetchDropdownData() {
-    console.log('[fetchDropdownData] Starting (Categories & Courses)...');
+    console.log('[fetchDropdownData] Starting (All Categories & Courses)...'); // Updated log message
     loadingCategories.value = true;
     loadingCourses.value = true;
     errorMessage.value = null;
@@ -197,16 +197,22 @@ async function fetchDropdownData() {
 
     try {
         const [catResult, courseResult] = await Promise.all([
-            supabase.from('categories').select('id, name').eq('type', 'lesson').order('name'), // فلترة فئات الدروس فقط
-            supabase.from('study_courses').select('id, title').order('title')
+            supabase.from('categories')
+                    .select('id, name')
+                    // .eq('type', 'lesson') // <<<--- تم حذف أو التعليق على هذا السطر
+                    .order('name'), // يمكنك تغيير الترتيب إذا أردت
+            supabase.from('study_courses')
+                    .select('id, title')
+                    .order('title')
         ]);
 
-        console.log('[fetchDropdownData] Categories Result:', JSON.stringify(catResult, null, 2));
+        console.log('[fetchDropdownData] Categories Result (All):', JSON.stringify(catResult, null, 2)); // Updated log message
         console.log('[fetchDropdownData] Courses Result:', JSON.stringify(courseResult, null, 2));
 
         if (catResult.error) throw new Error(`فشل تحميل الفئات: ${catResult.error.message}`);
+        // تأكد من أن البيانات القادمة ليست null أو undefined قبل إسنادها
         categories.value = catResult.data ?? [];
-        console.log(`[fetchDropdownData] ${categories.value.length} categories loaded.`);
+        console.log(`[fetchDropdownData] ${categories.value.length} total categories loaded.`);
 
         if (courseResult.error) throw new Error(`فشل تحميل الدورات: ${courseResult.error.message}`);
         courses.value = courseResult.data ?? [];
@@ -215,8 +221,8 @@ async function fetchDropdownData() {
     } catch (err: any) {
         console.error("Error in fetchDropdownData catch block:", err);
         errorMessage.value = err.message || "فشل تحميل بيانات القوائم المنسدلة.";
-        categories.value = [];
-        courses.value = [];
+        categories.value = []; // تأكد من تفريغها عند الخطأ
+        courses.value = [];    // تأكد من تفريغها عند الخطأ
     } finally {
         loadingCategories.value = false;
         loadingCourses.value = false;

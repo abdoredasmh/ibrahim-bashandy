@@ -2,7 +2,7 @@
   <div class="bg-white dark:bg-gray-800 rounded-lg shadow border border-cream-gray dark:border-gray-700/50 overflow-hidden group transition-shadow duration-300 hover:shadow-lg">
     <NuxtLink :to="`/lessons/${lesson.id}`" class="block group/link">
       <!-- منطقة الصورة المصغرة من يوتيوب -->
-      <div class="aspect-video bg-black flex items-center justify-center relative overflow-hidden"> {/* Use aspect-video for consistent ratio */}
+      <div class="aspect-video bg-black flex items-center justify-center relative overflow-hidden">
         <!-- صورة الفيديو -->
         <img
           v-if="videoId && !imageError"
@@ -49,10 +49,10 @@
         <h3 class="font-semibold text-lg mb-1 line-clamp-2 text-brown-dark dark:text-beige-light group-hover/link:text-olive-green transition-colors duration-200">
           {{ lesson.title }}
         </h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3"> {/* Removed mb-3 if no date is added */}
-          {{ lesson.description || '...' }} {/* Simplified placeholder */}
+        <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3"> 
+          {{ lesson.description || 'لا يوجد وصف للفديو' }} 
         </p>
-        {/* Optional: Add date if available */}
+  
         <!--
         <p v-if="lesson.created_at" class="text-xs text-gray-400 dark:text-gray-500 mt-2">
            {{ new Date(lesson.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) }}
