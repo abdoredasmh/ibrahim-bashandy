@@ -52,17 +52,8 @@
                    <p v-if="validationErrors.youtube_url" class="mt-1 text-xs text-red-500" id="youtube-error">{{ validationErrors.youtube_url }}</p>
                 </div>
 
-                <!-- Audio URL Field -->
-                 <div>
-                    <label for="audio_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رابط الصوت (MP3)</label>
-                    <input type="url" id="audio_url" v-model="form.audio_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
-                 </div>
-
-                 <!-- PDF Transcript URL Field -->
-                  <div>
-                     <label for="pdf_transcript_url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">رابط التفريغ (PDF)</label>
-                     <input type="url" id="pdf_transcript_url" v-model="form.pdf_transcript_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"/>
-                  </div>
+                <!-- Audio URL Field (تمت إزالته) -->
+                <!-- PDF Transcript URL Field (تمت إزالته) -->
 
                  <!-- Category Select Field -->
                   <div>
@@ -77,7 +68,7 @@
                       </select>
                   </div>
 
-                  <!-- === Course Select Field (عاد مرة أخرى) === -->
+                  <!-- === Course Select Field === -->
                    <div>
                        <label for="course_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">الدورة الدراسية (اختياري)</label>
                        <div v-if="loadingCourses" class="mt-1 text-sm text-gray-500">جار تحميل الدورات...</div>
@@ -87,9 +78,7 @@
                            v-model="form.course_id"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                        >
-                           <!-- الخيار الأساسي للدرس العام -->
                            <option :value="null">-- درس عام (لا يتبع دورة) --</option>
-                           <!-- قائمة الدورات المتاحة -->
                            <template v-if="courses && courses.length > 0">
                                <option v-for="course in courses" :key="course.id" :value="course.id">
                                    {{ course.title }}
@@ -125,34 +114,38 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, reactive } from 'vue';
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue';
-import type { Database, Tables } from '~/types/database.types';
+import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'; // استيراد الأنواع المطلوبة
 
 // Define Types
+// استخدم الأنواع الأساسية بدون الحقول المحذوفة إذا أردت دقة أكبر،
+// لكن Partial سيظل يعمل. للتوضيح، سنعرف نوعًا خاصًا بالنموذج.
+// type LessonPayload = Omit<TablesInsert<'lessons'>, 'id' | 'created_at' | 'updated_at' | 'audio_url' | 'pdf_transcript_url'>;
+// type LessonUpdatePayload = Omit<TablesUpdate<'lessons'>, 'id' | 'created_at' | 'updated_at' | 'audio_url' | 'pdf_transcript_url'>;
+// أو أبسط، استخدام Partial مع إزالة الحقول عند الإرسال
 type Lesson = Tables<'lessons'>;
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>;
-type Course = Pick<Tables<'study_courses'>, 'id' | 'title'>; // أعدنا تعريف Course
+type Course = Pick<Tables<'study_courses'>, 'id' | 'title'>;
 
 const props = defineProps<{
   show: boolean;
   lessonData: Lesson | null;
-  // Prop اختياري لتحديد الدورة مسبقًا عند الإضافة من صفحة الدورة
   preselectedCourseId?: number | null;
 }>();
 
 const emit = defineEmits(['close', 'saved']);
 const supabase = useSupabaseClient<Database>();
 
-// Form State
-const form = ref<Partial<Lesson>>({});
+// Form State - لاحظ أننا سنستخدم Partial، لكننا لا نضع الحقول المحذوفة فيه
+const form = ref<Partial<Omit<Lesson, 'audio_url' | 'pdf_transcript_url'>>>({});
 const isSaving = ref(false);
 const errorMessage = ref<string | null>(null);
 const validationErrors = reactive({ title: '', youtube_url: '' });
 
-// Dropdown State (للفئات والدورات)
+// Dropdown State
 const categories = ref<Category[]>([]);
-const courses = ref<Course[]>([]); // <-- عاد مرة أخرى
+const courses = ref<Course[]>([]);
 const loadingCategories = ref(false);
-const loadingCourses = ref(false); // <-- عاد مرة أخرى
+const loadingCourses = ref(false);
 
 // Computed Properties
 const isEditing = computed(() => !!props.lessonData && !!props.lessonData.id);
@@ -160,9 +153,10 @@ const isEditing = computed(() => !!props.lessonData && !!props.lessonData.id);
 // Functions
 const resetForm = () => {
     form.value = {
-        title: '', description: '', youtube_url: '', audio_url: '',
-        pdf_transcript_url: '', category_id: null,
-        // إعادة تعيين course_id إلى null افتراضيًا أو القيمة الممررة
+        title: '', description: '', youtube_url: '',
+        // audio_url: '', // تمت إزالته
+        // pdf_transcript_url: '', // تمت إزالته
+        category_id: null,
         course_id: props.preselectedCourseId ?? null,
     };
     errorMessage.value = null;
@@ -172,53 +166,48 @@ const resetForm = () => {
 
 // Watch for changes in lessonData or preselectedCourseId
 watch([() => props.lessonData, () => props.preselectedCourseId], ([newLesson, newPreselectedId], [oldLesson, oldPreselectedId]) => {
-  // Reset based on lessonData first (for editing)
   if (newLesson) {
-    form.value = { ...newLesson };
-    // Clear errors when editing existing lesson
+    // عند التعديل، نأخذ البيانات الموجودة ونحذف الحقول غير المرغوبة
+    const { audio_url, pdf_transcript_url, ...restOfLesson } = newLesson;
+    form.value = { ...restOfLesson };
     errorMessage.value = null;
     validationErrors.title = '';
     validationErrors.youtube_url = '';
   }
-  // Handle adding new lesson or preselection change
   else if (!newLesson && newPreselectedId !== oldPreselectedId) {
-     resetForm(); // This will now use the new preselectedCourseId
+     resetForm();
   }
   else if (!newLesson && !oldLesson) {
-      // This covers the initial opening for "Add New" without preselection
       resetForm();
   }
-
 }, { immediate: true, deep: true });
 
 
 // Close Modal Handler
 function closeModal() { if (!isSaving.value) emit('close'); }
 
-// --- Fetch Categories AND Courses ---
+// Fetch Categories AND Courses
 async function fetchDropdownData() {
     console.log('[fetchDropdownData] Starting (Categories & Courses)...');
     loadingCategories.value = true;
-    loadingCourses.value = true; // تفعيل تحميل الدورات
+    loadingCourses.value = true;
     errorMessage.value = null;
-    categories.value = []; // Clear previous
-    courses.value = [];    // Clear previous
+    categories.value = [];
+    courses.value = [];
 
     try {
         const [catResult, courseResult] = await Promise.all([
-            supabase.from('categories').select('id, name').order('name'),
-            supabase.from('study_courses').select('id, title').order('title') // <-- إعادة جلب الدورات
+            supabase.from('categories').select('id, name').eq('type', 'lesson').order('name'), // فلترة فئات الدروس فقط
+            supabase.from('study_courses').select('id, title').order('title')
         ]);
 
         console.log('[fetchDropdownData] Categories Result:', JSON.stringify(catResult, null, 2));
         console.log('[fetchDropdownData] Courses Result:', JSON.stringify(courseResult, null, 2));
 
-        // Handle Categories
         if (catResult.error) throw new Error(`فشل تحميل الفئات: ${catResult.error.message}`);
         categories.value = catResult.data ?? [];
         console.log(`[fetchDropdownData] ${categories.value.length} categories loaded.`);
 
-        // Handle Courses
         if (courseResult.error) throw new Error(`فشل تحميل الدورات: ${courseResult.error.message}`);
         courses.value = courseResult.data ?? [];
         console.log(`[fetchDropdownData] ${courses.value.length} courses loaded.`);
@@ -226,15 +215,14 @@ async function fetchDropdownData() {
     } catch (err: any) {
         console.error("Error in fetchDropdownData catch block:", err);
         errorMessage.value = err.message || "فشل تحميل بيانات القوائم المنسدلة.";
-        categories.value = []; // Ensure empty on error
-        courses.value = [];    // Ensure empty on error
+        categories.value = [];
+        courses.value = [];
     } finally {
         loadingCategories.value = false;
-        loadingCourses.value = false; // إيقاف تحميل الدورات
+        loadingCourses.value = false;
         console.log('[fetchDropdownData] Finished.');
     }
 }
-// --- End fetchDropdownData ---
 
 // Watch props.show to fetch data when modal opens
 watch(() => props.show, (newVal) => {
@@ -244,10 +232,9 @@ watch(() => props.show, (newVal) => {
     }
 });
 
-// Form Validation (كما هو)
+// Form Validation
 const validateForm = (): boolean => {
-    // ... (نفس كود التحقق السابق) ...
-     let isValid = true;
+    let isValid = true;
     validationErrors.title = '';
     validationErrors.youtube_url = '';
     errorMessage.value = null;
@@ -257,7 +244,7 @@ const validateForm = (): boolean => {
     return isValid;
 };
 
-// Save Lesson (Insert or Update) - يرسل course_id المختار
+// Save Lesson (Insert or Update)
 async function saveLesson() {
   console.log('Attempting to save lesson...');
   if (!validateForm()) { console.log('Validation failed.'); return; }
@@ -265,15 +252,15 @@ async function saveLesson() {
   isSaving.value = true;
   errorMessage.value = null;
 
-  // تحضير البيانات، بما في ذلك course_id المختار (قد يكون null)
-  const lessonPayload: Omit<Lesson, 'id' | 'created_at'> = {
+  // تحضير البيانات بدون الحقول المحذوفة
+  const lessonPayload: Omit<TablesInsert<'lessons'>, 'id' | 'created_at' | 'updated_at' | 'audio_url' | 'pdf_transcript_url'> = {
     title: form.value.title!,
     description: form.value.description || null,
     youtube_url: form.value.youtube_url!,
-    audio_url: form.value.audio_url || null,
-    pdf_transcript_url: form.value.pdf_transcript_url || null,
+    // audio_url: form.value.audio_url || null, // تمت إزالته
+    // pdf_transcript_url: form.value.pdf_transcript_url || null, // تمت إزالته
     category_id: form.value.category_id ? Number(form.value.category_id) : null,
-    course_id: form.value.course_id ? Number(form.value.course_id) : null, // <-- استخدام القيمة من النموذج
+    course_id: form.value.course_id ? Number(form.value.course_id) : null,
   };
   console.log('Payload to send:', JSON.stringify(lessonPayload, null, 2));
 
@@ -281,13 +268,18 @@ async function saveLesson() {
     let error: any = null;
     let data: any = null;
 
+    // تأكد من إزالة الحقول غير المرغوبة من payload للتحديث أيضاً إذا لزم الأمر
+    // في حالتنا هذه، `lessonPayload` نفسه لا يحتوي عليها، لذا يمكن استخدامه مباشرة
+    const updatePayload: TablesUpdate<'lessons'> = { ...lessonPayload };
+
     if (isEditing.value && form.value.id) {
        console.log(`Attempting UPDATE for lesson ID: ${form.value.id}`);
-       const result = await supabase.from('lessons').update(lessonPayload).eq('id', form.value.id).select();
+       // تأكد من عدم إرسال الحقول المحذوفة في التحديث
+       const result = await supabase.from('lessons').update(updatePayload).eq('id', form.value.id).select();
        error = result.error; data = result.data;
     } else {
       console.log('Attempting INSERT for new lesson');
-      const result = await supabase.from('lessons').insert(lessonPayload).select();
+      const result = await supabase.from('lessons').insert(lessonPayload).select(); // Insert لا يحتوي الحقول المحذوفة
       error = result.error; data = result.data;
     }
 
@@ -302,9 +294,8 @@ async function saveLesson() {
 
   } catch (err: any) {
     console.error('Error during save operation:', JSON.stringify(err, null, 2));
-     // (نفس معالجة الأخطاء السابقة)
      if (err.message?.includes('violates foreign key constraint')) {
-          errorMessage.value = 'فشل الحفظ: الفئة أو الدورة المحددة غير موجودة.'; // تعديل الرسالة قليلاً
+          errorMessage.value = 'فشل الحفظ: الفئة أو الدورة المحددة غير موجودة.';
      } else if (err.code === '42501') { /* ... RLS error ... */ }
      else { errorMessage.value = `فشل حفظ الدرس: ${err.message || 'خطأ غير متوقع'}`; }
   } finally {

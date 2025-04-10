@@ -227,7 +227,7 @@ const { data: book, pending, error, refresh } = await useAsyncData<Book | null>(
     if (data.storage_path) {
         try {
             // Use environment variable for bucket name if possible
-            const bucketName = 'library_files'; // Or process.env.SUPABASE_STORAGE_BUCKET
+            const bucketName = 'book-files'; // Or process.env.SUPABASE_STORAGE_BUCKET
             const { data: urlData, error: urlError } = await supabase.storage
                 .from(bucketName)
                 .getPublicUrl(data.storage_path);

@@ -217,16 +217,16 @@
          </button>
       </div>
 
-    <!-- Modals -->
-    <AdminLessonModal
-      :show="showModal"
-      :lesson-data="selectedLesson"
-      :categories="categories"
-      :courses="courses"
-      :loading-filters="isLoadingFilters"
-      @close="closeModal"
-      @saved="handleSave"
-    />
+   <AdminLessonModal
+     :show="showModal"
+     :lesson-data="selectedLesson"
+     :categories="categories"
+     :courses="courses"
+     :loading-filters="isLoadingFilters"
+     @close="closeModal"
+     @saved="handleSave"
+   />
+
     <VideoPreviewModal
       :show="showVideoPreview"
       :video-url="previewVideoUrl"
@@ -245,22 +245,22 @@ import VideoPreviewModal from '~/components/admin/VideoPreviewModal.vue'; // Ens
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
 
 // --- Constants ---
-const PAGE_SIZE = 10; // Number of lessons per page
+const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 400;
 
 // --- Page Meta ---
 definePageMeta({ layout: 'admin', middleware: 'admin' });
 
 // --- Composables ---
-const supabase = useSupabaseClient<Database>() as SupabaseClient<Database>; // Ensure correct typing
+const supabase = useSupabaseClient<Database>() as SupabaseClient<Database>;
 
 // --- State ---
 
 // List Loading & Data
-const isListLoading = ref(true); // Indicates list loading (initial or update)
-const fetchError = ref<PostgrestError | null>(null); // For list fetch errors
-const lessons = ref<LessonWithRelations[] | null>(null); // Holds lessons for the current page
-const totalLessons = ref(0); // Total lessons matching current filters
+const isListLoading = ref(true);
+const fetchError = ref<PostgrestError | null>(null);
+const lessons = ref<LessonWithRelations[] | null>(null);
+const totalLessons = ref(0);
 
 // Filters, Search, Sort
 const searchTerm = ref('');
@@ -273,15 +273,15 @@ const sortOrder = ref<'asc' | 'desc'>('desc');
 // Filter Options Data
 const categories = ref<Tables<'categories'>[]>([]);
 const courses = ref<Tables<'study_courses'>[]>([]);
-const isLoadingFilters = ref(true); // Loading state for categories/courses
+const isLoadingFilters = ref(true);
 
 // Pagination
 const currentPage = ref(1);
 
 // Actions State
-const isDeleting = ref<number | null>(null); // ID of the lesson being deleted
-const successMessage = ref<string | null>(null); // Success feedback
-const actionError = ref<string | null>(null); // Error feedback for actions
+const isDeleting = ref<number | null>(null);
+const successMessage = ref<string | null>(null);
+const actionError = ref<string | null>(null);
 
 // Modal State
 const showModal = ref(false);
@@ -290,7 +290,10 @@ const showVideoPreview = ref(false);
 const previewVideoUrl = ref<string | null>(null);
 
 // --- Define Types ---
-type LessonWithRelations = Tables<'lessons'> & {
+// Updated type to remove pdf_transcript_url if it's fully removed from DB type
+type LessonBase = Omit<Tables<'lessons'>, 'pdf_transcript_url'>; // Or use Tables<'lessons'> if type updated
+
+type LessonWithRelations = LessonBase & {
   categories: Pick<Tables<'categories'>, 'name'> | null;
   study_courses: Pick<Tables<'study_courses'>, 'title'> | null;
 };
@@ -303,7 +306,7 @@ const totalPages = computed(() => {
 
 // --- Functions ---
 
-/** Fetch Categories and Courses for filters and modal */
+/** Fetch Categories and Courses */
 const fetchFilterOptions = async () => {
   isLoadingFilters.value = true;
   try {
@@ -321,34 +324,33 @@ const fetchFilterOptions = async () => {
   } catch (err: any) {
     console.error("Error fetching filter options:", err);
     actionError.value = "فشل تحميل بيانات الفلاتر (التصنيفات/الدورات).";
-    // Keep existing data if fetch fails partially? Or clear? Decide based on UX.
-    // categories.value = [];
-    // courses.value = [];
   } finally {
     isLoadingFilters.value = false;
   }
 };
 
-/** Fetch Lessons based on current state (filters, sort, pagination) */
+/** Fetch Lessons */
 const fetchLessons = async (page = currentPage.value) => {
   isListLoading.value = true;
   fetchError.value = null;
-  clearMessages(false); // Keep potential actionError
+  clearMessages(false);
 
   const rangeFrom = (page - 1) * PAGE_SIZE;
   const rangeTo = rangeFrom + PAGE_SIZE - 1;
 
   try {
+    // --- THE ONLY CHANGE IS HERE: Removed pdf_transcript_url from select list ---
     let query = supabase
       .from('lessons')
       .select(`
-        id, title, description, youtube_url, audio_url, pdf_transcript_url,
+        id, title, description, youtube_url,
         category_id, course_id, created_at,
         categories!lessons_category_id_fkey ( name ),
         study_courses!fk_course ( title )
       `, { count: 'exact' })
       .order(sortBy.value, { ascending: sortOrder.value === 'asc' })
       .range(rangeFrom, rangeTo);
+    // --- End of change ---
 
     // Apply Filters
     if (filterCategory.value !== null) {
@@ -358,7 +360,7 @@ const fetchLessons = async (page = currentPage.value) => {
       query = query.eq('course_id', filterCourse.value);
     }
 
-    // Apply Search (on title)
+    // Apply Search
     const trimmedSearch = searchTerm.value.trim();
     if (trimmedSearch) {
       query = query.ilike('title', `%${trimmedSearch}%`);
@@ -369,13 +371,13 @@ const fetchLessons = async (page = currentPage.value) => {
 
     if (error) throw error;
 
-    lessons.value = data as LessonWithRelations[] | null;
+    lessons.value = data as LessonWithRelations[] | null; // Cast might be needed if type definition isn't updated
     totalLessons.value = count ?? 0;
     currentPage.value = page;
 
-    // Adjust page if current page becomes invalid after filtering/deletion
+    // Adjust page if needed
     if (page > totalPages.value && totalPages.value > 0) {
-      changePage(totalPages.value); // This will trigger another fetch via watch
+      changePage(totalPages.value);
     }
 
   } catch (err: any) {
@@ -392,15 +394,15 @@ const fetchLessons = async (page = currentPage.value) => {
 const handleSearchInput = () => {
     if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
-        if (currentPage.value !== 1) currentPage.value = 1; // Reset page, triggers watch
-        else fetchLessons(1); // Fetch directly if already on page 1
+        if (currentPage.value !== 1) currentPage.value = 1;
+        else fetchLessons(1);
     }, SEARCH_DEBOUNCE_MS);
 };
 
-/** Change page and trigger fetch */
+/** Change page */
 const changePage = (newPage: number) => {
   if (newPage >= 1 && newPage <= totalPages.value && newPage !== currentPage.value && !isListLoading.value) {
-    currentPage.value = newPage; // Watcher will trigger fetch
+    currentPage.value = newPage;
   }
 };
 
@@ -411,11 +413,10 @@ const closeModal = () => { showModal.value = false; selectedLesson.value = null;
 const openVideoPreviewModal = (url: string | null | undefined) => { if (url && !isDeleting.value) { previewVideoUrl.value = url; showVideoPreview.value = true; } };
 const closeVideoPreviewModal = () => { showVideoPreview.value = false; previewVideoUrl.value = null; };
 
-/** Handle successful save from modal */
+/** Handle save from modal */
 const handleSave = async () => {
   closeModal();
   setSuccessMessage('تم حفظ الدرس بنجاح.');
-  // Refetch current page to show updated data
   await fetchLessons(currentPage.value);
 };
 
@@ -436,7 +437,6 @@ const confirmDelete = async (lesson: LessonWithRelations) => {
       if (deleteError) throw deleteError;
 
       setSuccessMessage('تم حذف الدرس بنجاح.');
-      // Refetch current page. It might shift items or reduce total pages.
       await fetchLessons(currentPage.value);
 
     } catch (err: any) {
@@ -449,42 +449,37 @@ const confirmDelete = async (lesson: LessonWithRelations) => {
 };
 
 // --- Helper Functions ---
-const formatDate = (dateString: string | null): string => { /* ... (same as before) ... */ if (!dateString) return '-'; try { const date = new Date(dateString); if (isNaN(date.getTime())) return 'تاريخ غير صالح'; return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return 'خطأ تنسيق'; } };
-const getYoutubeVideoId = (url: string | null | undefined): string | null => { /* ... (same as before) ... */ if (!url) return null; try { const urlObj = new URL(url); if (urlObj.hostname === 'youtu.be') return urlObj.pathname.slice(1); if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.has('v')) return urlObj.searchParams.get('v'); } catch (e) { /* fallback for non-URL strings */ } const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ ]{11})/; const match = url.match(regex); return match?.[1] || null; };
+const formatDate = (dateString: string | null): string => { if (!dateString) return '-'; try { const date = new Date(dateString); if (isNaN(date.getTime())) return 'تاريخ غير صالح'; return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }); } catch (e) { return 'خطأ تنسيق'; } };
+const getYoutubeVideoId = (url: string | null | undefined): string | null => { if (!url) return null; try { const urlObj = new URL(url); if (urlObj.hostname === 'youtu.be') return urlObj.pathname.slice(1); if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.has('v')) return urlObj.searchParams.get('v'); } catch (e) {} const regex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ ]{11})/; const match = url.match(regex); return match?.[1] || null; };
 const getYoutubeThumbnail = (url: string | null | undefined): string | null => { const videoId = getYoutubeVideoId(url); return videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null; };
 const setSuccessMessage = (msg: string) => { successMessage.value = msg; actionError.value = null; setTimeout(() => { successMessage.value = null; }, 4000); };
 const setActionError = (msg: string) => { actionError.value = msg; successMessage.value = null; setTimeout(() => { actionError.value = null; }, 6000); };
 const clearMessages = (clearActionErr = true) => { successMessage.value = null; if (clearActionErr) actionError.value = null; };
 
 // --- Watchers ---
-// Watch filters, search, and sort changes to refetch data, resetting to page 1
 watch([filterCategory, filterCourse, searchTerm, sortBy, sortOrder], () => {
     if (currentPage.value !== 1) {
-        currentPage.value = 1; // Reset page, which triggers the currentPage watcher
+        currentPage.value = 1;
     } else {
-        fetchLessons(1); // Fetch page 1 directly if already there
+        fetchLessons(1);
     }
 });
-
-// Watch currentPage changes to fetch the new page
 watch(currentPage, (newPage) => {
     fetchLessons(newPage);
 });
 
 // --- Lifecycle Hooks ---
 onMounted(async () => {
-  isListLoading.value = true; // Ensure loading state is true initially
+  isListLoading.value = true;
   isLoadingFilters.value = true;
   await Promise.all([
-    fetchLessons(1),         // Fetch initial lessons page
-    fetchFilterOptions()     // Fetch categories and courses
+    fetchLessons(1),
+    fetchFilterOptions()
   ]);
-  // Loading states are handled within respective functions
 });
 
 </script>
 
 <style scoped>
-/* Add specific styles if needed */
-.max-w-xs { max-width: 20rem; /* Adjust as needed for title truncation */ }
+.max-w-xs { max-width: 20rem; }
 </style>

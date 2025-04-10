@@ -7,7 +7,8 @@ export default defineNuxtConfig({
     '@nuxtjs/supabase',
     // '@nuxt/icon', // افترضنا إزالته
     '@pinia/nuxt',
-    '@nuxtjs/color-mode'
+    '@nuxtjs/color-mode',
+    '@nuxt/image'
   ],
 
   css: ['~/assets/css/tailwind.css'],
@@ -43,7 +44,7 @@ export default defineNuxtConfig({
         '/about',
         '/leaderboard',
         '/live',
-        '/signup',
+        '/signup', 
         '/confirm',
         '/forgot-password',
         '/reset-password',

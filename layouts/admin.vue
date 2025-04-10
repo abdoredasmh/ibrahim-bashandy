@@ -18,7 +18,7 @@
 
       <!-- Content area -->
       <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900 p-6">
-        <slot /> {/* هنا سيتم عرض محتوى كل صفحة admin */}
+        <slot /> 
       </main>
     </div>
   </div>
