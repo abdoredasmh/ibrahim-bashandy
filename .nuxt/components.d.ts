@@ -18,6 +18,7 @@ interface _GlobalComponents {
     'CommentActions': typeof import("../components/CommentActions.vue")['default']
     'CommentItem': typeof import("../components/CommentItem.vue")['default']
     'CommentSection': typeof import("../components/CommentSection.vue")['default']
+    'CourseCard': typeof import("../components/CourseCard.vue")['default']
     'LessonCard': typeof import("../components/LessonCard.vue")['default']
     'LoadingSpinner': typeof import("../components/LoadingSpinner.vue")['default']
     'PdfViewerModal': typeof import("../components/PdfViewerModal.vue")['default']
@@ -29,6 +30,7 @@ interface _GlobalComponents {
     'AdminBookAddModal': typeof import("../components/admin/BookAddModal.vue")['default']
     'AdminBookEditModal': typeof import("../components/admin/BookEditModal.vue")['default']
     'AdminCategoryModal': typeof import("../components/admin/CategoryModal.vue")['default']
+    'AdminCourseAddEditModal': typeof import("../components/admin/CourseAddEditModal.vue")['default']
     'AdminVideoPreviewModal': typeof import("../components/admin/VideoPreviewModal.vue")['default']
     'NuxtWelcome': typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
     'NuxtLayout': typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -60,6 +62,7 @@ interface _GlobalComponents {
     'LazyCommentActions': LazyComponent<typeof import("../components/CommentActions.vue")['default']>
     'LazyCommentItem': LazyComponent<typeof import("../components/CommentItem.vue")['default']>
     'LazyCommentSection': LazyComponent<typeof import("../components/CommentSection.vue")['default']>
+    'LazyCourseCard': LazyComponent<typeof import("../components/CourseCard.vue")['default']>
     'LazyLessonCard': LazyComponent<typeof import("../components/LessonCard.vue")['default']>
     'LazyLoadingSpinner': LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
     'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
@@ -71,6 +74,7 @@ interface _GlobalComponents {
     'LazyAdminBookAddModal': LazyComponent<typeof import("../components/admin/BookAddModal.vue")['default']>
     'LazyAdminBookEditModal': LazyComponent<typeof import("../components/admin/BookEditModal.vue")['default']>
     'LazyAdminCategoryModal': LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
+    'LazyAdminCourseAddEditModal': LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
     'LazyAdminVideoPreviewModal': LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
     'LazyNuxtWelcome': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
     'LazyNuxtLayout': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
@@ -108,6 +112,7 @@ export const BookCard: typeof import("../components/BookCard.vue")['default']
 export const CommentActions: typeof import("../components/CommentActions.vue")['default']
 export const CommentItem: typeof import("../components/CommentItem.vue")['default']
 export const CommentSection: typeof import("../components/CommentSection.vue")['default']
+export const CourseCard: typeof import("../components/CourseCard.vue")['default']
 export const LessonCard: typeof import("../components/LessonCard.vue")['default']
 export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['default']
 export const PdfViewerModal: typeof import("../components/PdfViewerModal.vue")['default']
@@ -119,6 +124,7 @@ export const AdminStatCardVue: typeof import("../components/admin/AdminStatCard.
 export const AdminBookAddModal: typeof import("../components/admin/BookAddModal.vue")['default']
 export const AdminBookEditModal: typeof import("../components/admin/BookEditModal.vue")['default']
 export const AdminCategoryModal: typeof import("../components/admin/CategoryModal.vue")['default']
+export const AdminCourseAddEditModal: typeof import("../components/admin/CourseAddEditModal.vue")['default']
 export const AdminVideoPreviewModal: typeof import("../components/admin/VideoPreviewModal.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -150,6 +156,7 @@ export const LazyBookCard: LazyComponent<typeof import("../components/BookCard.v
 export const LazyCommentActions: LazyComponent<typeof import("../components/CommentActions.vue")['default']>
 export const LazyCommentItem: LazyComponent<typeof import("../components/CommentItem.vue")['default']>
 export const LazyCommentSection: LazyComponent<typeof import("../components/CommentSection.vue")['default']>
+export const LazyCourseCard: LazyComponent<typeof import("../components/CourseCard.vue")['default']>
 export const LazyLessonCard: LazyComponent<typeof import("../components/LessonCard.vue")['default']>
 export const LazyLoadingSpinner: LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
 export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
@@ -161,6 +168,7 @@ export const LazyAdminStatCardVue: LazyComponent<typeof import("../components/ad
 export const LazyAdminBookAddModal: LazyComponent<typeof import("../components/admin/BookAddModal.vue")['default']>
 export const LazyAdminBookEditModal: LazyComponent<typeof import("../components/admin/BookEditModal.vue")['default']>
 export const LazyAdminCategoryModal: LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
+export const LazyAdminCourseAddEditModal: LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
 export const LazyAdminVideoPreviewModal: LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>

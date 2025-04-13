@@ -50,23 +50,26 @@
 
                 <!-- PDF Viewer Area -->
                 <div class="mt-2 flex-grow border border-cream-gray dark:border-gray-700 rounded overflow-hidden flex flex-col min-h-[400px]">
-                  <div v-if="loading" class="flex items-center justify-center h-full p-8">
+                  <!-- Loading State -->
+                  <div v-if="loading" class="flex items-center justify-center h-full p-8" aria-live="polite">
                     <LoadingSpinner />
                     <p class="ms-3 text-gray-600 dark:text-gray-400">جارٍ تحميل الملف...</p>
                   </div>
 
-                  <div v-else-if="pdfUrlError" class="flex flex-col items-center justify-center h-full p-8 text-red-600 dark:text-red-400 text-center">
+                  <!-- Error State -->
+                  <div v-else-if="pdfUrlError" class="flex flex-col items-center justify-center h-full p-8 text-red-600 dark:text-red-400 text-center" aria-live="assertive">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                       <title>خطأ</title>
                       <path fill-rule="evenodd" d="M8.257 3.099c.763-1.36 2.683-1.36 3.446 0l6.518 11.636c.75 1.34-.213 3.01-1.723 3.01H3.462c-1.51 0-2.473-1.67-1.723-3.01L8.257 3.1zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-1-6a1 1 0 00-.993.883L9 8v3a1 1 0 001.993.117L11 11V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
-                    <p class="font-semibold">حدث خطأ أثناء تحميل رابط الملف.</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ pdfUrlError }}</p>
+                    <p class="font-semibold">حدث خطأ أثناء تحميل الملف.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ pdfUrlError }}</p> {/* Display user-friendly error */}
                     <button @click="fetchPublicUrl" class="mt-4 button-secondary text-sm">
                       إعادة المحاولة
                     </button>
                   </div>
 
+                  <!-- PDF Iframe -->
                   <iframe
                     v-else-if="pdfPublicUrl"
                     :src="pdfPublicUrl"
@@ -79,6 +82,7 @@
                     <p class="p-4 text-center text-gray-600 dark:text-gray-400">متصفحك لا يدعم عرض PDF في إطار. حاول استخدام زر التنزيل.</p>
                   </iframe>
 
+                  <!-- No File State -->
                   <div v-else class="flex items-center justify-center h-full p-8 text-gray-500 dark:text-gray-400">
                     <p>لم يتم تحديد ملف لعرضه.</p>
                   </div>
@@ -120,6 +124,7 @@ import {
   DialogTitle,
 } from '@headlessui/vue';
 import type { Database } from '~/types/database.types';
+import type { StorageError } from '@supabase/storage-js'; // Import StorageError type
 import LoadingSpinner from '~/components/LoadingSpinner.vue';
 
 const props = defineProps({
@@ -133,16 +138,38 @@ const emit = defineEmits(['close']);
 const supabase = useSupabaseClient<Database>();
 const pdfPublicUrl = ref<string | null>(null);
 const loading = ref(false);
-const pdfUrlError = ref<string | null>(null);
+const pdfUrlError = ref<string | null>(null); // Will store user-friendly message
 
 const BUCKET_NAME = 'book-files';
 
-async function fetchPublicUrl() {
-  if (!process.client) return; // client-only logic
+// Function to translate storage errors to user-friendly messages
+function getUserFriendlyErrorMessage(error: StorageError | Error): string {
+  console.error('Storage Error:', error); // Log the original error for debugging
 
-  if (!props.storagePath) {
+  if ('statusCode' in error) { // Check if it's a StorageError
+    switch (error.statusCode) {
+      case '404':
+        return 'الملف المطلوب غير موجود. قد يكون تم حذفه أو تغيير مساره.';
+      case '403':
+        return 'ليس لديك الصلاحية للوصول إلى هذا الملف.';
+      case '400': // Example for potentially bad path or similar
+        return 'حدث خطأ في طلب الملف. يرجى التحقق من صحة الرابط.';
+      // Add other common Supabase Storage error codes as needed
+      default:
+        return `حدث خطأ غير متوقع (${error.statusCode}). يرجى المحاولة مرة أخرى.`;
+    }
+  }
+  // Generic fallback
+  return error.message || 'حدث خطأ غير معروف أثناء محاولة الوصول للملف.';
+}
+
+async function fetchPublicUrl() {
+  if (!process.client) return;
+
+  // Improved check for invalid storagePath
+  if (!props.storagePath || props.storagePath.trim() === '') {
     pdfPublicUrl.value = null;
-    pdfUrlError.value = 'لم يتم توفير مسار للملف.';
+    pdfUrlError.value = 'لم يتم توفير مسار صالح للملف.';
     loading.value = false;
     return;
   }
@@ -156,13 +183,21 @@ async function fetchPublicUrl() {
       .from(BUCKET_NAME)
       .getPublicUrl(props.storagePath);
 
-    if (error) throw new Error(error.message);
-    if (!data?.publicUrl) throw new Error('لم يتم استلام رابط عام صالح للملف.');
+    // Handle Supabase storage error specifically
+    if (error) throw error; // Throw the specific StorageError
+
+    if (!data?.publicUrl) {
+      // This case might indicate an issue even without a direct 'error' object
+      throw new Error('لم يتم استلام رابط عام صالح للملف من الخادم.');
+    }
 
     pdfPublicUrl.value = data.publicUrl;
+
   } catch (err: any) {
-    pdfUrlError.value = err.message || 'حدث خطأ غير متوقع أثناء تحميل الملف.';
+    // Use the helper function to get a user-friendly message
+    pdfUrlError.value = getUserFriendlyErrorMessage(err);
     pdfPublicUrl.value = null;
+
   } finally {
     loading.value = false;
   }
@@ -171,14 +206,23 @@ async function fetchPublicUrl() {
 watch(() => props.show, (isVisible) => {
   if (isVisible) fetchPublicUrl();
   else {
+    // Reset state when modal closes
     pdfPublicUrl.value = null;
     pdfUrlError.value = null;
     loading.value = false;
   }
 });
 
+// Re-fetch if the path changes while the modal is open
 watch(() => props.storagePath, (newPath, oldPath) => {
-  if (props.show && newPath !== oldPath) fetchPublicUrl();
+  if (props.show && newPath !== oldPath && newPath) {
+     fetchPublicUrl();
+  } else if (props.show && !newPath) {
+      // Handle case where path becomes invalid while modal is open
+      pdfPublicUrl.value = null;
+      pdfUrlError.value = 'تمت إزالة مسار الملف.';
+      loading.value = false;
+  }
 });
 
 function closeModal() {

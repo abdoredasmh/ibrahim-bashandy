@@ -3,39 +3,39 @@ import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getResponseStatus, createError, lazyEventHandler, useBase, createApp, createRouter as createRouter$1, toNodeListener, getRouterParam, readBody, getQuery as getQuery$1, getResponseStatusText } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/h3/dist/index.mjs';
-import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/vue-bundle-renderer/dist/runtime.mjs';
-import destr from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/destr/dist/index.mjs';
-import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, joinRelativeURL } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/ufo/dist/index.mjs';
-import { createHead as createHead$1, propsToString, renderSSRHead } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/unhead/dist/server.mjs';
-import { isVNode, toValue, isRef } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/vue/index.mjs';
-import { walkResolver } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/unhead/dist/utils.mjs';
-import { renderToString } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/vue/server-renderer/index.mjs';
-import { klona } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/klona/dist/index.mjs';
-import defu, { defuFn } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/defu/dist/defu.mjs';
-import { snakeCase } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/scule/dist/index.mjs';
-import { stringify, uneval } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/devalue/index.js';
-import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/unhead/dist/plugins.mjs';
-import { createHooks } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/hookable/dist/index.mjs';
-import { createFetch, Headers as Headers$1 } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/ofetch/dist/node.mjs';
-import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/node-mock-http/dist/index.mjs';
-import { createStorage, prefixStorage } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/unstorage/dist/index.mjs';
-import unstorage_47drivers_47fs from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/unstorage/drivers/fs.mjs';
-import { digest } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/ohash/dist/index.mjs';
-import { toRouteMatcher, createRouter } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/radix3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getResponseStatus, createError, lazyEventHandler, useBase, createApp, createRouter as createRouter$1, toNodeListener, getRouterParam, readBody, getQuery as getQuery$1, getResponseStatusText } from 'file://D:/programing/ibrahim-bashandy/node_modules/h3/dist/index.mjs';
+import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://D:/programing/ibrahim-bashandy/node_modules/vue-bundle-renderer/dist/runtime.mjs';
+import destr from 'file://D:/programing/ibrahim-bashandy/node_modules/destr/dist/index.mjs';
+import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, joinRelativeURL } from 'file://D:/programing/ibrahim-bashandy/node_modules/ufo/dist/index.mjs';
+import { createHead as createHead$1, propsToString, renderSSRHead } from 'file://D:/programing/ibrahim-bashandy/node_modules/unhead/dist/server.mjs';
+import { isVNode, toValue, isRef } from 'file://D:/programing/ibrahim-bashandy/node_modules/vue/index.mjs';
+import { walkResolver } from 'file://D:/programing/ibrahim-bashandy/node_modules/unhead/dist/utils.mjs';
+import { renderToString } from 'file://D:/programing/ibrahim-bashandy/node_modules/vue/server-renderer/index.mjs';
+import { klona } from 'file://D:/programing/ibrahim-bashandy/node_modules/klona/dist/index.mjs';
+import defu, { defuFn } from 'file://D:/programing/ibrahim-bashandy/node_modules/defu/dist/defu.mjs';
+import { snakeCase } from 'file://D:/programing/ibrahim-bashandy/node_modules/scule/dist/index.mjs';
+import { stringify, uneval } from 'file://D:/programing/ibrahim-bashandy/node_modules/devalue/index.js';
+import { DeprecationsPlugin, PromisesPlugin, TemplateParamsPlugin, AliasSortingPlugin } from 'file://D:/programing/ibrahim-bashandy/node_modules/unhead/dist/plugins.mjs';
+import { createHooks } from 'file://D:/programing/ibrahim-bashandy/node_modules/hookable/dist/index.mjs';
+import { createFetch, Headers as Headers$1 } from 'file://D:/programing/ibrahim-bashandy/node_modules/ofetch/dist/node.mjs';
+import { fetchNodeRequestHandler, callNodeRequestHandler } from 'file://D:/programing/ibrahim-bashandy/node_modules/node-mock-http/dist/index.mjs';
+import { createStorage, prefixStorage } from 'file://D:/programing/ibrahim-bashandy/node_modules/unstorage/dist/index.mjs';
+import unstorage_47drivers_47fs from 'file://D:/programing/ibrahim-bashandy/node_modules/unstorage/drivers/fs.mjs';
+import { digest } from 'file://D:/programing/ibrahim-bashandy/node_modules/ohash/dist/index.mjs';
+import { toRouteMatcher, createRouter } from 'file://D:/programing/ibrahim-bashandy/node_modules/radix3/dist/index.mjs';
 import { readFile } from 'node:fs/promises';
-import consola, { consola as consola$1 } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/consola/dist/index.mjs';
-import { ErrorParser } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/youch-core/build/index.js';
-import { Youch } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/youch/build/index.js';
-import { SourceMapConsumer } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/source-map/source-map.js';
+import consola, { consola as consola$1 } from 'file://D:/programing/ibrahim-bashandy/node_modules/consola/dist/index.mjs';
+import { ErrorParser } from 'file://D:/programing/ibrahim-bashandy/node_modules/youch-core/build/index.js';
+import { Youch } from 'file://D:/programing/ibrahim-bashandy/node_modules/youch/build/index.js';
+import { SourceMapConsumer } from 'file://D:/programing/ibrahim-bashandy/node_modules/source-map/source-map.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { getContext } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/unctx/dist/index.mjs';
-import { captureRawStackTrace, parseRawStackTrace } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/errx/dist/index.js';
+import { getContext } from 'file://D:/programing/ibrahim-bashandy/node_modules/unctx/dist/index.mjs';
+import { captureRawStackTrace, parseRawStackTrace } from 'file://D:/programing/ibrahim-bashandy/node_modules/errx/dist/index.js';
 import { fileURLToPath } from 'node:url';
-import { ipxFSStorage, ipxHttpStorage, createIPX, createIPXH3Handler } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/ipx/dist/index.mjs';
-import { isAbsolute } from 'file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/node_modules/pathe/dist/index.mjs';
+import { ipxFSStorage, ipxHttpStorage, createIPX, createIPXH3Handler } from 'file://D:/programing/ibrahim-bashandy/node_modules/ipx/dist/index.mjs';
+import { isAbsolute } from 'file://D:/programing/ibrahim-bashandy/node_modules/pathe/dist/index.mjs';
 
-const serverAssets = [{"baseName":"server","dir":"D:/New folder/programing/web-dev/ibrahim-bashandy/server/assets"}];
+const serverAssets = [{"baseName":"server","dir":"D:/programing/ibrahim-bashandy/server/assets"}];
 
 const assets = createStorage();
 
@@ -47,11 +47,11 @@ const storage = createStorage({});
 
 storage.mount('/assets', assets);
 
-storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"D:/New folder/programing/web-dev/ibrahim-bashandy","watchOptions":{"ignored":[null]}}));
-storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"D:/New folder/programing/web-dev/ibrahim-bashandy/server","watchOptions":{"ignored":[null]}}));
-storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"D:/New folder/programing/web-dev/ibrahim-bashandy/.nuxt"}));
-storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"D:/New folder/programing/web-dev/ibrahim-bashandy/.nuxt/cache"}));
-storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"D:/New folder/programing/web-dev/ibrahim-bashandy/.data/kv"}));
+storage.mount('root', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"D:/programing/ibrahim-bashandy","watchOptions":{"ignored":[null]}}));
+storage.mount('src', unstorage_47drivers_47fs({"driver":"fs","readOnly":true,"base":"D:/programing/ibrahim-bashandy/server","watchOptions":{"ignored":[null]}}));
+storage.mount('build', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"D:/programing/ibrahim-bashandy/.nuxt"}));
+storage.mount('cache', unstorage_47drivers_47fs({"driver":"fs","readOnly":false,"base":"D:/programing/ibrahim-bashandy/.nuxt/cache"}));
+storage.mount('data', unstorage_47drivers_47fs({"driver":"fs","base":"D:/programing/ibrahim-bashandy/.data/kv"}));
 
 function useStorage(base = "") {
   return base ? prefixStorage(storage, base) : storage;
@@ -697,7 +697,7 @@ const _inlineRuntimeConfig = {
     "alias": {},
     "fs": {
       "dir": [
-        "D:/New folder/programing/web-dev/ibrahim-bashandy/public"
+        "D:/programing/ibrahim-bashandy/public"
       ]
     },
     "http": {
@@ -1063,13 +1063,13 @@ if (!window.__NUXT_DEVTOOLS_TIME_METRIC__) {
 window.__NUXT_DEVTOOLS_TIME_METRIC__.appInit = Date.now()
 `;
 
-const _6vmmSjTtC5u2qWGITS0LhF1KhINUk1g9k4XuxEP_Ps = (function(nitro) {
+const _s0ak5FhfPMQrJ8Sgewe1uv2GphbocTOcMuNsFrG8Jo = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script$1}<\/script>`);
   });
 });
 
-const rootDir = "D:/New folder/programing/web-dev/ibrahim-bashandy";
+const rootDir = "D:/programing/ibrahim-bashandy";
 
 const appHead = {"meta":[{"name":"viewport","content":"width=device-width, initial-scale=1"},{"charset":"utf-8"}],"link":[],"style":[],"script":[],"noscript":[],"htmlAttrs":{"dir":"rtl","lang":"ar"}};
 
@@ -1088,7 +1088,7 @@ const devReducers = {
   URL: (data) => data instanceof URL ? data.toString() : void 0
 };
 const asyncContext = getContext("nuxt-dev", { asyncContext: true, AsyncLocalStorage });
-const _ptlgpMHIiH56ubCGXYtpWr3nbWUUXTkgPYIvxOSJP8 = (nitroApp) => {
+const _f94GeWHGZG3RkqGLLWb03OIyq9xxFzvFlxdUW0_1Zg = (nitroApp) => {
   const handler = nitroApp.h3App.handler;
   nitroApp.h3App.handler = (event) => {
     return asyncContext.callAsync({ logs: [], event }, () => handler(event));
@@ -1159,16 +1159,16 @@ function onConsoleLog(callback) {
 
 const script = "\"use strict\";(()=>{const t=window,e=document.documentElement,c=[\"dark\",\"light\"],n=getStorageValue(\"localStorage\",\"nuxt-color-mode\")||\"system\";let i=n===\"system\"?u():n;const r=e.getAttribute(\"data-color-mode-forced\");r&&(i=r),l(i),t[\"__NUXT_COLOR_MODE__\"]={preference:n,value:i,getColorScheme:u,addColorScheme:l,removeColorScheme:d};function l(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.add(s):e.className+=\" \"+s,a&&e.setAttribute(\"data-\"+a,o)}function d(o){const s=\"\"+o+\"\",a=\"\";e.classList?e.classList.remove(s):e.className=e.className.replace(new RegExp(s,\"g\"),\"\"),a&&e.removeAttribute(\"data-\"+a)}function f(o){return t.matchMedia(\"(prefers-color-scheme\"+o+\")\")}function u(){if(t.matchMedia&&f(\"\").media!==\"not all\"){for(const o of c)if(f(\":\"+o).matches)return o}return\"light\"}})();function getStorageValue(t,e){switch(t){case\"localStorage\":return window.localStorage.getItem(e);case\"sessionStorage\":return window.sessionStorage.getItem(e);case\"cookie\":return getCookie(e);default:return null}}function getCookie(t){const c=(\"; \"+window.document.cookie).split(\"; \"+t+\"=\");if(c.length===2)return c.pop()?.split(\";\").shift()}";
 
-const _2l5ldNGLIvG1Ib3ffbyGkNgpZpubMSOr8I5Iz4bHqE = (function(nitro) {
+const _FhGgOlCsaq0IODf2dVgUY7gRbg_7PpRTz07E9MBGtU8 = (function(nitro) {
   nitro.hooks.hook("render:html", (htmlContext) => {
     htmlContext.head.push(`<script>${script}<\/script>`);
   });
 });
 
 const plugins = [
-  _6vmmSjTtC5u2qWGITS0LhF1KhINUk1g9k4XuxEP_Ps,
-_ptlgpMHIiH56ubCGXYtpWr3nbWUUXTkgPYIvxOSJP8,
-_2l5ldNGLIvG1Ib3ffbyGkNgpZpubMSOr8I5Iz4bHqE
+  _s0ak5FhfPMQrJ8Sgewe1uv2GphbocTOcMuNsFrG8Jo,
+_f94GeWHGZG3RkqGLLWb03OIyq9xxFzvFlxdUW0_1Zg,
+_FhGgOlCsaq0IODf2dVgUY7gRbg_7PpRTz07E9MBGtU8
 ];
 
 function defineRenderHandler(render) {
@@ -1259,7 +1259,7 @@ function publicAssetsURL(...path) {
   return path.length ? joinRelativeURL(publicBase, ...path) : publicBase;
 }
 
-const _hYNkc3 = lazyEventHandler(() => {
+const _ZkzHM3 = lazyEventHandler(() => {
   const opts = useRuntimeConfig().ipx || {};
   const fsDir = opts?.fs?.dir ? (Array.isArray(opts.fs.dir) ? opts.fs.dir : [opts.fs.dir]).map((dir) => isAbsolute(dir) ? dir : fileURLToPath(new URL(dir, globalThis._importMeta_.url))) : void 0;
   const fsStorage = opts.fs?.dir ? ipxFSStorage({ ...opts.fs, dir: fsDir }) : void 0;
@@ -1277,16 +1277,16 @@ const _hYNkc3 = lazyEventHandler(() => {
   return useBase(opts.baseURL, ipxHandler);
 });
 
-const _lazy_c6Yfqw = () => Promise.resolve().then(function () { return leaderboard_get$1; });
-const _lazy_67o8S1 = () => Promise.resolve().then(function () { return lessons_get$1; });
-const _lazy_HHQrhR = () => Promise.resolve().then(function () { return renderer$1; });
+const _lazy_Srg24N = () => Promise.resolve().then(function () { return leaderboard_get$1; });
+const _lazy_eWmSfV = () => Promise.resolve().then(function () { return lessons_get$1; });
+const _lazy_bcJdhG = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
-  { route: '/api/leaderboard', handler: _lazy_c6Yfqw, lazy: true, middleware: false, method: "get" },
-  { route: '/api/lessons', handler: _lazy_67o8S1, lazy: true, middleware: false, method: "get" },
-  { route: '/__nuxt_error', handler: _lazy_HHQrhR, lazy: true, middleware: false, method: undefined },
-  { route: '/_ipx/**', handler: _hYNkc3, lazy: false, middleware: false, method: undefined },
-  { route: '/**', handler: _lazy_HHQrhR, lazy: true, middleware: false, method: undefined }
+  { route: '/api/leaderboard', handler: _lazy_Srg24N, lazy: true, middleware: false, method: "get" },
+  { route: '/api/lessons', handler: _lazy_eWmSfV, lazy: true, middleware: false, method: "get" },
+  { route: '/__nuxt_error', handler: _lazy_bcJdhG, lazy: true, middleware: false, method: undefined },
+  { route: '/_ipx/**', handler: _ZkzHM3, lazy: false, middleware: false, method: undefined },
+  { route: '/**', handler: _lazy_bcJdhG, lazy: true, middleware: false, method: undefined }
 ];
 
 function createNitroApp() {
@@ -1571,8 +1571,8 @@ function resolveUnrefHeadInput(input) {
 
 const APP_ROOT_OPEN_TAG = `<${appRootTag}${propsToString(appRootAttrs)}>`;
 const APP_ROOT_CLOSE_TAG = `</${appRootTag}>`;
-const getClientManifest = () => import('file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/.nuxt/dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
-const getServerEntry = () => import('file://D:/New%20folder/programing/web-dev/ibrahim-bashandy/.nuxt/dist/server/server.mjs').then((r) => r.default || r);
+const getClientManifest = () => import('file://D:/programing/ibrahim-bashandy/.nuxt/dist/server/client.manifest.mjs').then((r) => r.default || r).then((r) => typeof r === "function" ? r() : r);
+const getServerEntry = () => import('file://D:/programing/ibrahim-bashandy/.nuxt/dist/server/server.mjs').then((r) => r.default || r);
 const getSSRStyles = lazyCachedFunction(() => Promise.resolve().then(function () { return styles$1; }).then((r) => r.default || r));
 const getSSRRenderer = lazyCachedFunction(async () => {
   const manifest = await getClientManifest();
