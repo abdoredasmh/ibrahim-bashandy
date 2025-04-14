@@ -9,6 +9,9 @@ declare module "nitropack/types" {
     '/api/lessons': {
       'get': Simplify<Serialize<Awaited<ReturnType<typeof import('../../server/api/lessons.get').default>>>>
     }
+    '/api/my-courses': {
+      'get': Simplify<Serialize<Awaited<ReturnType<typeof import('../../server/api/my-courses.get').default>>>>
+    }
     '/__nuxt_error': {
       'default': Simplify<Serialize<Awaited<ReturnType<typeof import('../../node_modules/nuxt/dist/core/runtime/nitro/handlers/renderer').default>>>>
     }

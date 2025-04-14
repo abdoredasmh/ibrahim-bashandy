@@ -5,11 +5,13 @@ import type { Database, Tables } from '~/types/database.types'; // تأكد من
 
 // تعريف نوع البروفايل ليشمل الدور والحقول الجديدة
 // سيتم تحديث Tables<'profiles'> تلقائياً عند إعادة إنشاء الأنواع
-type Profile = Tables<'profiles'> & { role: 'user' | 'admin' };
+// تأكد من أن types/database.types.ts محدث ليشمل الأعمدة الجديدة
+type Profile = Tables<'profiles'>; // النوع يأتي الآن من الأنواع المنشأة
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     supabaseUser: null as ReturnType<typeof useSupabaseUser>['value'],
+    // استخدم نوع Profile مباشرة من الأن المنشأة
     profile: null as Profile | null,
     isFetchingProfile: false,
     fetchProfileError: null as string | null,
@@ -23,15 +25,33 @@ export const useUserStore = defineStore('user', {
             return state.profile.full_name;
          }
          if (state.supabaseUser?.email) {
+            // اسم المستخدم الافتراضي هو الجزء الأول من البريد
             return state.supabaseUser.email.split('@')[0];
          }
          return 'مستخدم';
     },
     userAvatar: (state) => state.profile?.avatar_url,
     isAdmin: (state): boolean => state.profile?.role === 'admin',
-    userPoints: (state): number => state.profile?.points ?? 0, // Getter للنقاط
-    userBio: (state): string | null => state.profile?.bio ?? null, // Getter للنبذة
+    userPoints: (state): number => state.profile?.points ?? 0,
+    userBio: (state): string | null => state.profile?.bio ?? null,
     isLoadingProfile: (state): boolean => state.isFetchingProfile,
+    // Getter للتحقق من حالة إيقاف التعليق
+    isCommentingSuspended: (state): boolean => {
+        if (!state.profile || !state.profile.comment_suspended_until) {
+            return false; // غير موقوف إذا لا يوجد بروفايل أو تاريخ
+        }
+        try {
+            // قارن تاريخ الانتهاء بالتاريخ الحالي
+            return new Date(state.profile.comment_suspended_until) > new Date();
+        } catch {
+            console.error("Error parsing comment_suspended_until date:", state.profile.comment_suspended_until);
+            return false; // اعتبره غير موقوف إذا كان التاريخ غير صالح
+        }
+    },
+     // Getter للتحقق من حالة الحظر
+     isBanned: (state): boolean => {
+        return state.profile?.is_banned ?? false;
+     }
   },
 
   actions: {
@@ -46,19 +66,11 @@ export const useUserStore = defineStore('user', {
 
     async fetchProfile() {
       const user = this.supabaseUser;
+      // --- Keep initial checks ---
       if (!user || this.isFetchingProfile) {
-         if (this.profile && !this.isFetchingProfile) {
-             console.log('[UserStore] Profile already loaded.');
-             return;
-         }
-         if (this.isFetchingProfile) {
-             console.log('[UserStore] Profile fetch already in progress.');
-             return;
-         }
-         if (!user) {
-             console.log('[UserStore] No user to fetch profile for.');
-             return;
-         }
+         if (this.profile && !this.isFetchingProfile) { console.log('[UserStore] Profile already loaded.'); return; }
+         if (this.isFetchingProfile) { console.log('[UserStore] Profile fetch already in progress.'); return; }
+         if (!user) { console.log('[UserStore] No user to fetch profile for.'); return; }
       }
 
       this.isFetchingProfile = true;
@@ -67,40 +79,64 @@ export const useUserStore = defineStore('user', {
       console.log('[UserStore] Fetching profile for user:', user.id);
 
       try {
+        // --- تأكد من طلب كل الأعمدة المطلوبة ---
         const { data, error, status } = await client
           .from('profiles')
-          // --- التعديل هنا: إضافة points و bio ---
-          .select('id, full_name, avatar_url, role, points, bio')
+          .select(`
+            id,
+            full_name,
+            avatar_url,
+            role,
+            points,
+            bio,
+            is_banned,
+            comment_suspended_until,
+            created_at,
+            updated_at
+          `) // اطلب كل الأعمدة التي تحتاجها في أي مكان بالتطبيق
           .eq('id', user.id)
           .single();
 
-        if (error && status !== 406) throw error;
+        if (error && status !== 406) { // 406 means row not found (for .single())
+            // Handle specific errors like RLS violation if needed
+            console.error('[UserStore] Supabase error fetching profile:', error);
+            throw error;
+        }
 
         if (data) {
           console.log('[UserStore] Profile fetched:', data);
-          this.profile = data as Profile; // النوع Profile سيشمل الحقول الجديدة تلقائياً بعد تحديث الأنواع
+          this.profile = data; // النوع يجب أن يتطابق الآن بفضل الأنواع المنشأة
         } else {
-          console.warn('[UserStore] No profile found for user:', user.id);
+          console.warn('[UserStore] No profile found for user (or RLS prevented fetch):', user.id);
           this.profile = null;
-          // this.fetchProfileError = 'Profile record not found.';
+          // Don't necessarily set an error here, profile might genuinely not exist yet
         }
       } catch (error: any) {
-        console.error('[UserStore] Error fetching profile:', error.message);
-        this.profile = null;
+        console.error('[UserStore] Catch block error fetching profile:', error.message);
+        this.profile = null; // Ensure profile is null on error
         this.fetchProfileError = error.message || 'Failed to fetch profile.';
       } finally {
-        this.isFetchingProfile = false;
+        this.isFetchingProfile = false; // Crucial: Ensure this always runs
+        console.log('[UserStore] Fetch profile finished. Fetching state:', this.isFetchingProfile); // Log final state
       }
     },
 
     async logout() {
         const client = useSupabaseClient();
-        this.isFetchingProfile = true;
+        console.log('[UserStore] Logging out...');
+        // Reset state immediately for faster UI feedback
+        this.profile = null;
+        this.supabaseUser = null;
+        this.isFetchingProfile = false; // Reset fetching state
+        this.fetchProfileError = null;
+
         const { error } = await client.auth.signOut();
-        this.isFetchingProfile = false;
         if (error) {
             console.error('Error logging out:', error.message);
+            // Maybe show toast error to user
         } else {
+            console.log('[UserStore] Logout successful, navigating to /');
+            // Navigate after state is cleared
             await navigateTo('/');
         }
     }

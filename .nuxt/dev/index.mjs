@@ -3,7 +3,8 @@ import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getResponseStatus, createError, lazyEventHandler, useBase, createApp, createRouter as createRouter$1, toNodeListener, getRouterParam, readBody, getQuery as getQuery$1, getResponseStatusText } from 'file://D:/programing/ibrahim-bashandy/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, getRequestURL, getResponseHeader, getResponseStatus, createError, lazyEventHandler, useBase, createApp, createRouter as createRouter$1, toNodeListener, getRouterParam, readBody, getQuery as getQuery$1, setCookie, getHeader, getResponseStatusText } from 'file://D:/programing/ibrahim-bashandy/node_modules/h3/dist/index.mjs';
+import { createServerClient, parseCookieHeader } from 'file://D:/programing/ibrahim-bashandy/node_modules/@supabase/ssr/dist/main/index.js';
 import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://D:/programing/ibrahim-bashandy/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import destr from 'file://D:/programing/ibrahim-bashandy/node_modules/destr/dist/index.mjs';
 import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, joinRelativeURL } from 'file://D:/programing/ibrahim-bashandy/node_modules/ufo/dist/index.mjs';
@@ -1279,11 +1280,13 @@ const _ZkzHM3 = lazyEventHandler(() => {
 
 const _lazy_Srg24N = () => Promise.resolve().then(function () { return leaderboard_get$1; });
 const _lazy_eWmSfV = () => Promise.resolve().then(function () { return lessons_get$1; });
+const _lazy_9h2gOu = () => Promise.resolve().then(function () { return myCourses_get$1; });
 const _lazy_bcJdhG = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
   { route: '/api/leaderboard', handler: _lazy_Srg24N, lazy: true, middleware: false, method: "get" },
   { route: '/api/lessons', handler: _lazy_eWmSfV, lazy: true, middleware: false, method: "get" },
+  { route: '/api/my-courses', handler: _lazy_9h2gOu, lazy: true, middleware: false, method: "get" },
   { route: '/__nuxt_error', handler: _lazy_bcJdhG, lazy: true, middleware: false, method: undefined },
   { route: '/_ipx/**', handler: _ZkzHM3, lazy: false, middleware: false, method: undefined },
   { route: '/**', handler: _lazy_bcJdhG, lazy: true, middleware: false, method: undefined }
@@ -1538,6 +1541,110 @@ const lessons_get = defineEventHandler(() => {
 const lessons_get$1 = /*#__PURE__*/Object.freeze({
   __proto__: null,
   default: lessons_get
+});
+
+async function fetchWithRetry(req, init) {
+  const retries = 3;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fetch(req, init);
+    } catch (error) {
+      if (init?.signal?.aborted) {
+        throw error;
+      }
+      if (attempt === retries) {
+        console.error(`Error fetching request ${req}`, error, init);
+        throw error;
+      }
+      console.warn(`Retrying fetch attempt ${attempt + 1} for request: ${req}`);
+    }
+  }
+  throw new Error("Unreachable code");
+}
+
+const serverSupabaseClient = async (event) => {
+  if (!event.context._supabaseClient) {
+    const { url, key, cookiePrefix, cookieOptions, clientOptions: { auth = {}, global = {} } } = useRuntimeConfig().public.supabase;
+    event.context._supabaseClient = createServerClient(url, key, {
+      auth,
+      cookies: {
+        getAll: () => parseCookieHeader(getHeader(event, "Cookie") ?? ""),
+        setAll: (cookies) => cookies.forEach(({ name, value, options }) => setCookie(event, name, value, options))
+      },
+      cookieOptions: {
+        ...cookieOptions,
+        name: cookiePrefix
+      },
+      global: {
+        fetch: fetchWithRetry,
+        ...global
+      }
+    });
+  }
+  return event.context._supabaseClient;
+};
+
+const serverSupabaseUser = async (event) => {
+  const client = await serverSupabaseClient(event);
+  const { data: { user }, error } = await client.auth.getUser();
+  if (error) {
+    throw createError({ statusMessage: error?.message });
+  }
+  return user;
+};
+
+const myCourses_get = defineEventHandler(async (event) => {
+  const user = await serverSupabaseUser(event);
+  const client = await serverSupabaseClient(event);
+  if (!user) {
+    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+  }
+  try {
+    const { data: enrollments, error: enrollError } = await client.from("course_enrollments").select(`
+        course_id,
+        last_accessed_lesson_id,
+        study_courses (
+          id,
+          title,
+          description,
+          image_url
+        )
+      `).eq("user_id", user.id).not("study_courses", "is", null);
+    if (enrollError) throw enrollError;
+    if (!enrollments) return [];
+    const coursesWithProgress = await Promise.all(
+      enrollments.map(async (enrollment) => {
+        var _a, _b;
+        const course = enrollment.study_courses;
+        if (!course) return null;
+        const { count: totalLessons, error: lessonsError } = await client.from("lessons").select("id", { count: "exact", head: true }).eq("course_id", course.id);
+        if (lessonsError) {
+          console.error(`Error fetching lessons count for course ${course.id}:`, lessonsError);
+          return { ...course, progress: 0, last_accessed_lesson_id: enrollment.last_accessed_lesson_id };
+        }
+        const { count: completedLessons, error: completionError } = await client.from("lesson_completions").select("lesson_id", { count: "exact", head: true }).eq("user_id", user.id).in("lesson_id", (_b = (_a = (await client.from("lessons").select("id").eq("course_id", course.id)).data) == null ? void 0 : _a.map((l) => l.id)) != null ? _b : []);
+        if (completionError) {
+          console.error(`Error fetching completed lessons for course ${course.id}:`, completionError);
+          return { ...course, progress: 0, last_accessed_lesson_id: enrollment.last_accessed_lesson_id };
+        }
+        const progress = (totalLessons != null ? totalLessons : 0) > 0 ? Math.round((completedLessons != null ? completedLessons : 0) / totalLessons * 100) : 0;
+        return {
+          ...course,
+          progress,
+          last_accessed_lesson_id: enrollment.last_accessed_lesson_id
+        };
+      })
+    );
+    return coursesWithProgress.filter((course) => course !== null);
+  } catch (error) {
+    console.error("Error fetching user courses:", error.message);
+    throw createError({ statusCode: 500, statusMessage: "Failed to fetch courses" });
+  }
+});
+
+const myCourses_get$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: myCourses_get
 });
 
 const VueResolver = (_, value) => {

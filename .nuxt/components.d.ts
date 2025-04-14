@@ -14,6 +14,7 @@ type LazyComponent<T> = (T & DefineComponent<HydrationStrategies, {}, {}, {}, {}
 interface _GlobalComponents {
       'AppFooter': typeof import("../components/AppFooter.vue")['default']
     'AppHeader': typeof import("../components/AppHeader.vue")['default']
+    'BaseCard': typeof import("../components/BaseCard.vue")['default']
     'BookCard': typeof import("../components/BookCard.vue")['default']
     'CommentActions': typeof import("../components/CommentActions.vue")['default']
     'CommentItem': typeof import("../components/CommentItem.vue")['default']
@@ -27,10 +28,15 @@ interface _GlobalComponents {
     'AdminLessonModal': typeof import("../components/admin/AdminLessonModal.vue")['default']
     'AdminSidebar': typeof import("../components/admin/AdminSidebar.vue")['default']
     'AdminStatCardVue': typeof import("../components/admin/AdminStatCard.vue.vue")['default']
+    'AdminUserActions': typeof import("../components/admin/AdminUserActions.vue")['default']
     'AdminBookAddModal': typeof import("../components/admin/BookAddModal.vue")['default']
     'AdminBookEditModal': typeof import("../components/admin/BookEditModal.vue")['default']
     'AdminCategoryModal': typeof import("../components/admin/CategoryModal.vue")['default']
+    'AdminConfirmationModal': typeof import("../components/admin/ConfirmationModal.vue")['default']
     'AdminCourseAddEditModal': typeof import("../components/admin/CourseAddEditModal.vue")['default']
+    'AdminQuizCreateEditModal': typeof import("../components/admin/QuizCreateEditModal.vue")['default']
+    'AdminSendMessageModal': typeof import("../components/admin/SendMessageModal.vue")['default']
+    'AdminSuspendCommentModal': typeof import("../components/admin/SuspendCommentModal.vue")['default']
     'AdminVideoPreviewModal': typeof import("../components/admin/VideoPreviewModal.vue")['default']
     'NuxtWelcome': typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
     'NuxtLayout': typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -58,6 +64,7 @@ interface _GlobalComponents {
     'NuxtRouteAnnouncer': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
       'LazyAppFooter': LazyComponent<typeof import("../components/AppFooter.vue")['default']>
     'LazyAppHeader': LazyComponent<typeof import("../components/AppHeader.vue")['default']>
+    'LazyBaseCard': LazyComponent<typeof import("../components/BaseCard.vue")['default']>
     'LazyBookCard': LazyComponent<typeof import("../components/BookCard.vue")['default']>
     'LazyCommentActions': LazyComponent<typeof import("../components/CommentActions.vue")['default']>
     'LazyCommentItem': LazyComponent<typeof import("../components/CommentItem.vue")['default']>
@@ -71,10 +78,15 @@ interface _GlobalComponents {
     'LazyAdminLessonModal': LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
     'LazyAdminSidebar': LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
     'LazyAdminStatCardVue': LazyComponent<typeof import("../components/admin/AdminStatCard.vue.vue")['default']>
+    'LazyAdminUserActions': LazyComponent<typeof import("../components/admin/AdminUserActions.vue")['default']>
     'LazyAdminBookAddModal': LazyComponent<typeof import("../components/admin/BookAddModal.vue")['default']>
     'LazyAdminBookEditModal': LazyComponent<typeof import("../components/admin/BookEditModal.vue")['default']>
     'LazyAdminCategoryModal': LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
+    'LazyAdminConfirmationModal': LazyComponent<typeof import("../components/admin/ConfirmationModal.vue")['default']>
     'LazyAdminCourseAddEditModal': LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
+    'LazyAdminQuizCreateEditModal': LazyComponent<typeof import("../components/admin/QuizCreateEditModal.vue")['default']>
+    'LazyAdminSendMessageModal': LazyComponent<typeof import("../components/admin/SendMessageModal.vue")['default']>
+    'LazyAdminSuspendCommentModal': LazyComponent<typeof import("../components/admin/SuspendCommentModal.vue")['default']>
     'LazyAdminVideoPreviewModal': LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
     'LazyNuxtWelcome': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
     'LazyNuxtLayout': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
@@ -108,6 +120,7 @@ declare module 'vue' {
 
 export const AppFooter: typeof import("../components/AppFooter.vue")['default']
 export const AppHeader: typeof import("../components/AppHeader.vue")['default']
+export const BaseCard: typeof import("../components/BaseCard.vue")['default']
 export const BookCard: typeof import("../components/BookCard.vue")['default']
 export const CommentActions: typeof import("../components/CommentActions.vue")['default']
 export const CommentItem: typeof import("../components/CommentItem.vue")['default']
@@ -121,10 +134,15 @@ export const UserAvatar: typeof import("../components/UserAvatar.vue")['default'
 export const AdminLessonModal: typeof import("../components/admin/AdminLessonModal.vue")['default']
 export const AdminSidebar: typeof import("../components/admin/AdminSidebar.vue")['default']
 export const AdminStatCardVue: typeof import("../components/admin/AdminStatCard.vue.vue")['default']
+export const AdminUserActions: typeof import("../components/admin/AdminUserActions.vue")['default']
 export const AdminBookAddModal: typeof import("../components/admin/BookAddModal.vue")['default']
 export const AdminBookEditModal: typeof import("../components/admin/BookEditModal.vue")['default']
 export const AdminCategoryModal: typeof import("../components/admin/CategoryModal.vue")['default']
+export const AdminConfirmationModal: typeof import("../components/admin/ConfirmationModal.vue")['default']
 export const AdminCourseAddEditModal: typeof import("../components/admin/CourseAddEditModal.vue")['default']
+export const AdminQuizCreateEditModal: typeof import("../components/admin/QuizCreateEditModal.vue")['default']
+export const AdminSendMessageModal: typeof import("../components/admin/SendMessageModal.vue")['default']
+export const AdminSuspendCommentModal: typeof import("../components/admin/SuspendCommentModal.vue")['default']
 export const AdminVideoPreviewModal: typeof import("../components/admin/VideoPreviewModal.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
@@ -152,6 +170,7 @@ export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components
 export const NuxtRouteAnnouncer: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const LazyAppFooter: LazyComponent<typeof import("../components/AppFooter.vue")['default']>
 export const LazyAppHeader: LazyComponent<typeof import("../components/AppHeader.vue")['default']>
+export const LazyBaseCard: LazyComponent<typeof import("../components/BaseCard.vue")['default']>
 export const LazyBookCard: LazyComponent<typeof import("../components/BookCard.vue")['default']>
 export const LazyCommentActions: LazyComponent<typeof import("../components/CommentActions.vue")['default']>
 export const LazyCommentItem: LazyComponent<typeof import("../components/CommentItem.vue")['default']>
@@ -165,10 +184,15 @@ export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvat
 export const LazyAdminLessonModal: LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
 export const LazyAdminSidebar: LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
 export const LazyAdminStatCardVue: LazyComponent<typeof import("../components/admin/AdminStatCard.vue.vue")['default']>
+export const LazyAdminUserActions: LazyComponent<typeof import("../components/admin/AdminUserActions.vue")['default']>
 export const LazyAdminBookAddModal: LazyComponent<typeof import("../components/admin/BookAddModal.vue")['default']>
 export const LazyAdminBookEditModal: LazyComponent<typeof import("../components/admin/BookEditModal.vue")['default']>
 export const LazyAdminCategoryModal: LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
+export const LazyAdminConfirmationModal: LazyComponent<typeof import("../components/admin/ConfirmationModal.vue")['default']>
 export const LazyAdminCourseAddEditModal: LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
+export const LazyAdminQuizCreateEditModal: LazyComponent<typeof import("../components/admin/QuizCreateEditModal.vue")['default']>
+export const LazyAdminSendMessageModal: LazyComponent<typeof import("../components/admin/SendMessageModal.vue")['default']>
+export const LazyAdminSuspendCommentModal: LazyComponent<typeof import("../components/admin/SuspendCommentModal.vue")['default']>
 export const LazyAdminVideoPreviewModal: LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>

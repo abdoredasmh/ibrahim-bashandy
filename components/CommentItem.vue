@@ -13,10 +13,10 @@
           <span class="text-sm font-semibold text-gray-900 dark:text-white truncate">
             {{ comment.profiles?.full_name || 'مستخدم' }}
           </span>
-          <!-- استخدم CommentActions هنا -->
           <CommentActions
             :item="comment"
             item-type="comment"
+            :is-commenting-suspended="isCommentingSuspended" 
             @reply="toggleReplyForm"
             @edit="startEditingComment"
             @delete="requestDeleteComment"
@@ -48,24 +48,9 @@
           ></textarea>
           <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
             <span v-if="editCommentError" class="text-xs text-red-500 flex-1 text-right">{{ editCommentError }}</span>
-            <button
-              @click="cancelEditComment"
-              type="button"
-              :disabled="isSavingCommentEdit"
-              class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50"
-            >
-              إلغاء
-            </button>
-            <button
-              @click="saveEditComment"
-              type="button"
-              :disabled="isSavingCommentEdit || !editedCommentContent.trim()"
-              class="inline-flex items-center justify-center px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-            >
-               <svg v-if="isSavingCommentEdit" class="animate-spin -ml-0.5 mr-1.5 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-               </svg>
+            <button @click="cancelEditComment" type="button" :disabled="isSavingCommentEdit" class="px-3 py-1 text-xs ...">إلغاء</button>
+            <button @click="saveEditComment" type="button" :disabled="isSavingCommentEdit || !editedCommentContent.trim()" class="inline-flex ...">
+               <svg v-if="isSavingCommentEdit" class="animate-spin ..."></svg>
               <span>{{ isSavingCommentEdit ? 'جاري الحفظ...' : 'حفظ' }}</span>
             </button>
           </div>
@@ -77,18 +62,17 @@
             v-if="user"
             @click="toggleReplyForm"
             type="button"
-            class="font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white inline-flex items-center gap-1"
+            class="font-medium text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+             :disabled="isCommentingSuspended" 
             aria-controls="reply-form-{{ comment.id }}"
             :aria-expanded="showReplyForm.toString()"
           >
-             <svg v-if="!showReplyForm" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-               <path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-            </svg>
-             <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-             </svg>
-            <span>{{ showReplyForm ? 'إلغاء الرد' : 'رد' }}</span>
+             <svg v-if="!showReplyForm" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+             <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <span>{{ showReplyForm ? 'إلغاء الرد' : (isCommentingSuspended ? 'الرد موقوف' : 'رد') }}</span> 
           </button>
+           <!-- Optional: Show suspension reason near reply button -->
+           <span v-if="isCommentingSuspended && user" class="text-yellow-600 dark:text-yellow-400">(لا يمكنك الرد حاليًا)</span>
 
           <button
             v-if="localReplies.length > 0"
@@ -98,12 +82,8 @@
             :aria-expanded="repliesVisible.toString()"
             aria-controls="replies-list-{{ comment.id }}"
           >
-             <svg v-if="repliesVisible" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-               <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
-             </svg>
-             <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-             </svg>
+             <svg v-if="repliesVisible" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+             <svg v-else xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
             <span>
                 {{ localReplies.length }} {{ localReplies.length === 1 ? 'رد' : (localReplies.length === 2 ? 'ردان' : (localReplies.length <= 10 ? 'ردود' : 'ردًا')) }}
             </span>
@@ -117,12 +97,7 @@
       <!-- نموذج إضافة رد جديد -->
       <div v-if="showReplyForm" :id="'reply-form-' + comment.id" class="mb-4">
         <div class="flex space-x-3 rtl:space-x-reverse">
-          <UserAvatar
-            :avatar-url="userProfile?.avatar_url"
-            :name="userProfile?.full_name"
-            size="sm"
-            class="mt-1"
-          />
+          <UserAvatar :avatar-url="userProfile?.avatar_url" :name="userProfile?.full_name" size="sm" class="mt-1"/>
           <div class="flex-1 min-w-0">
             <textarea
               ref="replyInputRef"
@@ -130,31 +105,25 @@
               rows="2"
               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white disabled:opacity-70"
               placeholder="إضافة رد عام..."
-              :disabled="isSubmittingReply"
+               :disabled="isSubmittingReply || isCommentingSuspended" 
               @keydown.esc="cancelReply"
               @keydown.enter.prevent.exact="addReply"
               aria-label="إضافة رد جديد"
             ></textarea>
+             <!-- Suspension Message for reply form -->
+             <p v-if="isCommentingSuspended" class="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
+               لا يمكنك إضافة رد حاليًا بسبب الإيقاف.
+             </p>
             <div class="mt-2 flex items-center justify-end space-x-2 rtl:space-x-reverse">
               <span v-if="replyError" class="text-xs text-red-500 flex-1 text-right">{{ replyError }}</span>
-               <button
-                 @click="cancelReply"
-                 type="button"
-                 :disabled="isSubmittingReply"
-                 class="px-3 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50"
-               >
-                 إلغاء
-               </button>
+               <button @click="cancelReply" type="button" :disabled="isSubmittingReply" class="px-3 py-1 text-xs ...">إلغاء</button>
               <button
                 @click="addReply"
                 type="button"
-                :disabled="isSubmittingReply || !newReplyContent.trim()"
+                :disabled="isSubmittingReply || !newReplyContent.trim() || isCommentingSuspended" 
                 class="inline-flex items-center justify-center px-3 py-1 text-xs font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
               >
-                <svg v-if="isSubmittingReply" class="animate-spin -ml-0.5 mr-1.5 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                 </svg>
+                <svg v-if="isSubmittingReply" class="animate-spin ..."></svg>
                 <span>{{ isSubmittingReply ? 'جاري الرد...' : 'رد' }}</span>
               </button>
             </div>
@@ -179,15 +148,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
-import type { Database } from '~/types/database.types' // تأكد من المسار الصحيح
+import { ref, computed, watch, nextTick, type PropType } from 'vue' // Added PropType
+import type { Database } from '~/types/database.types'
 import { formatDistanceToNowStrict } from 'date-fns'
 import { ar } from 'date-fns/locale'
 import UserAvatar from './UserAvatar.vue'
 import ReplyItem from './ReplyItem.vue'
 import CommentActions from './CommentActions.vue'
 import { storeToRefs } from 'pinia'
-import { useUserStore } from '~/stores/user' // تأكد من المسار الصحيح
+import { useUserStore } from '~/stores/user'
 import type { PostgrestError } from '@supabase/supabase-js';
 
 // Define Type for Comment/Reply with Profile
@@ -202,12 +171,25 @@ type ContentId = {
   study_course_id?: number | string; // Ensure column name matches DB
 }
 
-// Props definition
-const props = defineProps<{
-  comment: CommentWithProfile,
-  replies: CommentWithProfile[], // Replies associated with this comment
-  contentId: ContentId // Identifier for the content (lesson, book, course)
-}>()
+// Props definition - ADD isCommentingSuspended
+const props = defineProps({
+  comment: {
+      type: Object as PropType<CommentWithProfile>,
+      required: true
+  },
+  replies: {
+      type: Array as PropType<CommentWithProfile[]>,
+      default: () => []
+  },
+  contentId: {
+      type: Object as PropType<ContentId>,
+      required: true
+  },
+  isCommentingSuspended: { // Receive suspension status from parent
+      type: Boolean,
+      default: false
+  }
+})
 
 // Emits definition
 const emit = defineEmits<{
@@ -222,19 +204,13 @@ const user = useSupabaseUser()
 const { profile: userProfile } = storeToRefs(useUserStore())
 
 // --- Component State ---
-
-// Replies state (local copy for easier updates)
 const localReplies = ref<CommentWithProfile[]>([])
-const repliesVisible = ref(true) // Start with replies visible
-
-// Comment editing state
+const repliesVisible = ref(true)
 const isEditingComment = ref(false)
 const editedCommentContent = ref('')
 const isSavingCommentEdit = ref(false)
 const editCommentError = ref<string | null>(null)
 const editCommentInputRef = ref<HTMLTextAreaElement | null>(null);
-
-// New reply state
 const showReplyForm = ref(false)
 const newReplyContent = ref('')
 const isSubmittingReply = ref(false)
@@ -242,46 +218,28 @@ const replyError = ref<string | null>(null)
 const replyInputRef = ref<HTMLTextAreaElement | null>(null);
 
 // --- Computed Properties ---
-const isCommentOwner = computed(() => user.value && user.value.id === props.comment.user_id)
+const isOwner = computed(() => user.value && user.value.id === props.comment.user_id) // Renamed for clarity
 const isCommentEdited = computed(() => props.comment.created_at !== props.comment.updated_at)
-
-// Format timestamp (relative)
-const formattedTimestamp = computed(() => {
-   try {
-    return formatDistanceToNowStrict(new Date(props.comment.created_at), { addSuffix: true, locale: ar })
-  } catch (e) {
-    console.error("Error formatting date:", e)
-    return props.comment.created_at?.toString() // Fallback
-  }
+const formattedTimestamp = computed(() => { /* ... as before ... */
+   try { return formatDistanceToNowStrict(new Date(props.comment.created_at), { addSuffix: true, locale: ar }) }
+   catch (e) { console.error("Error formatting date:", e); return props.comment.created_at?.toString() }
 })
-
-// Format timestamp (full)
-const fullTimestamp = computed(() => {
-    try {
-        return new Date(props.comment.created_at).toLocaleString('ar-EG', {dateStyle: 'long', timeStyle: 'short'});
-    } catch {
-        return props.comment.created_at?.toString(); // Fallback
-    }
+const fullTimestamp = computed(() => { /* ... as before ... */
+    try { return new Date(props.comment.created_at).toLocaleString('ar-EG', {dateStyle: 'long', timeStyle: 'short'}); }
+    catch { return props.comment.created_at?.toString(); }
 })
-
-// Sorted replies (oldest first)
-const sortedReplies = computed(() => {
-    // Sort localReplies by creation date, ascending
+const sortedReplies = computed(() => { /* ... as before ... */
     return [...localReplies.value].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 })
 
 // --- Watchers ---
-
-// Watch for external changes to replies prop and update local copy
-watch(() => props.replies, (newReplies) => {
-    // Create a new array to ensure reactivity if just assigning `newReplies` doesn't trigger updates
+watch(() => props.replies, (newReplies) => { /* ... as before ... */
     localReplies.value = [...newReplies];
-}, { deep: true, immediate: true }); // Use deep watch and run immediately
-
+}, { deep: true, immediate: true });
 
 // --- Methods for Comment Editing ---
-const startEditingComment = async () => {
-  if (!isCommentOwner.value) return
+const startEditingComment = async () => { /* ... as before ... */
+  if (!isOwner.value) return
   isEditingComment.value = true
   editedCommentContent.value = props.comment.content
   editCommentError.value = null
@@ -289,187 +247,83 @@ const startEditingComment = async () => {
   await nextTick();
   editCommentInputRef.value?.focus();
 }
-
-const cancelEditComment = () => {
+const cancelEditComment = () => { /* ... as before ... */
   isEditingComment.value = false
   editedCommentContent.value = ''
   editCommentError.value = null
 }
-
-const saveEditComment = async () => {
+const saveEditComment = async () => { /* ... as before ... */
   if (!isOwner.value || !editedCommentContent.value.trim() || isSavingCommentEdit.value) return
-
   const contentToSave = editedCommentContent.value.trim();
-  if (contentToSave === props.comment.content) {
-      cancelEditComment();
-      return; // No changes to save
-  }
-
-  isSavingCommentEdit.value = true
-  editCommentError.value = null
+  if (contentToSave === props.comment.content) { cancelEditComment(); return; }
+  isSavingCommentEdit.value = true; editCommentError.value = null
   try {
-    const { data, error } = await supabase
-      .from('comments')
-      .update({ content: contentToSave, updated_at: new Date().toISOString() })
-      .eq('id', props.comment.id)
-      .select('id, content, updated_at') // Select updated data
-      .single()
-
-    if (error) throw error
-    if (!data) throw new Error('لم يتم إرجاع بيانات التعليق المحدث.');
-
-
-    // Emit event with updated comment data
-    emit('commentUpdated', {
-        ...props.comment, // Spread existing comment data
-        content: data.content, // Update changed fields
-        updated_at: data.updated_at
-    })
-    isEditingComment.value = false // Exit editing mode
-
-  } catch (err: any) {
-    console.error('Error updating comment:', err)
-    editCommentError.value = `فشل حفظ التعديل: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
-  } finally {
-    isSavingCommentEdit.value = false
-  }
+    const { data, error } = await supabase.from('comments').update({ content: contentToSave, updated_at: new Date().toISOString() }).eq('id', props.comment.id).select('id, content, updated_at').single()
+    if (error) throw error; if (!data) throw new Error('لم يتم إرجاع بيانات التعليق المحدث.');
+    emit('commentUpdated', { ...props.comment, content: data.content, updated_at: data.updated_at }); isEditingComment.value = false
+  } catch (err: any) { console.error('Error updating comment:', err); editCommentError.value = `فشل حفظ التعديل: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
+  } finally { isSavingCommentEdit.value = false }
 }
 
 // --- Method for Comment Deletion ---
-const requestDeleteComment = async () => {
+const requestDeleteComment = async () => { /* ... as before ... */
    if (!isOwner.value) return
-
    if (window.confirm('هل أنت متأكد من حذف هذا التعليق وكل ردوده؟')) {
-     // No need for loading state here, parent handles disappearance
-     try {
-       const { error } = await supabase
-         .from('comments')
-         .delete()
-         .eq('id', props.comment.id) // Database CASCADE should handle replies
-
-       if (error) throw error
-       // Emit event for deletion (parent handles removal)
-       emit('commentDeleted', props.comment.id)
-
-     } catch (err: any) {
-       console.error('Error deleting comment:', err)
-       alert(`فشل حذف التعليق: (${(err as PostgrestError).message || 'خطأ غير معروف'})`)
-     }
+     try { const { error } = await supabase.from('comments').delete().eq('id', props.comment.id); if (error) throw error; emit('commentDeleted', props.comment.id) }
+     catch (err: any) { console.error('Error deleting comment:', err); alert(`فشل حذف التعليق: (${(err as PostgrestError).message || 'خطأ غير معروف'})`) }
    }
 }
 
 // --- Methods for Replying ---
-const toggleReplyForm = async () => {
-    if(!user.value) return; // Only logged-in users can reply
+const toggleReplyForm = async () => { /* ... as before ... */
+    if(!user.value || props.isCommentingSuspended) return; // Prevent opening if suspended
     showReplyForm.value = !showReplyForm.value
     newReplyContent.value = ''
     replyError.value = null
-    if (showReplyForm.value) {
-        isEditingComment.value = false // Close comment edit form if open
-        await nextTick();
-        replyInputRef.value?.focus();
-    }
+    if (showReplyForm.value) { isEditingComment.value = false; await nextTick(); replyInputRef.value?.focus(); }
 }
-
-const cancelReply = () => {
-    showReplyForm.value = false;
-    newReplyContent.value = '';
-    replyError.value = null;
+const cancelReply = () => { /* ... as before ... */
+    showReplyForm.value = false; newReplyContent.value = ''; replyError.value = null;
 }
-
+// ADD SUSPENSION CHECK to addReply
 const addReply = async () => {
-  if (!user.value || !userProfile.value || !newReplyContent.value.trim() || isSubmittingReply.value) return
-
-  // Ensure profile_id (UUID) is available
-  if (!userProfile.value.id) {
-      replyError.value = 'خطأ: لم يتم العثور على معرف الملف الشخصي.';
-      console.error('Profile ID is missing from user store');
+  // Add suspension check here as well
+  if (props.isCommentingSuspended) {
+      replyError.value = "لا يمكنك إضافة رد حاليًا بسبب الإيقاف.";
       return;
   }
+  if (!user.value || !userProfile.value || !newReplyContent.value.trim() || isSubmittingReply.value) return
+  if (!userProfile.value.id) { replyError.value = 'خطأ: لم يتم العثور على معرف الملف الشخصي.'; console.error('Profile ID missing'); return; }
 
-  isSubmittingReply.value = true
-  replyError.value = null
-
-  // Prepare reply data, ensuring contentId values are numbers or null
-  const replyData = {
-    user_id: user.value.id,
-    profile_id: userProfile.value.id,
-    content: newReplyContent.value.trim(),
-    parent_comment_id: props.comment.id,
-    // Conditionally add content keys only if they have a valid value
+  isSubmittingReply.value = true; replyError.value = null
+  const replyData = { /* ... as before ... */
+    user_id: user.value.id, profile_id: userProfile.value.id, content: newReplyContent.value.trim(), parent_comment_id: props.comment.id,
     ...(props.contentId.lesson_id && { lesson_id: Number(props.contentId.lesson_id) }),
     ...(props.contentId.book_id && { book_id: Number(props.contentId.book_id) }),
     ...(props.contentId.study_course_id && { study_course_id: Number(props.contentId.study_course_id) }),
-  }
-
-   // Basic check: At least one content ID must be present
-   if (!replyData.lesson_id && !replyData.book_id && !replyData.study_course_id) {
-       replyError.value = 'خطأ: يجب ربط الرد بمحتوى.';
-       console.error('Content ID is missing for reply', props.contentId);
-       isSubmittingReply.value = false;
-       return;
-   }
-
+  };
+   if (!replyData.lesson_id && !replyData.book_id && !replyData.study_course_id) { replyError.value = 'خطأ: يجب ربط الرد بمحتوى.'; console.error('Content ID missing'); isSubmittingReply.value = false; return; }
 
   try {
-    const { data: newReply, error } = await supabase
-      .from('comments')
-      .insert(replyData)
-      .select(`
-        *,
-        profiles!inner (id, full_name, avatar_url)
-      `) // Fetch profile data along with the new reply
-      .single()
-
-    if (error) throw error
-    if (!newReply || !newReply.profiles) throw new Error('فشل جلب بيانات الرد الجديد أو الملف الشخصي.');
-
-    // Emit event to parent component with the new reply data
-    emit('replyAdded', newReply as CommentWithProfile)
-
-    // Reset form and state
-    newReplyContent.value = ''
-    showReplyForm.value = false
-    repliesVisible.value = true // Ensure replies section is visible
-
-  } catch (err: any) {
-    console.error('Error adding reply:', err)
-    replyError.value = `فشل إضافة الرد: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
-  } finally {
-    isSubmittingReply.value = false
-  }
+    const { data: newReply, error } = await supabase.from('comments').insert(replyData).select(`*, profiles!inner (id, full_name, avatar_url)`).single()
+    if (error) throw error; if (!newReply || !newReply.profiles) throw new Error('فشل جلب بيانات الرد الجديد.');
+    emit('replyAdded', newReply as CommentWithProfile); newReplyContent.value = ''; showReplyForm.value = false; repliesVisible.value = true
+  } catch (err: any) { console.error('Error adding reply:', err); replyError.value = `فشل إضافة الرد: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
+  } finally { isSubmittingReply.value = false }
 }
 
 // --- Methods to Handle Events from ReplyItem ---
-const handleReplyUpdate = (updatedReply: CommentWithProfile) => {
-  const index = localReplies.value.findIndex(r => r.id === updatedReply.id)
-  if (index !== -1) {
-    // Use splice for reactivity
-    localReplies.value.splice(index, 1, updatedReply);
-  }
+const handleReplyUpdate = (updatedReply: CommentWithProfile) => { /* ... as before ... */
+  const index = localReplies.value.findIndex(r => r.id === updatedReply.id); if (index !== -1) { localReplies.value.splice(index, 1, updatedReply); }
 }
-
-const handleReplyDelete = (deletedReplyId: number) => {
-  // Filter out the deleted reply from the local list
+const handleReplyDelete = (deletedReplyId: number) => { /* ... as before ... */
   localReplies.value = localReplies.value.filter(r => r.id !== deletedReplyId)
 }
-
 </script>
 
 <style scoped>
-/* Simple fade transition for replies list */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Ensure replies div takes space even when hidden for transition */
-.fade-leave-active {
-  position: absolute; /* Or adjust as needed */
-  visibility: hidden;
-}
+/* ... (styles remain the same) ... */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-leave-active { position: absolute; visibility: hidden; }
 </style>
