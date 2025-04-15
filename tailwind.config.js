@@ -53,7 +53,7 @@ module.exports = {
         ':root': {
           '--color-beige-light': '#F8F4EC',
           '--color-brown-dark': '#3B2F2F',
-          '--color-olive-green': '#0026bd',
+          '--color-olive-green': '#0066bd',
           '--color-cream-gray': '#E8E2D6',
           '--color-golden-calm': '#D4AF37',
           '--color-blue-muted': '#6D91A0',

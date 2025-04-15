@@ -35,7 +35,7 @@
                          <option value="lesson">اختبار درس</option>
                          <option value="module">اختبار وحدة</option>
                          <option value="final">اختبار نهائي</option>
-                         <option value="practice">اختبار تدريبي</option>
+                         
                      </select>
                   </div>
 

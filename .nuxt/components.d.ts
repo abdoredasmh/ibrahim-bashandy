@@ -25,6 +25,7 @@ interface _GlobalComponents {
     'PdfViewerModal': typeof import("../components/PdfViewerModal.vue")['default']
     'ReplyItem': typeof import("../components/ReplyItem.vue")['default']
     'UserAvatar': typeof import("../components/UserAvatar.vue")['default']
+    'AdminAddEditQuestionModal': typeof import("../components/admin/AddEditQuestionModal.vue")['default']
     'AdminLessonModal': typeof import("../components/admin/AdminLessonModal.vue")['default']
     'AdminSidebar': typeof import("../components/admin/AdminSidebar.vue")['default']
     'AdminStatCardVue': typeof import("../components/admin/AdminStatCard.vue.vue")['default']
@@ -75,6 +76,7 @@ interface _GlobalComponents {
     'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
     'LazyReplyItem': LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
     'LazyUserAvatar': LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
+    'LazyAdminAddEditQuestionModal': LazyComponent<typeof import("../components/admin/AddEditQuestionModal.vue")['default']>
     'LazyAdminLessonModal': LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
     'LazyAdminSidebar': LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
     'LazyAdminStatCardVue': LazyComponent<typeof import("../components/admin/AdminStatCard.vue.vue")['default']>
@@ -131,6 +133,7 @@ export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['
 export const PdfViewerModal: typeof import("../components/PdfViewerModal.vue")['default']
 export const ReplyItem: typeof import("../components/ReplyItem.vue")['default']
 export const UserAvatar: typeof import("../components/UserAvatar.vue")['default']
+export const AdminAddEditQuestionModal: typeof import("../components/admin/AddEditQuestionModal.vue")['default']
 export const AdminLessonModal: typeof import("../components/admin/AdminLessonModal.vue")['default']
 export const AdminSidebar: typeof import("../components/admin/AdminSidebar.vue")['default']
 export const AdminStatCardVue: typeof import("../components/admin/AdminStatCard.vue.vue")['default']
@@ -181,6 +184,7 @@ export const LazyLoadingSpinner: LazyComponent<typeof import("../components/Load
 export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
 export const LazyReplyItem: LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
 export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
+export const LazyAdminAddEditQuestionModal: LazyComponent<typeof import("../components/admin/AddEditQuestionModal.vue")['default']>
 export const LazyAdminLessonModal: LazyComponent<typeof import("../components/admin/AdminLessonModal.vue")['default']>
 export const LazyAdminSidebar: LazyComponent<typeof import("../components/admin/AdminSidebar.vue")['default']>
 export const LazyAdminStatCardVue: LazyComponent<typeof import("../components/admin/AdminStatCard.vue.vue")['default']>
