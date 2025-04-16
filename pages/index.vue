@@ -1,289 +1,473 @@
 <template>
   <div>
     <!-- 1. Hero Section -->
-    <section class="bg-gradient-to-b from-beige-light to-cream-gray py-16 px-4">
+    <section class="bg-gradient-to-br from-beige-light via-cream-gray to-yellow-50 py-20 px-6 relative overflow-hidden">
       <div class="container mx-auto flex flex-col md:flex-row items-center gap-8 text-center md:text-right">
-        <div class="md:w-2/3">
-          <h1 class="text-3xl md:text-4xl font-bold text-olive-green mb-4">
-            فضيلة الشيخ إبراهيم بشندي
+        <div class="md:w-2/3 z-10">
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-olive-green mb-4">
+            {{ greeting }} فضيلة الشيخ إبراهيم بشندي
           </h1>
-          <p class="text-lg text-brown-dark leading-relaxed mb-6">
-            <!-- يمكن لاحقًا جلب هذه النبذة من قاعدة البيانات -->
-            نبذة مختصرة عن حياة الشيخ إبراهيم بشندي ومسيرته العلمية والدعوية.
-            هذا النص سيتم إدارته لاحقًا من لوحة التحكم لعرض معلومات محدثة ودقيقة
-            عن الشيخ حفظه الله. نسعى لتقديم محتوى ثري ومفيد لجميع المسلمين.
+          <p v-if="pending" class="text-lg text-brown-dark dark:text-gray-300 leading-relaxed mb-6">
+            جاري تحميل النبذة...
           </p>
-          <NuxtLink to="/about" class="inline-block bg-olive-green text-white py-2 px-6 rounded-md hover:bg-opacity-80 transition-colors text-lg">
-            المزيد عن الشيخ
-          </NuxtLink>
+          <p v-else-if="error || !aboutData" class="text-lg text-red-500 leading-relaxed mb-6">
+            لم يتم تحميل النبذة.
+          </p>
+          <p v-else class="text-lg text-brown-dark dark:text-gray-300 leading-relaxed mb-6">
+            {{ aboutData.short_bio || 'نبذة مختصرة عن حياة الشيخ إبراهيم بشندي ومسيرته العلمية والدعوية...' }}
+          </p>
+          <div class="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mt-8">
+            <NuxtLink to="/about" class="btn-primary">
+              المزيد عن الشيخ
+            </NuxtLink>
+            <button
+              v-if="upcomingLectureOrLive?.link"
+              @click="openLiveStreamModal(upcomingLectureOrLive)"
+              aria-label="مشاهدة البث المباشر أو المحاضرة القادمة"
+              :class="[upcomingLectureOrLive?.type === 'live' ? 'btn-live' : 'btn-upcoming-lecture']">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                   viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9A2.25 2.25 0 0013.5 5.25h-9A2.25 2.25 0 002.25 7.5v9A2.25 2.25 0 004.5 18.75z" />
+              </svg>
+              <span>
+                {{ isLiveNow(upcomingLectureOrLive?.date) ? (upcomingLectureOrLive?.type === 'live' ? 'شاهد البث الآن' : 'المحاضرة الآن') : (countdown ? 'يبدأ خلال ' + countdown : (upcomingLectureOrLive?.type === 'live' ? 'البث القادم' : 'المحاضرة القادمة')) }}
+              </span>
+            </button>
+          </div>
         </div>
-        <div class="md:w-1/3 flex justify-center md:justify-start">
-          <!-- استخدام NuxtImg لتحسين الأداء -->
+        <div class="md:w-1/3 flex justify-center md:justify-start z-10">
           <NuxtImg
-            src="/images/placeholder-sheikh.jpg"
+            :src="aboutData?.profile_image_url || '/images/placeholder-sheikh.jpg'"
             alt="صورة الشيخ إبراهيم بشندي"
-            class="rounded-lg shadow-lg w-60 h-60 object-cover"
-            sizes="240px"
-            format="webp"
-            quality="80"
-            loading="lazy"
-            :placeholder="[60, 60, 75, 5]" /> <!-- Placeholder لطيف -->
-          <!-- تأكد من وجود الصورة في public/images/placeholder-sheikh.jpg -->
+            class="rounded-lg shadow-xl w-64 h-64 md:w-72 md:h-72 object-cover border-4 border-white dark:border-gray-700"
+            sizes="256px md:288px" format="webp" quality="85" loading="lazy" :placeholder="[60, 60, 75, 5]" />
         </div>
       </div>
+      <div class="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-olive-green/10 dark:bg-olive-green/5 rounded-full opacity-30 blur-3xl z-0"></div>
+      <div class="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-golden-calm/10 dark:bg-golden-calm/5 rounded-full opacity-30 blur-3xl z-0"></div>
     </section>
 
-    <!-- 2. مواعيد وأخبار (القسم الجديد) -->
-    <section class="py-12 px-4 bg-white"> <!-- خلفية بيضاء للتمييز -->
+    <!-- 2. مواعيد الدروس والإعلانات (تعديل عرض التاريخ) -->
+    <section class="py-16 px-4 bg-white dark:bg-gray-900">
       <div class="container mx-auto">
-        <h2 class="text-2xl font-bold text-center text-brown-dark mb-8">مواعيد الدروس والإعلانات</h2>
-        <div v-if="pending">
-          <p class="text-center text-gray-500">جاري تحميل المواعيد...</p>
-        </div>
-        <div v-else-if="error && !data?.announcements">
-           <p class="text-center text-red-500">حدث خطأ أثناء تحميل المواعيد.</p>
-        </div>
-         <div v-else-if="!announcements?.length">
-          <p class="text-center text-gray-500">لا توجد مواعيد أو إعلانات حاليًا.</p>
-        </div>
-        <div v-else class="space-y-4 max-w-3xl mx-auto">
-          <!-- مثال لإعلان أو موعد (سيتم استخدام مكون AnnouncementCard لاحقًا) -->
-          <div v-for="item in announcements" :key="item.id" class="bg-beige-light/50 p-4 rounded-lg shadow-sm border border-cream-gray flex flex-col sm:flex-row gap-4 items-start">
-            <div class="flex-shrink-0 w-full sm:w-28 text-center">
-               <div class="text-sm font-semibold text-olive-green bg-olive-green/10 rounded px-2 py-1 inline-block mb-1">{{ item.type === 'lecture' ? 'محاضرة' : 'إعلان' }}</div>
-               <div class="text-xs text-gray-600">{{ formatDate(item.date) }}</div>
-               <div v-if="item.time" class="text-xs text-gray-600">{{ item.time }}</div>
+        <h2 class="text-3xl font-bold text-center text-brown-dark dark:text-beige-light mb-10">
+          مواعيد الدروس والإعلانات
+        </h2>
+        <div v-if="pending" class="text-center py-10 text-gray-500 dark:text-gray-400">جاري تحميل المواعيد...</div>
+        <div v-else-if="error && !data?.announcements" class="text-center py-10 text-red-500">حدث خطأ أثناء تحميل المواعيد.</div>
+        <div v-else-if="!filteredAnnouncements?.length" class="text-center py-10 text-gray-500 dark:text-gray-400">لا توجد مواعيد أو إعلانات (غير البث المباشر) حاليًا.</div>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+          <div v-for="item in filteredAnnouncements" :key="item.id" class="bg-beige-light/70 dark:bg-gray-800 p-5 rounded-lg shadow-md border border-cream-gray dark:border-gray-700 flex flex-col sm:flex-row gap-4 items-start hover:shadow-lg transition-shadow duration-300">
+            <div class="flex-shrink-0 w-full sm:w-24 text-center sm:text-right">
+              <span :class="['px-2.5 py-1 inline-block text-xs font-semibold rounded mb-1.5', item.type === 'lecture' ? 'tag-lecture' : 'tag-announcement']">
+                {{ getTypeText(item.type) }}
+              </span>
+              <!-- ***** التعديل هنا: استخدام formatDate بدلاً من formatFriendlyDate وإزالة عرض الوقت ***** -->
+              <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                {{ formatDate(item.date) || 'بدون تاريخ' }}
+              </div>
+              <!-- تم إزالة div الخاص بـ formatTimeOnly -->
             </div>
             <div class="flex-grow">
-              <h3 class="font-semibold text-brown-dark mb-1">{{ item.title }}</h3>
-              <p class="text-sm text-gray-700 line-clamp-3">
-                {{ item.details }}
-              </p>
-              <!-- يمكن إضافة رابط إذا كان للإعلان رابط خاص -->
-              <NuxtLink v-if="item.link" :to="item.link" class="text-sm text-olive-green hover:underline mt-2 inline-block">التفاصيل</NuxtLink>
+              <h3 class="font-semibold text-brown-dark dark:text-beige-light mb-2 text-lg">{{ item.title }}</h3>
+              <p v-if="item.details" class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">{{ item.details }}</p>
+              <NuxtLink v-if="item.link && item.type === 'announcement'" :to="item.link" class="text-sm text-primary hover:underline mt-auto inline-block">التفاصيل</NuxtLink>
+              <NuxtLink v-if="item.link && item.type === 'lecture'" :to="item.link" class="text-sm text-primary hover:underline mt-auto inline-block">تفاصيل المحاضرة</NuxtLink>
             </div>
           </div>
-          <!-- نهاية مثال الإعلان -->
         </div>
       </div>
     </section>
 
-    <!-- 3. آخر الأسئلة المجابة -->
-    <section class="py-12 px-4">
-      <div class="container mx-auto">
-        <h2 class="text-2xl font-bold text-center text-brown-dark mb-8">آخر الأسئلة المجابة</h2>
-        <div v-if="pending">
-          <p class="text-center text-gray-500">جاري تحميل الأسئلة...</p>
-        </div>
-         <div v-else-if="error && !data?.latestQuestions">
-           <p class="text-center text-red-500">حدث خطأ أثناء تحميل الأسئلة.</p>
-        </div>
-        <div v-else-if="!latestQuestions?.length">
-          <p class="text-center text-gray-500">لا توجد أسئلة مجابة حاليًا.</p>
-        </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <!-- مثال لسؤال واحد (سيتم استخدام مكون QuestionPreviewCard لاحقًا) -->
-          <div v-for="question in latestQuestions" :key="question.id" class="bg-white p-4 rounded-lg shadow border border-cream-gray hover:shadow-md transition-shadow">
-            <NuxtLink :to="`/ask/${question.id}`" class="hover:text-olive-green group"> <!-- رابط لصفحة السؤال -->
-              <h3 class="font-semibold mb-2 line-clamp-2 group-hover:underline">{{ question.title }}</h3>
-            </NuxtLink>
-            <p class="text-sm text-gray-600 line-clamp-3">
-              {{ question.answerSnippet }}
-            </p>
-          </div>
-          <!-- نهاية مثال السؤال -->
-        </div>
-        <div v-if="latestQuestions?.length" class="text-center mt-8">
-           <NuxtLink to="/ask" class="text-olive-green hover:underline font-medium">
-             عرض جميع الأسئلة
-          </NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. مقتطف قائمة المتفوقين -->
-    <section class="bg-cream-gray py-12 px-4">
+    <!-- 3. لوحة الشرف -->
+    <section class="bg-cream-gray dark:bg-gray-800/50 py-16 px-4">
+       <!-- ... الكود كما هو ... -->
        <div class="container mx-auto">
-        <h2 class="text-2xl font-bold text-center text-brown-dark mb-8">لوحة الشرف (المتفوقون دراسيًا)</h2>
-         <div v-if="pending">
-          <p class="text-center text-gray-500">جاري تحميل لوحة الشرف...</p>
-         </div>
-         <div v-else-if="error && !data?.leaderboard">
-           <p class="text-center text-red-500">حدث خطأ أثناء تحميل لوحة الشرف.</p>
-         </div>
-         <div v-else-if="!leaderboard?.length">
-           <p class="text-center text-gray-500">لا يوجد متفوقون حاليًا.</p>
-         </div>
-        <div v-else class="max-w-md mx-auto bg-white p-6 rounded-lg shadow border border-cream-gray">
-           <ul class="space-y-3">
-             <!-- مثال لطالب (سيتم استخدام مكون LeaderboardItem لاحقًا) -->
-             <li v-for="(entry, index) in leaderboard" :key="entry.userId" class="flex items-center justify-between p-2 rounded hover:bg-beige-light transition-colors">
-               <div class="flex items-center gap-x-3">
-                 <span class="font-bold text-lg text-olive-green w-6 text-center">{{ index + 1 }}.</span>
-                 <span class="font-medium text-brown-dark">{{ entry.userName }}</span>
+        <h2 class="text-3xl font-bold text-center text-brown-dark dark:text-beige-light mb-10">لوحة الشرف</h2>
+        <div v-if="pending" class="text-center text-gray-500 dark:text-gray-400">جاري تحميل لوحة الشرف...</div>
+        <div v-else-if="error && !data?.leaderboard" class="text-center text-red-500">حدث خطأ أثناء تحميل لوحة الشرف.</div>
+        <div v-else-if="!leaderboard?.length" class="text-center text-gray-500 dark:text-gray-400">لا يوجد متفوقون حاليًا.</div>
+        <div v-else class="max-w-lg mx-auto bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-cream-gray dark:border-gray-700">
+           <ul class="space-y-4">
+             <li v-for="(entry, index) in leaderboard" :key="entry.userId" class="flex items-center justify-between p-3 rounded-md hover:bg-beige-light/70 dark:hover:bg-gray-700/50 transition-colors border-b border-cream-gray dark:border-gray-700 last:border-b-0">
+               <div class="flex items-center gap-x-4">
+                 <span class="font-bold text-xl text-primary w-8 text-center">{{ index + 1 }}.</span>
+                 <span class="font-semibold text-brown-dark dark:text-beige-light text-lg">{{ entry.userName }}</span>
                </div>
-               <span class="text-sm text-gray-500">{{ entry.score }} نقطة</span> <!-- أو حسب ما يمثل التفوق -->
+               <span class="text-base text-gray-600 dark:text-gray-400 font-medium">{{ entry.score }} نقطة</span>
              </li>
-             <!-- نهاية مثال الطالب -->
            </ul>
         </div>
-         <div v-if="leaderboard?.length" class="text-center mt-8">
-           <NuxtLink to="/leaderboard" class="inline-block bg-olive-green text-white py-2 px-5 rounded-md hover:bg-opacity-80 transition-colors">
+         <div v-if="leaderboard?.length" class="text-center mt-10">
+           <NuxtLink to="/leaderboard" class="inline-block bg-primary text-white py-2.5 px-7 rounded-md hover:bg-opacity-85 transition-colors text-lg shadow hover:shadow-md">
              عرض لوحة الشرف كاملة
           </NuxtLink>
         </div>
        </div>
     </section>
 
-    <!-- 5. أحدث المحتوى (دروس، كتب، إلخ) -->
-    <section class="py-12 px-4">
-      <div class="container mx-auto">
-        <h2 class="text-2xl font-bold text-center text-brown-dark mb-8">أحدث الإضافات</h2>
-         <div v-if="pending">
-           <p class="text-center text-gray-500">جاري تحميل المحتوى...</p>
-         </div>
-          <div v-else-if="error && !data?.latestContent">
-           <p class="text-center text-red-500">حدث خطأ أثناء تحميل المحتوى.</p>
-         </div>
-         <div v-else-if="!latestContent?.length">
-           <p class="text-center text-gray-500">لا يوجد محتوى مضاف حديثًا.</p>
-         </div>
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-           <!-- مثال لبطاقة محتوى (سيتم استخدام مكونات مثل LessonCard, BookCard لاحقًا) -->
-           <div v-for="item in latestContent" :key="item.id" class="bg-white rounded-lg shadow border border-cream-gray overflow-hidden group hover:shadow-lg transition-shadow">
-              <!-- استخدام NuxtImg للصورة المصغرة -->
-             <NuxtImg
-               :src="item.thumbnail || '/images/placeholder-content.jpg'"
-               alt=""
-               class="h-40 w-full object-cover"
-               sizes="300px sm:400px md:300px"
-               format="webp"
-               quality="75"
-               loading="lazy"
-              :placeholder="[40, 20, 75, 5]" />
-             <div class="p-4">
-               <p class="text-xs text-gray-500 mb-1">{{ getContentType(item.type) }}</p>
-               <h3 class="font-semibold mb-2 line-clamp-2 text-brown-dark group-hover:text-olive-green transition-colors">{{ item.title }}</h3>
-               <NuxtLink :to="item.link" class="text-sm text-olive-green hover:underline mt-2 inline-block">
-                 {{ item.type === 'book' ? 'تحميل الكتاب' : 'مشاهدة الدرس' }}
-               </NuxtLink>
-            </div>
-           </div>
-           <!-- نهاية مثال البطاقة -->
+    <!-- 4. آخر الأسئلة المجابة -->
+    <section class="py-16 px-4">
+       <!-- ... الكود كما هو ... -->
+       <div class="container mx-auto">
+        <h2 class="text-3xl font-bold text-center text-brown-dark dark:text-beige-light mb-10">آخر الأسئلة المجابة</h2>
+        <div v-if="pending" class="text-center py-10 text-gray-500 dark:text-gray-400">جاري تحميل الأسئلة...</div>
+         <div v-else-if="error && !data?.latestQuestions" class="text-center py-10 text-red-500">حدث خطأ أثناء تحميل الأسئلة.</div>
+        <div v-else-if="!latestQuestions?.length" class="text-center py-10 text-gray-500 dark:text-gray-400">لا توجد أسئلة مجابة حاليًا.</div>
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div v-for="question in latestQuestions" :key="question.id" class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border border-cream-gray dark:border-gray-700 hover:shadow-lg transition-shadow flex flex-col">
+            <NuxtLink :to="`/ask/${question.id}`" class="hover:text-primary group flex-grow">
+              <h3 class="font-semibold text-lg mb-2 line-clamp-2 group-hover:underline text-brown-dark dark:text-beige-light">{{ question.title }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{{ question.answerSnippet }}</p>
+            </NuxtLink>
+            <NuxtLink :to="`/ask/${question.id}`" class="text-xs text-primary hover:underline mt-3 self-start">اقرأ الإجابة كاملة →</NuxtLink>
+          </div>
+        </div>
+        <div class="text-center mt-10">
+           <NuxtLink to="/ask" class="text-primary hover:underline font-semibold text-lg">عرض جميع الأسئلة المجابة</NuxtLink>
+        </div>
+        <!-- زر إرسال السؤال -->
+        <div class="text-center mt-6">
+          <NuxtLink to="/ask" class="bg-primary text-white py-2.5 px-6 rounded-md shadow hover:bg-opacity-90 transition-colors">
+            أرسل سؤالك للشيخ
+          </NuxtLink>
         </div>
       </div>
     </section>
+
+    <!-- 5. أحدث الإضافات -->
+    <!-- 5.1 أحدث الدروس (المستقلة فقط) -->
+    <section class="py-16 px-4 bg-beige-light/50 dark:bg-gray-800/20">
+      <!-- ... الكود كما هو ... -->
+       <div class="container mx-auto">
+        <div class="flex justify-between items-center mb-10">
+          <h2 class="text-3xl font-bold text-brown-dark dark:text-beige-light">أحدث الدروس المستقلة</h2>
+          <NuxtLink v-if="latestLessons?.length" to="/lessons" class="text-sm text-primary hover:underline font-medium">عرض كل الدروس</NuxtLink>
+        </div>
+        <div v-if="pending" class="text-center text-gray-500 dark:text-gray-400">جاري تحميل الدروس...</div>
+        <div v-else-if="error && !data?.latestLessons" class="text-center text-red-500">حدث خطأ أثناء تحميل الدروس.</div>
+        <div v-else-if="!latestLessons?.length" class="text-center text-gray-500 dark:text-gray-400">لا توجد دروس مستقلة مضافة حديثًا.</div>
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div v-for="item in latestLessons" :key="`lesson-${item.id}`" class="content-card">
+            <NuxtLink :to="item.link" class="block group">
+              <NuxtImg :src="item.thumbnail || '/images/placeholder-lesson.jpg'" :alt="item.title" class="content-card-image"/>
+              <div class="p-4">
+                <p class="content-card-type">{{ getContentType(item.type) }}</p>
+                <h3 class="content-card-title">{{ item.title }}</h3>
+                 <span class="text-xs text-primary group-hover:underline">مشاهدة الدرس →</span>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5.2 أحدث الدورات -->
+    <section class="py-16 px-4 bg-white dark:bg-gray-900">
+      <!-- ... الكود كما هو ... -->
+       <div class="container mx-auto">
+         <div class="flex justify-between items-center mb-10">
+          <h2 class="text-3xl font-bold text-brown-dark dark:text-beige-light">أحدث الدورات</h2>
+          <NuxtLink v-if="latestCourses?.length" to="/study" class="text-sm text-primary hover:underline font-medium">عرض كل الدورات</NuxtLink>
+        </div>
+        <div v-if="pending" class="text-center text-gray-500 dark:text-gray-400">جاري تحميل الدورات...</div>
+        <div v-else-if="error && !data?.latestCourses" class="text-center text-red-500">حدث خطأ أثناء تحميل الدورات.</div>
+        <div v-else-if="!latestCourses?.length" class="text-center text-gray-500 dark:text-gray-400">لا توجد دورات مضافة حديثًا.</div>
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div v-for="item in latestCourses" :key="`course-${item.id}`" class="content-card">
+            <NuxtLink :to="item.link" class="block group">
+              <NuxtImg :src="item.thumbnail || '/images/placeholder-course.jpg'" :alt="item.title" class="content-card-image"/>
+              <div class="p-4">
+                <p class="content-card-type">{{ getContentType(item.type) }}</p>
+                <h3 class="content-card-title">{{ item.title }}</h3>
+                 <span class="text-xs text-primary group-hover:underline">بدء الدورة →</span>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5.3 أحدث الكتب -->
+    <section class="py-16 px-4 bg-beige-light/50 dark:bg-gray-800/20">
+       <!-- ... الكود كما هو ... -->
+        <div class="container mx-auto">
+        <div class="flex justify-between items-center mb-10">
+          <h2 class="text-3xl font-bold text-brown-dark dark:text-beige-light">أحدث الكتب</h2>
+           <NuxtLink v-if="latestBooks?.length" to="/books" class="text-sm text-primary hover:underline font-medium">عرض كل الكتب</NuxtLink>
+        </div>
+         <div v-if="pending" class="text-center text-gray-500 dark:text-gray-400">جاري تحميل الكتب...</div>
+        <div v-else-if="error && !data?.latestBooks" class="text-center text-red-500">حدث خطأ أثناء تحميل الكتب.</div>
+        <div v-else-if="!latestBooks?.length" class="text-center text-gray-500 dark:text-gray-400">لا توجد كتب مضافة حديثًا.</div>
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div v-for="item in latestBooks" :key="`book-${item.id}`" class="content-card">
+            <NuxtLink :to="item.link" class="block group">
+              <NuxtImg :src="item.thumbnail || '/images/placeholder-content.jpg'" :alt="item.title" class="content-card-image"/>
+              <div class="p-4">
+                <p class="content-card-type">{{ getContentType(item.type) }}</p>
+                <h3 class="content-card-title">{{ item.title }}</h3>
+                 <span class="text-xs text-primary group-hover:underline">تصفح الكتاب →</span>
+              </div>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal for Live Stream -->
+     <ClientOnly>
+        <VideoPreviewModal
+         :show="showLiveModal"
+         :video-url="liveStreamUrl"
+         :title="liveStreamTitle"
+         @close="closeLiveStreamModal" />
+     </ClientOnly>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onUnmounted, watch, onMounted } from 'vue';
+import { useSupabaseClient, useAsyncData } from '#imports';
+import type { Database, Tables, Enums } from '~/types/database.types';
+import VideoPreviewModal from '~/components/admin/VideoPreviewModal.vue'; // تأكد من المسار الصحيح
 
-// --- 1. تعريف واجهات البيانات (Interfaces) ---
-interface Announcement {
-  id: number;
-  title: string;
-  details: string;
-  date: string; // ISO format e.g., "2024-07-28T10:00:00Z"
-  time?: string; // Optional time e.g., "10:00 صباحًا"
-  type: 'announcement' | 'lecture';
-  link?: string; // Optional link for more details
+// --- Supabase Client ---
+const client = useSupabaseClient<Database>();
+
+// --- Types ---
+type AnnouncementType = Enums<'announcement_type'>;
+type Announcement = Omit<Tables<'announcements'>, 'type'> & { type: AnnouncementType, time?: string };
+type Question = { id: number; title: string; answerSnippet: string; };
+type LeaderboardEntry = { userId: string; userName: string; score: number; };
+type ContentItem = { id: string | number; title: string; type: 'lesson' | 'book' | 'course'; thumbnail?: string | null; link: string; created_at: string; };
+type AboutSheikhInfo = Tables<'about_sheikh'> | null;
+
+// --- Modal State ---
+const showLiveModal = ref(false);
+const liveStreamUrl = ref('');
+const liveStreamTitle = ref('');
+
+// --- Countdown State ---
+const countdown = ref<string | null>(null);
+let countdownInterval: ReturnType<typeof setInterval> | null = null;
+
+// --- Functions for Modal ---
+function openLiveStreamModal(lecture: Announcement | undefined) {
+    if (lecture?.link) {
+        liveStreamUrl.value = lecture.link;
+        liveStreamTitle.value = lecture.title;
+        showLiveModal.value = true;
+    }
+}
+function closeLiveStreamModal() {
+    showLiveModal.value = false;
+    liveStreamUrl.value = '';
+    liveStreamTitle.value = '';
 }
 
-interface Question {
-  id: number;
-  title: string;
-  answerSnippet: string; // Short preview of the answer
+// --- Helper function to get YouTube Thumbnail ---
+function getYoutubeThumbnailUrl(url: string | null | undefined): string | null {
+    if (!url) return null;
+    let videoId: string | null = null;
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') { videoId = urlObj.pathname.slice(1); }
+        else if (urlObj.hostname.includes('youtube.com')) {
+            videoId = urlObj.searchParams.get('v');
+            if (!videoId && urlObj.searchParams.get('list')) { return null; } // Cannot get playlist thumb reliably
+        }
+    } catch (e) { console.error("Error parsing YouTube URL:", e); return null; }
+    if (videoId) { return `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`; }
+    return null;
 }
 
-interface LeaderboardEntry {
-  userId: string;
-  userName: string;
-  score: number; // Or completions, points, etc.
+
+// --- Function to generate content links ---
+function generateContentLink(type: ContentItem['type'], id: number | string): string {
+    switch (type) {
+        case 'lesson': return `/lessons/${id}`;
+        case 'book': return `/books/${id}`;
+        case 'course': return `/study/courses/${id}`;
+        default: return '/';
+    }
 }
 
-interface ContentItem {
-  id: number;
-  title: string;
-  type: 'lesson' | 'book' | 'course'; // Example types
-  thumbnail?: string; // Optional image URL
-  link: string; // Link to the content page
-}
-
-// --- 2. محاكاة جلب البيانات (استخدم بيانات وهمية مؤقتًا) ---
-// في التطبيق الحقيقي، هذه الدالة ستتصل بـ Supabase
+// --- Function to fetch homepage data ---
 async function fetchHomepageData() {
-  console.log("Fetching homepage data (mock)...");
-  // محاكاة تأخير الشبكة
-  await new Promise(resolve => setTimeout(resolve, 500));
+  console.log("Fetching homepage data from Supabase...");
+   const aboutPromise = client.from('about_sheikh').select('short_bio, profile_image_url').eq('id', 1).maybeSingle();
+   const lessonsPromise = client.from('lessons').select('id, title, created_at, youtube_url').is('course_id', null).order('created_at', { ascending: false }).limit(4);
+   const booksPromise = client.from('books').select('id, title, cover_image_url, created_at').order('created_at', { ascending: false }).limit(4);
+   const coursesPromise = client.from('study_courses').select('id, title, created_at, youtube_playlist_url').eq('is_active', true).order('created_at', { ascending: false }).limit(4);
+   const announcementsPromise = client.from('announcements').select('id, title, details, date, type, link').eq('is_published', true).order('date', { ascending: false, nullsFirst: false }).limit(6);
+   const questionsPromise = client.from('questions_to_sheikh').select('id, question_text, answer_text').eq('is_public', true).eq('is_answered', true).order('answered_at', { ascending: false }).limit(4);
+   const leaderboardPromise = client.from('profiles').select('id, full_name, points').order('points', { ascending: false }).limit(3);
 
-  // --- بيانات وهمية (Mock Data) ---
-  const mockAnnouncements: Announcement[] = [
-    { id: 1, title: 'محاضرة الأسبوع: فقه الصيام', details: 'محاضرة مباشرة عن أحكام الصيام وما يتعلق به، يقدمها فضيلة الشيخ إبراهيم بشندي.', date: '2024-08-05T18:00:00Z', time: '06:00 مساءً', type: 'lecture', link: '/live' },
-    { id: 2, title: 'إعلان هام: بدء التسجيل في دورة العقيدة المستوى الأول', details: 'تم فتح باب التسجيل في دورة العقيدة (المستوى الأول). سارع بالتسجيل فالأماكن محدودة.', date: '2024-08-01T09:00:00Z', type: 'announcement', link: '/courses/aqeedah-1' },
-     { id: 3, title: 'تذكير: حلقة التفسير الأسبوعية', details: 'نذكركم بحلقة تفسير سورة البقرة الأسبوعية كل يوم ثلاثاء بعد صلاة العشاء بتوقيت مكة المكرمة.', date: '2024-08-06T19:30:00Z', time:'بعد العشاء', type: 'lecture'},
-  ];
+  const [
+    announcementsResponse, questionsResponse, leaderboardResponse, aboutResponse,
+    lessonsResponse, booksResponse, coursesResponse
+  ] = await Promise.all([
+    announcementsPromise, questionsPromise, leaderboardPromise, aboutPromise,
+    lessonsPromise, booksPromise, coursesPromise
+  ]);
+   const errors = [ /* ... */ ].filter(Boolean);
+   if (errors.length > 0) { console.error('Errors fetching homepage data:', errors.map(e => e?.message)); }
 
-  const mockLatestQuestions: Question[] = [
-    { id: 101, title: 'ما حكم استخدام معجون الأسنان أثناء الصيام؟', answerSnippet: 'يجوز استخدام معجون الأسنان للصائم بشرط ألا يبتلع شيئاً منه...' },
-    { id: 102, title: 'هل يجوز إخراج زكاة الفطر نقداً؟', answerSnippet: 'اختلف العلماء في هذه المسألة، والراجح عند بعضهم جواز إخراج القيمة للحاجة...' },
-    { id: 103, title: 'كيف أجمع بين طلب العلم والعمل؟', answerSnippet: 'التوفيق بين طلب العلم والعمل يتطلب تنظيم الوقت وتحديد الأولويات والاستعانة بالله...' },
-    { id: 104, title: 'ما فضل قراءة سورة الكهف يوم الجمعة؟', answerSnippet: 'وردت أحاديث في فضل قراءة سورة الكهف يوم الجمعة وأنها نور ما بين الجمعتين...' },
-  ];
-
-  const mockLeaderboard: LeaderboardEntry[] = [
-    { userId: 'user1', userName: 'عبد الله محمد', score: 1500 },
-    { userId: 'user2', userName: 'فاطمة علي', score: 1450 },
-    { userId: 'user3', userName: 'أحمد خالد', score: 1380 },
-  ];
-
-  const mockLatestContent: ContentItem[] = [
-    { id: 201, title: 'شرح كتاب التوحيد - الدرس الخامس', type: 'lesson', link: '/lessons/tawheed-5', thumbnail:'/images/content/lesson1.jpg' },
-    { id: 202, title: 'كتاب مختصر النصيحة', type: 'book', link: '/books/naseeha', thumbnail:'/images/content/book1.jpg' },
-    { id: 203, title: 'دورة السيرة النبوية - الدرس الأول', type: 'course', link: '/courses/seerah-1/lesson-1', thumbnail:'/images/content/course1.jpg' },
-    { id: 204, title: 'الرد على شبهات حول السنة', type: 'lesson', link: '/lessons/shubuhat-sunnah', thumbnail:'/images/content/lesson2.jpg' },
-    { id: 205, title: 'آداب طالب العلم', type: 'lesson', link: '/lessons/adab-talib', thumbnail:'/images/content/lesson3.jpg' },
-     { id: 206, title: 'كتاب رياض الصالحين (PDF)', type: 'book', link: '/books/riyadh-salihin', thumbnail:'/images/content/book2.jpg' },
-  ];
-
-  // محاكاة خطأ محتمل (للاختبار)
-  // if (Math.random() > 0.8) {
-  //   throw new Error("Failed to fetch mock data!");
-  // }
+  const processedQuestions = questionsResponse.data?.map(q => ({ id: q.id, title: q.question_text, answerSnippet: q.answer_text?.substring(0, 120) + (q.answer_text && q.answer_text.length > 120 ? '...' : '') || '...' })) || [];
+  const processedLeaderboard = leaderboardResponse.data?.map(p => ({ userId: p.id, userName: p.full_name ?? 'مستخدم', score: p.points ?? 0 })) || [];
+  const processedLessons = lessonsResponse.data?.map(item => ({ id: item.id, title: item.title, type: 'lesson' as const, thumbnail: getYoutubeThumbnailUrl(item.youtube_url), created_at: item.created_at, link: generateContentLink('lesson', item.id) })) || [];
+  const processedBooks = booksResponse.data?.map(item => ({ id: item.id, title: item.title, type: 'book' as const, thumbnail: item.cover_image_url, created_at: item.created_at, link: generateContentLink('book', item.id) })) || [];
+  const processedCourses = coursesResponse.data?.map(item => ({ id: item.id, title: item.title, type: 'course' as const, thumbnail: getYoutubeThumbnailUrl(item.youtube_playlist_url), created_at: item.created_at, link: generateContentLink('course', item.id) })) || [];
 
   return {
-    announcements: mockAnnouncements,
-    latestQuestions: mockLatestQuestions,
-    leaderboard: mockLeaderboard,
-    latestContent: mockLatestContent,
+    aboutData: aboutResponse.data as AboutSheikhInfo,
+    announcements: (announcementsResponse.data || []) as Announcement[],
+    latestQuestions: processedQuestions,
+    leaderboard: processedLeaderboard,
+    latestLessons: processedLessons,
+    latestBooks: processedBooks,
+    latestCourses: processedCourses,
   };
 }
 
-// --- 3. استخدام useAsyncData لجلب البيانات ---
-const { data, pending, error } = await useAsyncData('homepage', fetchHomepageData, {
-   lazy: true // يجعل الصفحة تعرض المحتوى الثابت أولاً ثم تُحمّل البيانات
+// --- useAsyncData ---
+const { data, pending, error } = await useAsyncData('homepageData', fetchHomepageData, { lazy: true });
+
+// --- Computed Properties ---
+const aboutData = computed(() => data.value?.aboutData || null);
+const allAnnouncements = computed(() => data.value?.announcements || []); // Get all announcements first
+const latestQuestions = computed(() => data.value?.latestQuestions || []);
+const leaderboard = computed(() => data.value?.leaderboard || []);
+const latestLessons = computed(() => data.value?.latestLessons || []);
+const latestBooks = computed(() => data.value?.latestBooks || []);
+const latestCourses = computed(() => data.value?.latestCourses || []);
+
+// --- Upcoming Lecture/Live Logic (for Hero button) ---
+const upcomingLectureOrLive = computed<Announcement | undefined>(() => {
+  if (!allAnnouncements.value) return undefined;
+  const now = new Date();
+  // Find the nearest upcoming/ongoing lecture or live event
+  return [...allAnnouncements.value]
+    .filter(a => (a.type === 'lecture' || a.type === 'live') && a.date)
+    .sort((a, b) => new Date(a.date!).getTime() - new Date(b.date!).getTime()) // Sort by date ascending
+    .find(a => new Date(a.date!).getTime() >= now.getTime() - (1 * 60 * 60 * 1000)); // Within the last hour or in the future
 });
 
-// --- 4. Computed Properties للوصول السهل للبيانات ---
-const announcements = computed(() => data.value?.announcements || []);
-const latestQuestions = computed(() => data.value?.latestQuestions?.slice(0, 4) || []); // عرض 4 فقط
-const leaderboard = computed(() => data.value?.leaderboard?.slice(0, 3) || []); // عرض 3 فقط
-const latestContent = computed(() => data.value?.latestContent?.slice(0, 6) || []); // عرض 6 فقط
+// --- Filtered Announcements (for the list section, excluding 'live' and the one shown in hero) ---
+const filteredAnnouncements = computed(() => {
+    const upcomingId = upcomingLectureOrLive.value?.id;
+    return allAnnouncements.value.filter(a => {
+        if (a.type === 'live') return false; // Exclude all live events
+        if (a.id === upcomingId) return false; // Exclude the specific event shown in hero
+        return true; // Include other announcements and lectures
+    });
+});
 
-// --- 5. دوال مساعدة ---
-function formatDate(dateString: string): string {
-  if (!dateString) return '';
-  try {
-     // يمكن استخدام مكتبة مثل date-fns لتنسيق أكثر احترافية ودعمًا للغة
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return dateString; // أرجع النص الأصلي عند الخطأ
+
+// --- Countdown Update Function ---
+function updateCountdown() {
+  if (!upcomingLectureOrLive.value?.date || isLiveNow(upcomingLectureOrLive.value.date)) {
+    countdown.value = null;
+    if (countdownInterval) clearInterval(countdownInterval);
+    return;
+  }
+  const now = new Date();
+  const eventDate = new Date(upcomingLectureOrLive.value.date);
+  const diff = eventDate.getTime() - now.getTime();
+  if (diff <= 0) {
+    countdown.value = null;
+    if (countdownInterval) clearInterval(countdownInterval);
+  } else {
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    let countdownString = '';
+    if (days > 0) countdownString += `${days}ي `;
+    if (hours > 0 || days > 0) countdownString += `${hours}س `;
+    if (minutes > 0 || hours > 0 || days > 0) countdownString += `${minutes}د `;
+    countdownString += `${seconds}ث`;
+    countdown.value = countdownString.trim();
   }
 }
 
+// --- Lifecycle Hooks for Countdown ---
+onMounted(() => {
+   watch(upcomingLectureOrLive, (newLecture) => {
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (newLecture && !isLiveNow(newLecture.date)) {
+         updateCountdown();
+         countdownInterval = setInterval(updateCountdown, 1000);
+      } else {
+          countdown.value = null;
+      }
+   }, { immediate: true }); // Use immediate: true to run the watch handler on mount
+});
+
+onUnmounted(() => {
+  if (countdownInterval) { clearInterval(countdownInterval); }
+});
+
+
+// --- Greeting Computed Property ---
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) return 'فجر مبارك مع';
+  if (hour < 12) return 'صباح الخير مع';
+  if (hour < 17) return 'نهارك سعيد مع';
+  return 'مساء الخير مع';
+});
+
+// --- Helper Functions ---
+function formatDate(dateString: string | null): string {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+  } catch (e) { console.error("Error formatting date:", e); return dateString || ''; }
+}
+function formatFriendlyDate(dateString: string | null): string | null {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+  } catch (e) { console.error("Error formatting friendly date:", e); return null; }
+}
+function formatTimeOnly(dateString: string | null): string | null {
+   if (!dateString) return null;
+   try {
+     const date = new Date(dateString);
+     if (isNaN(date.getTime())) return null;
+      const hasTimeComponent = dateString.includes('T') || dateString.includes(':'); // Improved check
+      if (date.getHours() === 0 && date.getMinutes() === 0 && !hasTimeComponent) {
+          return null;
+      }
+     return date.toLocaleTimeString('ar-EG', { timeStyle: 'short' });
+   } catch (e) { console.error("Error formatting time only:", e); return null; }
+}
+function isLiveNow(dateString: string | null): boolean {
+    if (!dateString) return false;
+    try {
+        const now = new Date();
+        const eventDate = new Date(dateString);
+        if (isNaN(eventDate.getTime())) return false;
+        const eventDurationMs = 3 * 60 * 60 * 1000; // 3 hours duration example
+        const eventEnd = new Date(eventDate.getTime() + eventDurationMs);
+        return eventDate <= now && now < eventEnd;
+    } catch (e) { console.error("Error checking if live now:", e); return false; }
+}
+function getTypeText(type: AnnouncementType | undefined): string {
+    switch (type) {
+        case 'lecture': return 'محاضرة';
+        case 'announcement': return 'إعلان';
+        case 'live': return 'بث مباشر';
+        default: return 'غير محدد';
+    }
+}
 function getContentType(type: ContentItem['type']): string {
   switch (type) {
     case 'lesson': return 'درس';
@@ -296,7 +480,49 @@ function getContentType(type: ContentItem['type']): string {
 </script>
 
 <style scoped>
-/* أي تنسيقات خاصة بالصفحة الرئيسية فقط */
+/* ----- أنماط الأزرار ----- */
+.btn-primary {
+  @apply bg-primary text-white py-3 px-10 rounded-md transition-all duration-300 text-lg shadow-lg hover:bg-opacity-90 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-gray-900;
+}
+.btn-live {
+  @apply inline-flex items-center gap-2 bg-red-600 text-white py-3 px-6 md:px-8 rounded-md transition-all duration-300 text-lg shadow-lg hover:bg-red-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900 animate-pulse;
+}
+.btn-upcoming-lecture {
+    @apply inline-flex items-center gap-2 bg-blue-600 text-white py-3 px-6 md:px-8 rounded-md transition-all duration-300 text-lg shadow-lg hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900;
+}
+
+/* ----- أنماط محتوى البطاقات ----- */
+.content-card {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow border border-cream-gray dark:border-gray-700 overflow-hidden transition-shadow duration-200 hover:shadow-lg flex flex-col;
+}
+.content-card-image {
+  @apply h-40 w-full object-cover group-hover:scale-105 transition-transform duration-300 bg-gray-200 dark:bg-gray-700; /* Added background color */
+}
+.content-card .p-4 {
+    @apply flex flex-col flex-grow;
+}
+.content-card-type {
+  @apply text-xs text-gray-500 dark:text-gray-400 mb-1;
+}
+.content-card-title {
+  @apply font-semibold mb-2 line-clamp-2 text-brown-dark dark:text-beige-light group-hover:text-primary transition-colors flex-grow;
+}
+.content-card .text-xs {
+    @apply mt-auto pt-2;
+}
+
+/* ----- أنماط الوسوم الخاصة بالإعلانات ----- */
+.tag-lecture {
+    @apply bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-200;
+}
+.tag-live {
+     @apply bg-red-100 text-red-800 dark:bg-red-900/70 dark:text-red-200 animate-pulse;
+}
+.tag-announcement {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/70 dark:text-yellow-200;
+}
+
+/* ----- ميزة تقطيع الأسطر ----- */
 .line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
@@ -310,17 +536,12 @@ function getContentType(type: ContentItem['type']): string {
   -webkit-line-clamp: 3;
 }
 
-/* تحسين بسيط لمظهر البطاقات */
-.shadow {
-   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+/* ----- تأثير نبض زر البث المباشر (والوسم) ----- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
-.shadow-md {
-   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-}
-.hover\:shadow-md:hover {
-   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-}
-.hover\:shadow-lg:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+.animate-pulse {
+  animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>

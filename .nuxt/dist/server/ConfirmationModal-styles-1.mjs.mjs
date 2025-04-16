@@ -1,0 +1,5 @@
+const ConfirmationModal_vue_vue_type_style_index_0_scoped_b0ec62f0_lang = ".button-base[data-v-b0ec62f0]{align-items:center;border-radius:.375rem;border-width:1px;display:inline-flex;font-size:.875rem;font-weight:500;line-height:1.25rem;padding:.5rem 1rem;transition-duration:.15s;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(.4,0,.2,1)}.button-base[data-v-b0ec62f0]:focus{outline:2px solid transparent;outline-offset:2px}.button-base[data-v-b0ec62f0]:focus-visible{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow),var(--tw-ring-shadow),var(--tw-shadow,0 0 #0000);--tw-ring-offset-width:2px}.button-base[data-v-b0ec62f0]:disabled{opacity:.5}.button-base[data-v-b0ec62f0]:focus:is(.dark *){--tw-ring-offset-color:#1f2937}";
+export {
+  ConfirmationModal_vue_vue_type_style_index_0_scoped_b0ec62f0_lang as default
+};
+//# sourceMappingURL=ConfirmationModal-styles-1.mjs.mjs.map

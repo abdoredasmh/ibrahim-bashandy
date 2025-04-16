@@ -19,6 +19,7 @@ interface _GlobalComponents {
     'CommentActions': typeof import("../components/CommentActions.vue")['default']
     'CommentItem': typeof import("../components/CommentItem.vue")['default']
     'CommentSection': typeof import("../components/CommentSection.vue")['default']
+    'ConfirmationModal': typeof import("../components/ConfirmationModal.vue")['default']
     'CourseCard': typeof import("../components/CourseCard.vue")['default']
     'LessonCard': typeof import("../components/LessonCard.vue")['default']
     'LoadingSpinner': typeof import("../components/LoadingSpinner.vue")['default']
@@ -35,6 +36,7 @@ interface _GlobalComponents {
     'AdminCategoryModal': typeof import("../components/admin/CategoryModal.vue")['default']
     'AdminConfirmationModal': typeof import("../components/admin/ConfirmationModal.vue")['default']
     'AdminCourseAddEditModal': typeof import("../components/admin/CourseAddEditModal.vue")['default']
+    'AdminInfoItem': typeof import("../components/admin/InfoItem.vue")['default']
     'AdminQuizCreateEditModal': typeof import("../components/admin/QuizCreateEditModal.vue")['default']
     'AdminSendMessageModal': typeof import("../components/admin/SendMessageModal.vue")['default']
     'AdminSuspendCommentModal': typeof import("../components/admin/SuspendCommentModal.vue")['default']
@@ -70,6 +72,7 @@ interface _GlobalComponents {
     'LazyCommentActions': LazyComponent<typeof import("../components/CommentActions.vue")['default']>
     'LazyCommentItem': LazyComponent<typeof import("../components/CommentItem.vue")['default']>
     'LazyCommentSection': LazyComponent<typeof import("../components/CommentSection.vue")['default']>
+    'LazyConfirmationModal': LazyComponent<typeof import("../components/ConfirmationModal.vue")['default']>
     'LazyCourseCard': LazyComponent<typeof import("../components/CourseCard.vue")['default']>
     'LazyLessonCard': LazyComponent<typeof import("../components/LessonCard.vue")['default']>
     'LazyLoadingSpinner': LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
@@ -86,6 +89,7 @@ interface _GlobalComponents {
     'LazyAdminCategoryModal': LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
     'LazyAdminConfirmationModal': LazyComponent<typeof import("../components/admin/ConfirmationModal.vue")['default']>
     'LazyAdminCourseAddEditModal': LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
+    'LazyAdminInfoItem': LazyComponent<typeof import("../components/admin/InfoItem.vue")['default']>
     'LazyAdminQuizCreateEditModal': LazyComponent<typeof import("../components/admin/QuizCreateEditModal.vue")['default']>
     'LazyAdminSendMessageModal': LazyComponent<typeof import("../components/admin/SendMessageModal.vue")['default']>
     'LazyAdminSuspendCommentModal': LazyComponent<typeof import("../components/admin/SuspendCommentModal.vue")['default']>
@@ -127,6 +131,7 @@ export const BookCard: typeof import("../components/BookCard.vue")['default']
 export const CommentActions: typeof import("../components/CommentActions.vue")['default']
 export const CommentItem: typeof import("../components/CommentItem.vue")['default']
 export const CommentSection: typeof import("../components/CommentSection.vue")['default']
+export const ConfirmationModal: typeof import("../components/ConfirmationModal.vue")['default']
 export const CourseCard: typeof import("../components/CourseCard.vue")['default']
 export const LessonCard: typeof import("../components/LessonCard.vue")['default']
 export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['default']
@@ -143,6 +148,7 @@ export const AdminBookEditModal: typeof import("../components/admin/BookEditModa
 export const AdminCategoryModal: typeof import("../components/admin/CategoryModal.vue")['default']
 export const AdminConfirmationModal: typeof import("../components/admin/ConfirmationModal.vue")['default']
 export const AdminCourseAddEditModal: typeof import("../components/admin/CourseAddEditModal.vue")['default']
+export const AdminInfoItem: typeof import("../components/admin/InfoItem.vue")['default']
 export const AdminQuizCreateEditModal: typeof import("../components/admin/QuizCreateEditModal.vue")['default']
 export const AdminSendMessageModal: typeof import("../components/admin/SendMessageModal.vue")['default']
 export const AdminSuspendCommentModal: typeof import("../components/admin/SuspendCommentModal.vue")['default']
@@ -178,6 +184,7 @@ export const LazyBookCard: LazyComponent<typeof import("../components/BookCard.v
 export const LazyCommentActions: LazyComponent<typeof import("../components/CommentActions.vue")['default']>
 export const LazyCommentItem: LazyComponent<typeof import("../components/CommentItem.vue")['default']>
 export const LazyCommentSection: LazyComponent<typeof import("../components/CommentSection.vue")['default']>
+export const LazyConfirmationModal: LazyComponent<typeof import("../components/ConfirmationModal.vue")['default']>
 export const LazyCourseCard: LazyComponent<typeof import("../components/CourseCard.vue")['default']>
 export const LazyLessonCard: LazyComponent<typeof import("../components/LessonCard.vue")['default']>
 export const LazyLoadingSpinner: LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
@@ -194,6 +201,7 @@ export const LazyAdminBookEditModal: LazyComponent<typeof import("../components/
 export const LazyAdminCategoryModal: LazyComponent<typeof import("../components/admin/CategoryModal.vue")['default']>
 export const LazyAdminConfirmationModal: LazyComponent<typeof import("../components/admin/ConfirmationModal.vue")['default']>
 export const LazyAdminCourseAddEditModal: LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
+export const LazyAdminInfoItem: LazyComponent<typeof import("../components/admin/InfoItem.vue")['default']>
 export const LazyAdminQuizCreateEditModal: LazyComponent<typeof import("../components/admin/QuizCreateEditModal.vue")['default']>
 export const LazyAdminSendMessageModal: LazyComponent<typeof import("../components/admin/SendMessageModal.vue")['default']>
 export const LazyAdminSuspendCommentModal: LazyComponent<typeof import("../components/admin/SuspendCommentModal.vue")['default']>

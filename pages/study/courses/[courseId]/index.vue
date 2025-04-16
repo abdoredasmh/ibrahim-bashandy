@@ -88,12 +88,12 @@
                                  :key="quiz.id"
                                  @click="goToQuiz(quiz.id)"
                                  :class="['button-quiz-base button-quiz-course', { 'passed': hasPassedQuiz(quiz.id) }]"
-                                 :title="hasPassedQuiz(quiz.id) ? 'تم اجتياز هذا الاختبار' : quiz.title"
-                                 :disabled="!canAttemptQuiz(quiz.id) || hasPassedQuiz(quiz.id)"
+                                 :title="hasPassedQuiz(quiz.id) ? `تم اجتياز الاختبار: ${quiz.title}` : quiz.title"
+                                 :disabled="!canAttemptQuiz(quiz.id)"
                               >
-                                 <QuizIcon class="w-4 h-4 me-1.5" aria-hidden="true"/>
+                                 <!-- *** QuizIcon REMOVED *** -->
                                  {{ quiz.title || 'الاختبار النهائي' }}
-                                 <span v-if="hasPassedQuiz(quiz.id)" class="ms-1.5 text-xxs opacity-80">(تم الاجتياز)</span>
+                                 <span v-if="hasPassedQuiz(quiz.id)" class="ms-1.5 text-xxs opacity-80 text-green-100">(تم الاجتياز - عرض النتيجة)</span>
                              </button>
                          </div>
                      </div>
@@ -131,12 +131,12 @@
                            :key="quiz.id"
                            @click="goToQuiz(quiz.id)"
                            :class="['button-quiz-base button-quiz-module', { 'passed': hasPassedQuiz(quiz.id) }]"
-                           :title="hasPassedQuiz(quiz.id) ? 'تم اجتياز هذا الاختبار' : quiz.title"
-                           :disabled="!canAttemptQuiz(quiz.id) || hasPassedQuiz(quiz.id)"
+                           :title="hasPassedQuiz(quiz.id) ? `تم اجتياز الاختبار: ${quiz.title}` : quiz.title"
+                           :disabled="!canAttemptQuiz(quiz.id)"
                        >
-                            <QuizIcon class="w-4 h-4 me-1.5" aria-hidden="true"/>
+                           <!-- *** QuizIcon REMOVED *** -->
                             {{ quiz.title || `اختبار الوحدة ${moduleGroup.moduleNumber}` }}
-                             <span v-if="hasPassedQuiz(quiz.id)" class="ms-1.5 text-xxs opacity-80">(تم الاجتياز)</span>
+                            <span v-if="hasPassedQuiz(quiz.id)" class="ms-1.5 text-xxs opacity-80 text-green-100">(تم الاجتياز - عرض النتيجة)</span>
                        </button>
                     </div>
                 </div>
@@ -163,12 +163,12 @@
                                 :key="quiz.id"
                                 @click="goToQuiz(quiz.id)"
                                 :class="['button-quiz-base button-quiz-lesson', { 'passed': hasPassedQuiz(quiz.id) }]"
-                                :title="hasPassedQuiz(quiz.id) ? 'تم اجتياز هذا الاختبار' : quiz.title"
-                                :disabled="!canAttemptQuiz(quiz.id) || hasPassedQuiz(quiz.id)"
+                                :title="hasPassedQuiz(quiz.id) ? `تم اجتياز الاختبار: ${quiz.title}` : quiz.title"
+                                :disabled="!canAttemptQuiz(quiz.id)"
                             >
-                                <QuizIcon class="w-4 h-4 me-1" aria-hidden="true"/>
+                                <!-- *** QuizIcon REMOVED *** -->
                                 {{ quiz.title || 'اختبار الدرس' }}
-                                <span v-if="hasPassedQuiz(quiz.id)" class="ms-1 text-xxs opacity-80">(تم الاجتياز)</span>
+                                <span v-if="hasPassedQuiz(quiz.id)" class="ms-1 text-xxs opacity-80 text-indigo-800 dark:text-indigo-300">(تم الاجتياز - عرض النتيجة)</span>
                             </button>
                          </div>
                          <!-- Placeholder to maintain alignment -->
@@ -184,167 +184,192 @@
   </div>
 </template>
 
+
+
 <script setup lang="ts">
-import { ref, computed, watch, shallowRef } from 'vue';
-import type { Database, Tables } from '~/types/database.types';
-import { useSupabaseClient, useAsyncData, useRoute, useHead, navigateTo, createError, showError } from '#imports';
-import LoadingSpinner from '~/components/LoadingSpinner.vue';
-import { useUserStore } from '~/stores/user';
-import { storeToRefs } from 'pinia';
+// --- استيراد الوحدات والمكونات اللازمة ---
+import { ref, computed, watch, shallowRef } from 'vue'; // لاستخدام حالة التفاعل والحساب والمراقبة
+import type { Database, Tables } from '~/types/database.types'; // أنواع قاعدة بيانات Supabase المنشأة
+import { useSupabaseClient, useAsyncData, useRoute, useHead, navigateTo, createError, showError } from '#imports'; // وظائف Nuxt و Supabase
+import LoadingSpinner from '~/components/LoadingSpinner.vue'; // مكون عرض التحميل
+import { useUserStore } from '~/stores/user'; // مخزن Pinia لإدارة حالة المستخدم
+import { storeToRefs } from 'pinia'; // لتحويل حالة المخزن إلى refs تفاعلية
 
-// Define QuizIcon inline component
-const QuizIcon = {
-  template: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M11.983 1.907a.75.75 0 0 0-1.966 0l-5.25 3.031A.75.75 0 0 0 4 5.69v8.62a.75.75 0 0 0 .767.745l5.25-1.125 5.25 1.125A.75.75 0 0 0 16 14.31V5.69a.75.75 0 0 0-.767-.744L11.983 1.907ZM12.75 6.19a.75.75 0 0 0-1.5 0v2.447a1.5 1.5 0 0 1-1.045 1.435l-1.008.432a.75.75 0 1 0 .61 1.386l1.008-.432A3 3 0 0 0 12 11.82V13a.75.75 0 0 0 1.5 0V6.19Z" /></svg>`,
-  props: ['class']
-};
+// --- تعريف الأنواع (Types) ---
+// أنواع مخصصة لتمثيل البيانات التي يتم جلبها والتعامل معها في الصفحة لزيادة الوضوح والأمان
 
-// --- Type Definitions ---
-// Type for the result of the main fetch, combining course with related data
+// نوع مركب يجمع بيانات الدورة مع العلاقات المرتبطة بها (الفئة، الوحدات، الدروس، الاختبارات)
+// يتم استخدامه بشكل أساسي لتحديد نوع البيانات المتوقع من الاستعلام الرئيسي في useAsyncData
 type CourseWithDetails = Tables<'study_courses'> & {
-    category: Pick<Tables<'categories'>, 'name'> | null;
-    modules: Array<Pick<Tables<'course_modules'>, 'id' | 'title' | 'module_number'>>;
-    lessons: Array<Pick<Tables<'lessons'>, 'id' | 'title' | 'lesson_order' | 'module_number' | 'created_at'>>;
-    quizzes: Array<Pick<Tables<'quizzes'>, 'id' | 'title' | 'lesson_id' | 'module_number' | 'course_id' | 'is_active'>>;
+    category: Pick<Tables<'categories'>, 'name'> | null; // اسم الفئة فقط
+    modules: Array<Pick<Tables<'course_modules'>, 'id' | 'title' | 'module_number'>>; // معلومات أساسية للوحدات
+    lessons: Array<Pick<Tables<'lessons'>, 'id' | 'title' | 'lesson_order' | 'module_number' | 'created_at'>>; // معلومات أساسية للدروس
+    quizzes: Array<Pick<Tables<'quizzes'>, 'id' | 'title' | 'lesson_id' | 'module_number' | 'course_id' | 'is_active'>>; // معلومات أساسية للاختبارات
 };
-// Standard types for individual entities
-type Course = Tables<'study_courses'>;
-type Lesson = Pick<Tables<'lessons'>, 'id' | 'title' | 'lesson_order' | 'module_number' | 'created_at'>;
-type CourseModuleInfo = Pick<Tables<'course_modules'>, 'id' | 'title' | 'module_number'>;
-type QuizInfo = Pick<Tables<'quizzes'>, 'id' | 'title' | 'lesson_id' | 'module_number' | 'course_id' | 'is_active'>;
-type CourseEnrollment = Tables<'course_enrollments'>;
-type LessonCompletionInfo = Pick<Tables<'lesson_completions'>, 'lesson_id'>;
-type QuizAttemptInfo = Pick<Tables<'quiz_attempts'>, 'id' | 'quiz_id' | 'passed' | 'submitted_at'>;
 
-// Type for the structure returned by useAsyncData
+// أنواع قياسية لتمثيل الكيانات الفردية
+type Course = Tables<'study_courses'>; // نوع الدورة الأساسي من الأنواع المنشأة
+type Lesson = Pick<Tables<'lessons'>, 'id' | 'title' | 'lesson_order' | 'module_number' | 'created_at'>; // المعلومات الأساسية للدرس
+type CourseModuleInfo = Pick<Tables<'course_modules'>, 'id' | 'title' | 'module_number'>; // المعلومات الأساسية للوحدة
+type QuizInfo = Pick<Tables<'quizzes'>, 'id' | 'title' | 'lesson_id' | 'module_number' | 'course_id' | 'is_active'>; // المعلومات الأساسية للاختبار
+type CourseEnrollment = Tables<'course_enrollments'>; // نوع سجل الانتساب
+type LessonCompletionInfo = Pick<Tables<'lesson_completions'>, 'lesson_id'>; // معرف الدرس المكتمل فقط
+type QuizAttemptInfo = Pick<Tables<'quiz_attempts'>, 'id' | 'quiz_id' | 'passed' | 'submitted_at'>; // معلومات أساسية عن محاولة الاختبار
+
+// نوع الهيكل الكامل للبيانات التي يتم إرجاعها من useAsyncData
 type FetchedCoursePageData = {
-    course: Course | null;
-    modules: CourseModuleInfo[];
-    lessons: Lesson[];
-    quizzes: QuizInfo[];
-    attempts: QuizAttemptInfo[];
-    categoryName: string | null;
-    enrollment: CourseEnrollment | null;
-    completions: LessonCompletionInfo[];
+    course: Course | null;                 // بيانات الدورة الرئيسية
+    modules: CourseModuleInfo[];         // قائمة الوحدات
+    lessons: Lesson[];                   // قائمة الدروس
+    quizzes: QuizInfo[];                 // قائمة الاختبارات النشطة (للدورة، الوحدة، الدرس)
+    attempts: QuizAttemptInfo[];         // قائمة محاولات المستخدم للاختبارات في هذه الدورة
+    categoryName: string | null;         // اسم الفئة
+    enrollment: CourseEnrollment | null; // سجل انتساب المستخدم الحالي (إن وجد)
+    completions: LessonCompletionInfo[]; // قائمة الدروس المكتملة للمستخدم الحالي
 };
 
-// Type for grouping content in the template
+// نوع يستخدم لتجميع المحتوى (دروس واختبارات) حسب الوحدة في القالب
 interface ModuleGroup {
-  moduleNumber: number | null;
-  moduleTitle: string;
-  lessons: Lesson[];
-  quizzes: QuizInfo[];
+  moduleNumber: number | null; // رقم الوحدة (أو null للدروس العامة)
+  moduleTitle: string;         // عنوان الوحدة
+  lessons: Lesson[];           // قائمة الدروس في هذه الوحدة
+  quizzes: QuizInfo[];         // قائمة اختبارات الوحدة (Module-level quizzes)
 }
 
-// --- Setup ---
-const supabase = useSupabaseClient<Database>();
-const route = useRoute();
-const userStore = useUserStore();
-const { profile, isLoggedIn } = storeToRefs(userStore);
+// --- إعدادات أولية ---
+const supabase = useSupabaseClient<Database>(); // عميل Supabase للتفاعل مع قاعدة البيانات
+const route = useRoute();                     // للوصول إلى معلمات المسار (مثل courseId)
+const userStore = useUserStore();             // للوصول إلى حالة المستخدم
+const { profile, isLoggedIn } = storeToRefs(userStore); // الحصول على بيانات المستخدم وحالة تسجيل الدخول كـ refs تفاعلية
 
-// Validate and get course ID from route params
+// --- الحصول على معرف الدورة والتحقق منه ---
 const courseId = computed<number>(() => {
+    // يقرأ معلمة 'courseId' من عنوان URL
     const id = parseInt(route.params.courseId as string, 10);
+    // يتحقق إذا كان الرقم صالحًا (ليس NaN وأكبر من 0)
     if (isNaN(id) || id <= 0) {
+         // يعرض خطأ فادحًا إذا كان المعرف غير صالح ويوقف تحميل الصفحة
          showError({ statusCode: 400, statusMessage: `معرف الدورة غير صالح: "${route.params.courseId}"`, fatal: true });
-         return -1; // Return invalid ID to prevent further execution
+         return NaN; // إرجاع NaN للإشارة إلى مشكلة
     }
-    return id;
+    return id; // إرجاع المعرف الصحيح
 });
 
-// --- Reactive State ---
-const course = shallowRef<Course | null>(null);
-const courseModulesData = shallowRef<CourseModuleInfo[]>([]);
-const courseLessonsData = shallowRef<Lesson[]>([]);
-const courseQuizzesData = shallowRef<QuizInfo[]>([]);
-const userQuizAttempts = shallowRef<QuizAttemptInfo[]>([]);
-const categoryName = shallowRef<string | null>(null);
-const enrollment = shallowRef<CourseEnrollment | null>(null);
-const completedLessonIds = shallowRef<number[]>([]);
-const enrollLoading = ref(false);
+// --- تعريف الحالة التفاعلية المحلية للصفحة ---
+// تُستخدم لتخزين البيانات التي تم جلبها وعرضها في القالب
+const course = shallowRef<Course | null>(null); // بيانات الدورة الحالية (shallowRef لتحسين الأداء مع الكائنات الكبيرة)
+const courseModulesData = shallowRef<CourseModuleInfo[]>([]); // قائمة بيانات الوحدات
+const courseLessonsData = shallowRef<Lesson[]>([]);         // قائمة بيانات الدروس
+const courseQuizzesData = shallowRef<QuizInfo[]>([]);         // قائمة بيانات الاختبارات
+const userQuizAttempts = shallowRef<QuizAttemptInfo[]>([]);   // قائمة محاولات المستخدم
+const categoryName = shallowRef<string | null>(null);        // اسم الفئة
+const enrollment = shallowRef<CourseEnrollment | null>(null); // بيانات انتساب المستخدم
+const completedLessonIds = shallowRef<number[]>([]);        // قائمة بمعرفات الدروس المكتملة
+const enrollLoading = ref(false); // حالة التحميل لعمليات الانتساب/إلغاء الانتساب
 
-// Halt setup if course ID is invalid
+// --- إيقاف مؤقت للإعداد إذا كان معرف الدورة غير صالح ---
 if (isNaN(courseId.value)) {
     console.error("Course ID is invalid, stopping component setup.");
+    // قد تحتاج لإضافة حالة خطأ هنا إذا لم يكن showError كافيًا
 }
 
-// --- Data Fetching (useAsyncData) ---
-// Fetches all necessary data for the course page.
-// Structure:
-// 1. Fetch main course data and directly related info (category, modules, lessons, quizzes) in one query,
-//    explicitly defining relationships to avoid ambiguity.
-// 2. Fetch user-specific data (enrollment, completions, attempts) in parallel if logged in.
+// --- جلب البيانات باستخدام useAsyncData ---
+// هذه الوظيفة تجلب جميع البيانات اللازمة لعرض الصفحة بشكل غير متزامن.
+// يتم تخزين النتائج مؤقتًا (cache) بناءً على المفتاح الفريد.
 const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageData>(
-    // Unique key for caching, includes user ID for reactivity on login/logout
+    // مفتاح فريد لتخزين البيانات: يعتمد على معرف الدورة ومعرف المستخدم (للتحديث عند تسجيل الدخول/الخروج)
     `course-page-data-${courseId.value}-${profile.value?.id ?? 'guest'}`,
+    // الدالة الفعلية التي تقوم بالجلب
     async () => {
         const currentCourseId = courseId.value;
-        if (isNaN(currentCourseId)) throw new Error('Invalid Course ID'); // Should already be handled, but good practice
-
+        if (isNaN(currentCourseId)) {
+             throw createError({ statusCode: 400, message: 'معرف الدورة غير صالح عند بدء الجلب.', fatal: true });
+        }
         const currentUserId = profile.value?.id;
         console.log(`[useAsyncData] Fetching data for course ${currentCourseId}, User ${currentUserId ?? 'Guest'}`);
 
         try {
-            // --- Step 1: Fetch Main Course Data with Embeds ---
-            console.log("[useAsyncData] Fetching main course data with embeds...");
-            const { data: courseWithDetails, error: courseFetchError } = await supabase
+            // --- الخطوة 1: جلب بيانات الدورة الرئيسية والعلاقات المباشرة (وحدات، دروس) ---
+            console.log("[useAsyncData] Fetching main course data, category, modules, lessons...");
+            const { data: courseBaseData, error: courseFetchError } = await supabase
                 .from('study_courses')
                 .select(`
                     *,
                     category:categories ( name ),
                     modules:course_modules!course_id ( id, title, module_number ),
-                    lessons:lessons!course_id ( id, title, lesson_order, module_number, created_at ),
-                    quizzes:quizzes!course_id ( id, title, lesson_id, module_number, course_id, is_active )
+                    lessons:lessons!course_id ( id, title, lesson_order, module_number, created_at )
                 `)
                 .eq('id', currentCourseId)
-                .eq('is_active', true) // Ensure course is active
-                .maybeSingle<CourseWithDetails>(); // Type assertion for clarity
+                .eq('is_active', true) // التأكد من أن الدورة نشطة
+                .single(); // توقع صف واحد فقط للدورة
 
             if (courseFetchError) {
-                console.error("[useAsyncData] Error fetching main course data:", courseFetchError);
-                // Handle specific embedding error
-                if (courseFetchError.message.includes("more than one relationship")) {
-                     throw createError({ statusCode: 500, statusMessage: `خطأ في ربط بيانات الدورة: ${courseFetchError.message}. يرجى مراجعة تعريف العلاقات بين الجداول.`, fatal: true });
-                }
-                // Handle other fetch errors
-                throw createError({ statusCode: 500, statusMessage: `فشل جلب بيانات الدورة: ${courseFetchError.message}`, fatal: true });
+                 console.error("[useAsyncData] Error fetching base course data:", courseFetchError);
+                 throw createError({ statusCode: 500, statusMessage: `فشل جلب بيانات الدورة الرئيسية: ${courseFetchError.message}`, fatal: true });
             }
-            if (!courseWithDetails) {
+             if (!courseBaseData) {
                 console.warn(`[useAsyncData] Course ${currentCourseId} not found or inactive.`);
                 throw createError({ statusCode: 404, message: 'الدورة المطلوبة غير موجودة أو غير نشطة.', fatal: true });
             }
-            console.log(`[useAsyncData] Main data fetched. Modules: ${courseWithDetails.modules?.length ?? 0}, Lessons: ${courseWithDetails.lessons?.length ?? 0}, Quizzes: ${courseWithDetails.quizzes?.length ?? 0}`);
 
-            // Extract data from the main fetch result
-            const fetchedCourse: Course = { ...courseWithDetails, category: undefined, modules: undefined, lessons: undefined, quizzes: undefined };
-            const fetchedModules = courseWithDetails.modules?.sort((a, b) => (a.module_number ?? Infinity) - (b.module_number ?? Infinity)) ?? [];
-            const fetchedLessons = courseWithDetails.lessons?.sort((a, b) => { // Sort lessons properly
+            // فصل البيانات التي تم جلبها
+            const fetchedCourse: Course = { ...courseBaseData, category: undefined, modules: undefined, lessons: undefined };
+            const fetchedModules = courseBaseData.modules?.sort((a, b) => (a.module_number ?? Infinity) - (b.module_number ?? Infinity)) ?? [];
+            const fetchedLessons = courseBaseData.lessons?.sort((a, b) => { /* ... (نفس منطق الترتيب السابق للدروس) ... */
                 const moduleCompare = (a.module_number ?? Infinity) - (b.module_number ?? Infinity);
                 if (moduleCompare !== 0) return moduleCompare;
                 const orderCompare = (a.lesson_order ?? Infinity) - (b.lesson_order ?? Infinity);
                  if (orderCompare !== 0) return orderCompare;
                 return new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime();
-            }) ?? [];
-            const fetchedQuizzes = courseWithDetails.quizzes?.filter(q => q.is_active) ?? []; // Filter active quizzes client-side as well
-            const fetchedCategoryName = courseWithDetails.category?.name ?? null;
+             }) ?? [];
+            const fetchedCategoryName = courseBaseData.category?.name ?? null;
+            const lessonIds = fetchedLessons.map(l => l.id); // الحصول على معرفات الدروس لجلب اختباراتها
 
-            // Prepare IDs for user-specific fetches
-            const lessonIds = fetchedLessons.map(l => l.id);
-            const quizIds = fetchedQuizzes.map(q => q.id);
+            // --- الخطوة 2: جلب جميع الاختبارات النشطة المرتبطة (بالدورة مباشرة أو بدروسها) ---
+             console.log("[useAsyncData] Fetching course-level and lesson-level quizzes...");
+            let fetchedQuizzes: QuizInfo[] = [];
+            // جلب اختبارات الدورة (module/final)
+            const { data: courseLinkedQuizzes, error: courseQuizError } = await supabase
+                .from('quizzes')
+                .select('id, title, lesson_id, module_number, course_id, is_active')
+                .eq('course_id', currentCourseId) // المرتبطة مباشرة بالدورة
+                .eq('is_active', true);
 
-            // --- Step 2: Fetch User-Specific Data (if logged in) ---
+            if (courseQuizError) console.error("Error fetching course-linked quizzes:", courseQuizError.message);
+            else fetchedQuizzes = fetchedQuizzes.concat(courseLinkedQuizzes ?? []);
+
+            // جلب اختبارات الدروس (lesson)
+            if (lessonIds.length > 0) {
+                const { data: lessonLinkedQuizzes, error: lessonQuizError } = await supabase
+                    .from('quizzes')
+                    .select('id, title, lesson_id, module_number, course_id, is_active')
+                    .in('lesson_id', lessonIds) // المرتبطة بالدروس في هذه الدورة
+                    .eq('is_active', true);
+
+                if (lessonQuizError) console.error("Error fetching lesson-linked quizzes:", lessonQuizError.message);
+                else fetchedQuizzes = fetchedQuizzes.concat(lessonLinkedQuizzes ?? []);
+            }
+            // إزالة التكرارات المحتملة (غير مرجح لكن آمن)
+            fetchedQuizzes = Array.from(new Map(fetchedQuizzes.map(q => [q.id, q])).values());
+             console.log(`[useAsyncData] Total active quizzes fetched: ${fetchedQuizzes.length}`);
+
+
+            // --- الخطوة 3: جلب البيانات الخاصة بالمستخدم (إذا كان مسجل الدخول) ---
              console.log("[useAsyncData] Fetching user-specific data...");
             let fetchedEnrollment: CourseEnrollment | null = null;
             let fetchedCompletions: LessonCompletionInfo[] = [];
             let fetchedAttempts: QuizAttemptInfo[] = [];
+            const quizIds = fetchedQuizzes.map(q => q.id); // معرفات الاختبارات لجلب المحاولات
 
             if (isLoggedIn.value && currentUserId) {
+                // تنفيذ الاستعلامات بشكل متوازي لتحسين الأداء
                 const [enrollmentRes, completionsRes, attemptsRes] = await Promise.all([
                     supabase.from('course_enrollments').select('*').eq('user_id', currentUserId).eq('course_id', currentCourseId).maybeSingle(),
                     lessonIds.length > 0 ? supabase.from('lesson_completions').select('lesson_id').eq('user_id', currentUserId).in('lesson_id', lessonIds) : Promise.resolve({ data: [], error: null }),
                     quizIds.length > 0 ? supabase.from('quiz_attempts').select('id, quiz_id, passed, submitted_at').eq('user_id', currentUserId).in('quiz_id', quizIds) : Promise.resolve({ data: [], error: null })
                 ]);
 
-                // Log errors but don't fail the entire fetch for user data errors
+                // تسجيل الأخطاء دون إيقاف الجلب بالكامل
                 if (enrollmentRes.error) console.error("Enrollment fetch error:", enrollmentRes.error.message); else fetchedEnrollment = enrollmentRes.data;
                 if (completionsRes.error) console.error("Completions fetch error:", completionsRes.error.message); else fetchedCompletions = completionsRes.data ?? [];
                 if (attemptsRes.error) console.error("Attempts fetch error:", attemptsRes.error.message); else fetchedAttempts = attemptsRes.data ?? [];
@@ -353,13 +378,13 @@ const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageDa
                  console.log("[useAsyncData] User not logged in, skipping user-specific data fetch.");
             }
 
-            // --- Step 3: Return the combined data structure ---
+            // --- الخطوة 4: إرجاع البيانات المجمعة ---
              console.log("[useAsyncData] Fetch process complete.");
             return {
                 course: fetchedCourse,
                 modules: fetchedModules,
                 lessons: fetchedLessons,
-                quizzes: fetchedQuizzes,
+                quizzes: fetchedQuizzes, // القائمة المدمجة للاختبارات
                 categoryName: fetchedCategoryName,
                 enrollment: fetchedEnrollment,
                 completions: fetchedCompletions,
@@ -367,264 +392,306 @@ const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageDa
             };
 
         } catch (err: any) {
-            console.error("[useAsyncData] CRITICAL ERROR during data fetching:", err);
-             // Re-throw errors created with createError to be handled by Nuxt/useAsyncData
-             if (err.statusCode && err.fatal) {
-                throw err;
-             }
-            // Show a generic error page for unexpected errors
-            showError({ statusCode: err.statusCode || 500, message: `حدث خطأ غير متوقع أثناء تحميل بيانات الدورة: ${err.message || 'خطأ غير معروف'}`, fatal: true });
-            // Return default structure on error (though showError should prevent this)
-            return { course: null, modules: [], lessons: [], quizzes: [], attempts: [], categoryName: null, enrollment: null, completions: [] };
+             console.error("[useAsyncData] CRITICAL ERROR during data fetching:", err);
+             if (err.statusCode && err.fatal) { throw err; } // إعادة رمي أخطاء createError
+             showError({ statusCode: err.statusCode || 500, message: `حدث خطأ غير متوقع أثناء تحميل بيانات الدورة: ${err.message || 'خطأ غير معروف'}`, fatal: true });
+             // إرجاع هيكل افتراضي فارغ في حالة الأخطاء غير المتوقعة
+             return { course: null, modules: [], lessons: [], quizzes: [], attempts: [], categoryName: null, enrollment: null, completions: [] };
         }
     }, {
-         // Default value while loading or on SSR without data
+         // القيمة الافتراضية أثناء التحميل أو في حالة عدم وجود بيانات
          default: (): FetchedCoursePageData => ({
              course: null, modules: [], lessons: [], quizzes: [], attempts: [],
              categoryName: null, enrollment: null, completions: []
          }),
-         // Watch for user ID changes to refetch data on login/logout
+         // إعادة الجلب عند تغير معرف المستخدم (تسجيل الدخول/الخروج)
          watch: [() => profile.value?.id]
     }
 );
 
- // --- Watcher to update local refs when fetched data changes ---
+// --- مراقبة البيانات المجلوبة وتحديث الحالة المحلية ---
+// هذا الـ watcher يضمن تحديث الـ refs المحلية (مثل course, lessons, quizzes)
+// كلما تغيرت البيانات المجلوبة بواسطة useAsyncData (بما في ذلك بعد refresh).
  watch(data, (newData) => {
     console.log("[Watcher] Updating local state from fetched data.");
+    // تحديث كل ref بقيمته الجديدة أو القيمة الافتراضية إذا كانت null/undefined
     course.value = newData?.course ?? null;
-    courseModulesData.value = newData?.modules ?? [];
-    courseLessonsData.value = newData?.lessons ?? [];
-    courseQuizzesData.value = newData?.quizzes ?? [];
-    userQuizAttempts.value = newData?.attempts ?? [];
+    courseModulesData.value = Array.isArray(newData?.modules) ? newData.modules : [];
+    courseLessonsData.value = Array.isArray(newData?.lessons) ? newData.lessons : [];
+    courseQuizzesData.value = Array.isArray(newData?.quizzes) ? newData.quizzes : [];
+    userQuizAttempts.value = Array.isArray(newData?.attempts) ? newData.attempts : [];
     categoryName.value = newData?.categoryName ?? null;
     enrollment.value = newData?.enrollment ?? null;
     completedLessonIds.value = Array.isArray(newData?.completions) ? newData.completions.map(c => c.lesson_id) : [];
     console.log("[Watcher] Local state updated. Course:", !!course.value, "Lessons:", courseLessonsData.value.length, "Quizzes:", courseQuizzesData.value.length);
- }, { immediate: true }); // Immediate ensures it runs once on load
 
- // --- Computed Properties ---
+    // التعامل مع حالة عدم وجود بيانات بعد التحميل
+    if (!pending.value && !error.value && !newData?.course) {
+       console.warn("[Watcher] No course data found after loading.");
+       // يمكنك هنا إظهار رسالة خطأ محلية إذا أردت
+    }
+
+ }, { immediate: true }); // immediate: true يضمن التشغيل مرة واحدة فورًا عند تحميل المكون
+
+// --- الخصائص المحسوبة (Computed Properties) ---
+// تُستخدم لحساب قيم مشتقة من الحالة التفاعلية بطريقة فعالة
+
+// هل المستخدم منتسب لهذه الدورة؟
 const isEnrolled = computed(() => !!enrollment.value);
+// إجمالي عدد الدروس في الدورة
 const totalLessonsCount = computed(() => courseLessonsData.value.length);
+// عدد الدروس التي أكملها المستخدم
 const completedLessonsCount = computed(() => completedLessonIds.value.length);
-
-// Calculates progress percentage
+// نسبة التقدم المئوية
 const progressPercentage = computed(() => {
-  if (totalLessonsCount.value === 0) return 0;
+  if (totalLessonsCount.value === 0) return 0; // تجنب القسمة على صفر
+  // التأكد من أن عدد الدروس المكتملة لا يتجاوز الإجمالي (احتياطي)
   const validCompletedCount = Math.min(completedLessonsCount.value, totalLessonsCount.value);
   return Math.round((validCompletedCount / totalLessonsCount.value) * 100);
 });
 
-// Creates a map of lesson ID to its associated quizzes for quick lookup
+// إنشاء خريطة (Map) لربط معرف الدرس بقائمة اختباراته لتسهيل الوصول في القالب
 const lessonQuizzesMap = computed(() => {
-    // console.log("[Computed lessonQuizzesMap] Generating map..."); // Keep logs minimal if not debugging
     const map = new Map<number, QuizInfo[]>();
+    // المرور على قائمة الاختبارات المجلوبة
     for (const quiz of courseQuizzesData.value) {
+        // التحقق إذا كان الاختبار مرتبط بدرس (له lesson_id صالح)
         if (quiz.lesson_id !== null && !isNaN(Number(quiz.lesson_id))) {
              const lessonIdNumber = Number(quiz.lesson_id);
+             // إذا لم يكن هناك مدخل لهذا الدرس بعد، قم بإنشائه
             if (!map.has(lessonIdNumber)) {
                 map.set(lessonIdNumber, []);
             }
+            // أضف الاختبار إلى قائمة اختبارات هذا الدرس
             map.get(lessonIdNumber)!.push(quiz);
         }
     }
-    map.forEach(quizzes => quizzes.sort((a, b) => (a.title || '').localeCompare(b.title || ''))); // Sort quizzes within each lesson
-    // console.log("[Computed lessonQuizzesMap] Map generated. Size:", map.size);
-    return map;
+    // ترتيب الاختبارات داخل كل درس أبجديًا حسب العنوان (اختياري)
+    map.forEach(quizzes => quizzes.sort((a, b) => (a.title || '').localeCompare(b.title || '')));
+    return map; // إرجاع الخريطة النهائية
 });
 
-// Filters quizzes that are course-level (no module or lesson associated)
+// تصفية الاختبارات التي ليس لها lesson_id أو module_number (اختبارات مستوى الدورة)
 const courseLevelQuizzes = computed(() => {
     return courseQuizzesData.value
-           .filter(q => q.lesson_id === null && q.module_number === null)
-           .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+           .filter(q => q.lesson_id === null && q.module_number === null) // الشرط الأساسي
+           .sort((a, b) => (a.title || '').localeCompare(b.title || '')); // الترتيب الأبجدي
 });
 
-// Groups lessons and module-level quizzes by module for display
+// تجميع المحتوى (الدروس واختبارات الوحدات) حسب الوحدة لعرضها بشكل منظم في القالب
 const groupedContent = computed<ModuleGroup[]>(() => {
-    // console.log("[Computed groupedContent] Generating groups...");
-    const modulesMap: Map<number | string, ModuleGroup> = new Map();
+    const modulesMap: Map<number | string, ModuleGroup> = new Map(); // خريطة لتخزين مجموعات الوحدات
 
-    // Initialize with defined modules
+    // إضافة الوحدات المعرفة مسبقًا من courseModulesData إلى الخريطة
     for (const moduleInfo of courseModulesData.value) {
         if (moduleInfo.module_number !== null) {
              modulesMap.set(moduleInfo.module_number, {
                  moduleNumber: moduleInfo.module_number,
-                 moduleTitle: moduleInfo.title || `الوحدة ${moduleInfo.module_number}`,
-                 lessons: [],
-                 quizzes: [],
+                 moduleTitle: moduleInfo.title || `الوحدة ${moduleInfo.module_number}`, // عنوان الوحدة أو عنوان افتراضي
+                 lessons: [], // قائمة فارغة مبدئية للدروس
+                 quizzes: [], // قائمة فارغة مبدئية لاختبارات الوحدة
              });
-        } else { console.warn(`Module ID ${moduleInfo.id} has null module_number.`); }
+        } else { console.warn(`Module ID ${moduleInfo.id} has null module_number.`); } // تحذير إذا كان رقم الوحدة غير موجود
     }
-    // Add 'general' group for items without a module number
+
+    // إضافة مجموعة افتراضية للدروس/الاختبارات التي ليس لها رقم وحدة
     const generalGroupKey = 'general';
     modulesMap.set(generalGroupKey, { moduleNumber: null, moduleTitle: 'دروس أو اختبارات عامة', lessons: [], quizzes: [] });
 
-    // Assign lessons
+    // توزيع الدروس على المجموعات الصحيحة بناءً على module_number
     for (const lesson of courseLessonsData.value) {
-        const key = lesson.module_number !== null ? lesson.module_number : generalGroupKey;
-        const group = modulesMap.get(key);
-        if (group) { group.lessons.push(lesson); }
-        else { modulesMap.get(generalGroupKey)?.lessons.push(lesson); } // Fallback
+        const key = lesson.module_number !== null ? lesson.module_number : generalGroupKey; // تحديد المفتاح (رقم الوحدة أو 'general')
+        const group = modulesMap.get(key); // الحصول على المجموعة المناسبة من الخريطة
+        if (group) { group.lessons.push(lesson); } // إضافة الدرس للمجموعة
+        else { modulesMap.get(generalGroupKey)?.lessons.push(lesson); } // إذا لم توجد مجموعة، إضافته للمجموعة العامة كاحتياط
     }
 
-    // Assign module-level quizzes (have module_number, no lesson_id)
+    // توزيع اختبارات الوحدات (لها module_number ولكن lesson_id هو null)
     for (const quiz of courseQuizzesData.value) {
         if (quiz.module_number !== null && quiz.lesson_id === null) {
-             const group = modulesMap.get(quiz.module_number);
-             if (group) { group.quizzes.push(quiz); }
-             else { console.warn(`Module quiz ${quiz.id} (module ${quiz.module_number}) has no matching group.`); }
+             const group = modulesMap.get(quiz.module_number); // الحصول على مجموعة الوحدة
+             if (group) { group.quizzes.push(quiz); } // إضافة الاختبار للمجموعة
+             else { console.warn(`Module quiz ${quiz.id} (module ${quiz.module_number}) has no matching group.`); } // تحذير إذا لم توجد مجموعة
         }
     }
-    // Sort module quizzes
+    // ترتيب اختبارات الوحدات داخل كل مجموعة أبجديًا
     modulesMap.forEach(group => group.quizzes.sort((a, b) => (a.title || '').localeCompare(b.title || '')));
 
-    // Remove empty 'general' group
+    // حذف المجموعة العامة إذا كانت فارغة (لا تحتوي على دروس أو اختبارات)
     const generalGroup = modulesMap.get(generalGroupKey);
     if (generalGroup && generalGroup.lessons.length === 0 && generalGroup.quizzes.length === 0) {
         modulesMap.delete(generalGroupKey);
     }
 
-    // Sort groups (general first, then by module number)
+    // تحويل الخريطة إلى مصفوفة وترتيب المجموعات (العامة أولاً، ثم حسب رقم الوحدة)
     const sortedGroups = Array.from(modulesMap.values()).sort((a, b) => {
-        if (a.moduleNumber === null) return -1; if (b.moduleNumber === null) return 1;
-        return a.moduleNumber - b.moduleNumber;
+        if (a.moduleNumber === null) return -1; // المجموعة العامة تأتي أولاً
+        if (b.moduleNumber === null) return 1;
+        return a.moduleNumber - b.moduleNumber; // ترتيب رقمي للوحدات الأخرى
     });
-    // console.log("[Computed groupedContent] Groups generated:", sortedGroups.length);
-    return sortedGroups;
+
+    return sortedGroups; // إرجاع المصفوفة المرتبة للمجموعات
 });
 
- // --- Helper Functions ---
-const isLessonCompleted = (lessonId: number): boolean => completedLessonIds.value.includes(lessonId);
-const getCourseImageUrl = (url: string | null): string => url || '/images/placeholder-course.jpg'; // Default placeholder
-const lessonLink = (lessonId: number | undefined): string => lessonId ? `/study/courses/${courseId.value}/lessons/${lessonId}` : '#';
+ // --- الدوال المساعدة (Helper Functions) ---
 
-// Checks if the user has passed a specific quiz based on the latest submitted attempt
+// التحقق مما إذا كان الدرس قد اكتمل بواسطة المستخدم الحالي
+const isLessonCompleted = (lessonId: number): boolean => completedLessonIds.value.includes(lessonId);
+
+// الحصول على رابط صورة الدورة أو صورة افتراضية
+const getCourseImageUrl = (url: string | null): string => url || '/images/placeholder-course.jpg'; // استخدام placeholder إذا لم يتوفر رابط
+
+// إنشاء رابط لصفحة الدرس
+const lessonLink = (lessonId: number | undefined): string => lessonId ? `/study/courses/${courseId.value}/lessons/${lessonId}` : '#'; // رابط آمن
+
+// التحقق مما إذا كان المستخدم قد اجتاز اختبارًا معينًا (بناءً على آخر محاولة)
 const hasPassedQuiz = (quizId: number | bigint | undefined | null): boolean => {
-    if (!quizId || !isLoggedIn.value) return false;
-    const numericQuizId = Number(quizId);
+    if (!quizId || !isLoggedIn.value) return false; // لا يمكن التحقق بدون معرف اختبار أو تسجيل دخول
+    const numericQuizId = Number(quizId); // تحويل إلى رقم
+    // تصفية محاولات المستخدم لهذا الاختبار المحدد والتي تم إرسالها
     const attemptsForQuiz = userQuizAttempts.value
         .filter(att => att.quiz_id === numericQuizId && att.submitted_at !== null)
+        // ترتيب المحاولات حسب تاريخ الإرسال (الأحدث أولاً)
         .sort((a, b) => new Date(b.submitted_at!).getTime() - new Date(a.submitted_at!).getTime());
+    // إرجاع true إذا كان هناك محاولات وكانت آخر محاولة ناجحة (passed = true)
     return attemptsForQuiz.length > 0 && attemptsForQuiz[0].passed === true;
 };
 
-// Basic check if user can attempt a quiz (logged in and enrolled)
+// التحقق المبدئي مما إذا كان بإمكان المستخدم محاولة إجراء الاختبار (مسجل ومنتسب)
 const canAttemptQuiz = (quizId: number | bigint | undefined | null): boolean => {
+    // يمكن إضافة شروط أكثر تعقيدًا هنا لاحقًا (مثل عدد المحاولات، المتطلبات السابقة)
     return isLoggedIn.value && isEnrolled.value;
-    // Add more complex logic here if needed (e.g., prerequisites, max attempts)
 };
 
-// --- Event Handlers ---
+// --- معالجات الأحداث (Event Handlers) ---
+
+// معالج حدث النقر على زر "انتسب الآن"
 const handleEnroll = async (id: number | undefined | null) => {
-    const targetCourseId = Number(id); // Ensure number
+    const targetCourseId = Number(id); // التأكد من أنه رقم
+    // التحقق من الشروط الأساسية قبل المتابعة
     if (!targetCourseId || !isLoggedIn.value || !profile.value?.id || isEnrolled.value || enrollLoading.value) return;
-    enrollLoading.value = true;
+    enrollLoading.value = true; // تفعيل حالة التحميل
     try {
+      // إدخال سجل جديد في جدول الانتساب
       const { data: newEnrollment, error: enrollError } = await supabase
         .from('course_enrollments')
         .insert({ user_id: profile.value.id, course_id: targetCourseId })
-        .select('*').single();
-      if (enrollError) throw enrollError;
-      await refresh(); // Refresh all data after enrollment
-      // TODO: Replace alert with a user-friendly notification system
+        .select('*').single(); // طلب إرجاع السجل الجديد (اختياري)
+      if (enrollError) throw enrollError; // رمي الخطأ إذا حدث
+      await refresh(); // إعادة جلب جميع بيانات الصفحة لتحديث الواجهة (بما في ذلك حالة الانتساب والتقدم)
       console.log('Enrollment successful!');
+      // TODO: استبدال alert بنظام إشعارات أفضل (toast)
       // alert('تم الانتساب بنجاح!');
     } catch (err:any) {
         console.error("Enrollment error:", err);
+        // TODO: إظهار رسالة خطأ للمستخدم
         // alert(`فشل الانتساب: ${err.message}`);
-        // TODO: Show error notification
     } finally {
-        enrollLoading.value = false;
+        enrollLoading.value = false; // إلغاء تفعيل حالة التحميل دائمًا
     }
 };
 
+// معالج حدث النقر على زر "إلغاء الانتساب"
 const handleUnenroll = async (id: number | undefined | null) => {
-    const targetCourseId = Number(id); // Ensure number
+    const targetCourseId = Number(id); // التأكد من أنه رقم
+    // التحقق من الشروط الأساسية
     if (!targetCourseId || !isEnrolled.value || !profile.value?.id || enrollLoading.value) return;
-    // Confirmation dialog
+    // طلب تأكيد من المستخدم قبل الحذف
     if (!confirm('هل أنت متأكد من إلغاء الانتساب لهذه الدورة؟ سيتم حذف تقدمك المحفوظ المتعلق بهذه الدورة.')) return;
-    enrollLoading.value = true;
+    enrollLoading.value = true; // تفعيل حالة التحميل
     try {
-      // Consider potential need for cascading deletes or manual cleanup of related data
+      // حذف سجل الانتساب المطابق للمستخدم والدورة
       const { error: unenrollError } = await supabase
         .from('course_enrollments')
         .delete()
-        .match({ user_id: profile.value.id, course_id: targetCourseId });
-      if (unenrollError) throw unenrollError;
-      await refresh(); // Refresh all data after unenrollment
-      // TODO: Replace alert with a user-friendly notification system
+        .match({ user_id: profile.value.id, course_id: targetCourseId }); // شرط الحذف الدقيق
+      if (unenrollError) throw unenrollError; // رمي الخطأ إذا حدث
+      await refresh(); // إعادة جلب جميع بيانات الصفحة لتحديث الواجهة
       console.log('Unenrollment successful!');
+      // TODO: استبدال alert بنظام إشعارات أفضل (toast)
       // alert('تم إلغاء الانتساب.');
     } catch (err:any) {
         console.error("Unenrollment error:", err);
+        // TODO: إظهار رسالة خطأ للمستخدم
         // alert(`فشل إلغاء الانتساب: ${err.message}`);
-        // TODO: Show error notification
     } finally {
-        enrollLoading.value = false;
+        enrollLoading.value = false; // إلغاء تفعيل حالة التحميل دائمًا
     }
 };
 
-// Navigates to the last accessed lesson or the first lesson
+// معالج حدث النقر على زر "استئناف التعلم"
 const navigateToLastAccessed = () => {
-     const targetCourseId = courseId.value;
-    if (isNaN(targetCourseId) || !isEnrolled.value) return;
+     const targetCourseId = courseId.value; // استخدام المعرف المحسوب
+    if (isNaN(targetCourseId) || !isEnrolled.value) return; // التحقق من الصلاحية والانتساب
+
+    // الحصول على معرف آخر درس تم الوصول إليه من بيانات الانتساب
     const lastLessonId = enrollment.value?.last_accessed_lesson_id;
-    const lessons = courseLessonsData.value; // Use the sorted list
+    // الحصول على قائمة الدروس المرتبة
+    const lessons = courseLessonsData.value;
+    // الحصول على معرف أول درس في القائمة كاحتياط
     const firstLessonId = lessons.length > 0 ? lessons[0]?.id : undefined;
 
+    // تحديد الدرس المستهدف: إما آخر درس تم الوصول إليه (إذا كان موجودًا وصالحًا) أو أول درس
     const targetLessonId = lastLessonId && lessons.some(l => l.id === lastLessonId)
                            ? lastLessonId
                            : firstLessonId;
 
+    // الانتقال إلى صفحة الدرس المستهدف إذا تم تحديده
     if (targetLessonId) {
-        navigateTo(lessonLink(targetLessonId));
+        navigateTo(lessonLink(targetLessonId)); // استخدام الدالة المساعدة لإنشاء الرابط
     } else {
+        // إذا لم يتم العثور على أي دروس
         console.warn("No lessons found to navigate to for last accessed/first lesson.");
+        // TODO: إظهار إشعار للمستخدم
         // alert('لا توجد دروس في هذه الدورة بعد.');
-        // TODO: Show notification
     }
 };
 
-// Navigates to the quiz page
+// معالج حدث النقر على زر اختبار (لأي مستوى)
 const goToQuiz = (quizId: number | bigint | undefined | null) => {
-    if (!quizId) return;
+    if (!quizId) return; // التأكد من وجود معرف للاختبار
+    // الانتقال إلى صفحة الاختبار باستخدام المعرف
     navigateTo(`/quizzes/${String(quizId)}`);
 };
 
- // --- Meta Tags / Head ---
- // Updates page title and description based on course data, loading, or error state
+ // --- تحديث معلومات الرأس (Meta Tags / Head) ---
+ // يراقب تغير بيانات الدورة وحالة التحميل والخطأ لتحديث عنوان الصفحة ووصفها ديناميكيًا
  watch([course, pending, error], ([newCourse, loadingState, errorState]) => {
-     let pageTitle = 'تفاصيل الدورة';
-     let description = 'تصفح محتوى الدورة والدروس المتاحة.';
+     let pageTitle = 'تفاصيل الدورة'; // العنوان الافتراضي
+     let description = 'تصفح محتوى الدورة والدروس المتاحة.'; // الوصف الافتراضي
 
+     // تحديد العنوان والوصف بناءً على الحالة
      if (loadingState) {
          pageTitle = 'جارٍ تحميل الدورة...';
          description = 'يتم الآن تحميل تفاصيل الدورة المطلوبة.';
-     } else if (errorState && errorState.statusCode === 404) {
+     } else if (errorState && errorState.statusCode === 404) { // خطأ 404 (غير موجود)
          pageTitle = 'الدورة غير متاحة';
          description = 'لم نتمكن من العثور على الدورة المطلوبة أو أنها غير نشطة حالياً.';
-     } else if (errorState) {
+     } else if (errorState) { // أي خطأ آخر
          pageTitle = 'خطأ في تحميل الدورة';
          description = `حدث خطأ أثناء تحميل بيانات الدورة: ${errorState.message}`;
-     } else if (newCourse) {
-         pageTitle = `دورة: ${newCourse.title}`;
+     } else if (newCourse) { // في حالة النجاح ووجود بيانات الدورة
+         pageTitle = `دورة: ${newCourse.title}`; // استخدام عنوان الدورة
+         // استخدام وصف الدورة (أو جزء منه) أو وصف افتراضي
          description = newCourse.description?.substring(0, 160) || `تفاصيل ومحتوى دورة "${newCourse.title}".`;
      }
 
+     // استخدام useHead لتحديث معلومات الرأس
      useHead({
-         title: pageTitle,
+         title: pageTitle, // تعيين عنوان الصفحة
          meta: [
-            { name: 'description', content: description },
-            // Add more relevant meta tags (Open Graph, Twitter Cards) if desired
+            { name: 'description', content: description }, // تعيين وصف الصفحة
+            // إضافة علامات Open Graph لتحسين المشاركة على وسائل التواصل الاجتماعي (اختياري)
              { property: 'og:title', content: pageTitle },
              { property: 'og:description', content: description },
-             { property: 'og:type', content: 'website' }, // Or 'article' if more appropriate
+             { property: 'og:type', content: 'website' },
+             // يمكنك إضافة og:image هنا إذا كان لديك رابط صورة الدورة
+             // { property: 'og:image', content: getCourseImageUrl(newCourse?.image_url ?? null) },
          ]
      });
- }, { immediate: true }); // Run immediately to set initial head tags
+ }, { immediate: true }); // immediate: true لتطبيق التحديث فورًا عند تحميل المكون
 
 </script>
-
 <style scoped>
 /* Styles from the original component */
 .button-primary {

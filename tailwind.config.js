@@ -1,5 +1,3 @@
-// tailwind.config.js
-
 const plugin = require('tailwindcss/plugin')
 
 module.exports = {
@@ -23,20 +21,19 @@ module.exports = {
         'golden-calm': 'var(--color-golden-calm)',
         'blue-muted': 'var(--color-blue-muted)',
 
-        // --- اللون الأساسي primary ---
+        // اللون الأساسي
         primary: {
           DEFAULT: 'var(--color-olive-green)',
-          50: '#e6f0ff',
-          100: '#bfd9ff',
-          200: '#99c2ff',
-          300: '#73aaff',
-          400: '#4d93ff',
-          500: 'var(--color-olive-green)', // التدرج الأساسي يبقى من الـ CSS variable
-          600: '#1a75ff',
-          700: '#005ce6',
-          800: '#0047b3',
-          900: '#003380',
-          950: '#001a4d',
+          50: '#e8f9f0',
+          100: '#c2eed7',
+          200: '#98e2bb',
+          300: '#6dd7a0',
+          400: '#47cc89',
+          500: 'var(--color-olive-green)',
+          600: '#177245',
+          700: '#105635',
+          800: '#093b25',
+          900: '#041f14',
         },
       },
     },
@@ -47,24 +44,24 @@ module.exports = {
     require('@tailwindcss/aspect-ratio'),
     require('@tailwindcss/line-clamp'),
 
-    // تعريف المتغيرات في :root و .dark
+    // المتغيرات الديناميكية للوضعين
     plugin(function ({ addBase }) {
       addBase({
         ':root': {
-          '--color-beige-light': '#F8F4EC',
-          '--color-brown-dark': '#3B2F2F',
-          '--color-olive-green': '#0066bd',
-          '--color-cream-gray': '#E8E2D6',
-          '--color-golden-calm': '#D4AF37',
-          '--color-blue-muted': '#6D91A0',
+          '--color-beige-light': '#fdfaf6',
+          '--color-brown-dark': '#3c2f2f',
+          '--color-olive-green': '#177245',
+          '--color-cream-gray': '#f0eae0',
+          '--color-golden-calm': '#c2a85d',
+          '--color-blue-muted': '#7d9ca8',
         },
         '.dark': {
-          '--color-beige-light': '#1e1e1e',
-          '--color-brown-dark': '#f5f5f5',
-          '--color-olive-green': '#79b8f3',
-          '--color-cream-gray': '#2a2a2a',
-          '--color-golden-calm': '#ffe083',
-          '--color-blue-muted': '#88a9b5',
+          '--color-beige-light': '#121212',
+          '--color-brown-dark': '#f3f3f3',
+          '--color-olive-green': '#30c176',
+          '--color-cream-gray': '#1d1d1d',
+          '--color-golden-calm': '#e4c76f',
+          '--color-blue-muted': '#a4c3ce',
         }
       })
     })

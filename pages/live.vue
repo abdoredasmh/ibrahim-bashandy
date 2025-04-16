@@ -1,1 +1,0 @@
-<template><div class='p-4'>البث المباشر</div></template>
