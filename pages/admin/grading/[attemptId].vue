@@ -193,13 +193,12 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, shallowRef, watch, reactive } from 'vue';
 import { useRoute, useSupabaseClient, useAsyncData, definePageMeta, createError, navigateTo, useHead } from '#imports';
 import type { Database, Tables, Json, Enums } from '~/types/database.types';
-import LoadingSpinner from '~/components/LoadingSpinner.vue';
-import InfoItem from '~/components/admin/infoItem.vue';
+import LoadingSpinner from '~/components/LoadingSpinner.vue'; // تأكد من المسار الصحيح
+import InfoItem from '~/components/admin/infoItem.vue'; // تأكد من المسار الصحيح
 // Use DOMPurify for safer HTML rendering if markdown source is potentially untrusted
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -593,6 +592,7 @@ const validateAllScoresForSubmit = (): boolean => {
     return isValid;
 };
 
+
 // --- Form Submission ---
 const submitManualGrades = async () => {
   // Ensure essential data is loaded and not already saving
@@ -642,70 +642,101 @@ const submitManualGrades = async () => {
 
   isSaving.value = true;
 
-  // Use computed properties for final calculations
-  const finalManualScore = calculatedManualScore.value;
-  const finalTotalScore = calculatedFinalScore.value;
-  const finalPassedStatus = passStatus.value ?? false; // Default to false if calculation somehow fails
-
-  // Prepare the map of manual scores for storage, ensuring only valid numbers are included
-  const manualScoresMapForStorage: Record<string, number> = {};
-  Object.entries(manualScores).forEach(([key, score]) => {
-      // Include if it's a valid number score and belongs to a written question
-      if (typeof score === 'number' && !isNaN(score) && writtenQuestions.value.some(q => q.id.toString() === key)) {
-          manualScoresMapForStorage[key] = score;
-      }
-  });
-
-  // Ensure we have the latest parsed answers to merge with
-  const currentParsedAnswers = attemptData.value.answers_parsed ?? {};
-
-  // Data for Supabase update
-  const updateData: Partial<Tables<'quiz_attempts'>> & { answers?: Json } = {
-    manual_score: finalManualScore,
-    total_score: finalTotalScore,
-    grading_status: 'graded', // Mark as fully graded upon successful manual submission
-    passed: finalPassedStatus,
-    // Record the time of manual grading completion
-    // Update the 'answers' JSONB field:
-    // Preserve existing answers and merge/overwrite the manual_score_map
-    answers: {
-      ...currentParsedAnswers, // Spread existing parsed data first
-      manual_score_map: manualScoresMapForStorage, // Add/update the manual scores
-      // feedback_map: manualFeedback.value // Add feedback map here if implemented
-    }
-  };
-
-  console.log(`Submitting final grades for attempt ${attemptData.value.id}:`, updateData);
-
   try {
-    const { error: updateError } = await supabase
-      .from('quiz_attempts')
-      .update(updateData)
-      .eq('id', attemptData.value.id)
-      .select('id') // Select something small to confirm success
-      .single(); // Expect a single row update
+      // Use computed properties for final calculations
+      const finalManualScore = calculatedManualScore.value;
+      const finalTotalScore = calculatedFinalScore.value;
+      const finalPassedStatus = passStatus.value ?? false; // Default to false if calculation somehow fails
 
-    if (updateError) {
-        // Throw the Supabase error to be caught below
-        throw updateError;
+      // Prepare the map of manual scores for storage, ensuring only valid numbers are included
+      const manualScoresMapForStorage: Record<string, number> = {};
+      Object.entries(manualScores).forEach(([key, score]) => {
+          // Include if it's a valid number score and belongs to a written question
+          if (typeof score === 'number' && !isNaN(score) && writtenQuestions.value.some(q => q.id.toString() === key)) {
+              manualScoresMapForStorage[key] = score;
+          }
+      });
+
+      // Ensure we have the latest parsed answers to merge with
+      const currentParsedAnswers = attemptData.value.answers_parsed ?? {};
+
+      // Data for Supabase update
+      const updateData: Partial<Tables<'quiz_attempts'>> & { answers?: Json } = {
+        manual_score: finalManualScore,
+        total_score: finalTotalScore,
+        grading_status: 'graded', // Mark as fully graded upon successful manual submission
+        passed: finalPassedStatus,
+        // Record the time of manual grading completion
+        // Update the 'answers' JSONB field:
+        // Preserve existing answers and merge/overwrite the manual_score_map
+        answers: {
+          ...currentParsedAnswers, // Spread existing parsed data first
+          manual_score_map: manualScoresMapForStorage, // Add/update the manual scores
+          // feedback_map: manualFeedback.value // Add feedback map here if implemented
+        }
+      };
+
+      console.log(`Submitting final grades for attempt ${attemptData.value.id}:`, updateData);
+
+
+        // 1. Update the quiz attempt record
+        const { error: updateError } = await supabase
+          .from('quiz_attempts')
+          .update(updateData)
+          .eq('id', attemptData.value!.id) // Use ! because we checked attemptData.value earlier
+          .select('id')
+          .single(); // Expect a single row update
+
+        if (updateError) {
+            throw updateError; // Throw to be caught by the catch block
+        }
+
+        console.log("Manual grades submitted successfully!");
+
+        // ***** START: Notification Logic *****
+        // Check again if attemptData and user_id are valid before sending notification
+        if (attemptData.value && attemptData.value.user_id) {
+            const notificationPayload = {
+                user_id: attemptData.value.user_id,
+                message: `تم تصحيح اختبارك "${quizData.value?.title ?? 'غير مسمى'}" ويمكنك الآن الاطلاع على النتيجة.`,
+                // IMPORTANT: Ensure this link works in your user-facing frontend
+                link: `/quizzes/results/${attemptData.value.id}`,
+                is_read: false
+            };
+
+            const { error: notificationError } = await supabase
+                .from('notifications')
+                .insert(notificationPayload);
+
+            if (notificationError) {
+                console.error("Error creating grading notification:", notificationError);
+                // Handle notification error - maybe show a warning, but don't stop the flow
+                // Using alert as placeholder - replace with your notification system
+                alert("تم حفظ التصحيح بنجاح، لكن فشل إرسال الإشعار للطالب. الخطأ: " + notificationError.message);
+            } else {
+                console.log("Grading notification created successfully for user:", attemptData.value.user_id);
+                // Success message including notification
+                alert("تم حفظ التصحيح بنجاح وتم إرسال إشعار للطالب."); // Placeholder
+            }
+        } else {
+             console.warn("Could not send notification: attemptData or user_id missing after update success.");
+             // Success message without notification confirmation
+             alert("تم حفظ التصحيح بنجاح (لم يتم إرسال إشعار - بيانات الطالب مفقودة)."); // Placeholder
+        }
+        // ***** END: Notification Logic *****
+
+
+        // Navigate back after successful save and notification attempt
+        await navigateTo('/admin/grading');
+
+    } catch (err: any) {
+      console.error("Error saving manual grades:", err);
+      saveError.value = `فشل حفظ التصحيح: ${err.message || 'حدث خطأ غير متوقع في الاتصال بالخادم.'}`;
+      // Consider more specific error handling based on err.code or err.details if needed
+      // e.g., check for permission errors (403), network errors, etc.
+    } finally {
+      isSaving.value = false;
     }
-
-    console.log("Manual grades submitted successfully!");
-    // TODO: Replace alert with a notification system (e.g., toast)
-    // notificationStore.showSuccess("تم حفظ التصحيح بنجاح!");
-    alert("تم حفظ التصحيح بنجاح!"); // Placeholder
-
-    // Navigate back to the main grading list after successful save
-    await navigateTo('/admin/grading');
-
-  } catch (err: any) {
-    console.error("Error saving manual grades:", err);
-    saveError.value = `فشل حفظ التصحيح: ${err.message || 'حدث خطأ غير متوقع في الاتصال بالخادم.'}`;
-    // Consider more specific error handling based on err.code or err.details if needed
-    // e.g., check for permission errors (403), network errors, etc.
-  } finally {
-    isSaving.value = false;
-  }
 };
 
 // --- Meta Tags ---
@@ -722,7 +753,6 @@ useHead({
 });
 
 </script>
-
 <style scoped>
 /* Basic Error Box Style */
 .error-box {

@@ -1,49 +1,207 @@
-// plugins/watch-auth.client.ts
-import { useUserStore } from '~/stores/user'; // تأكد من المسار الصحيح
+// stores/notifications.ts
+import { defineStore } from 'pinia';
+import { useSupabaseClient } from '#imports';
+import type { Database, Tables } from '~/types/database.types';
+import { useUserStore } from './user'; // لاستخدام معرف المستخدم
 
-export default defineNuxtPlugin(() => {
-  const userStore = useUserStore();
-  const supabase = useSupabaseClient();
-  const user = useSupabaseUser(); // استخدم useSupabaseUser للمراقبة
+// تعريف نوع الإشعار مع إضافة حالة الواجهة (اختياري)
+type NotificationWithState = Tables<'notifications'> & { isUpdating?: boolean };
 
-  // 1. تعيين المستخدم الأولي (قد يكون null أو المستخدم الحالي)
-  userStore.setSupabaseUser(user.value);
+export const useNotificationStore = defineStore('notifications', {
+  state: () => ({
+    notifications: [] as NotificationWithState[], // قائمة الإشعارات المحملة
+    unreadCount: 0,                         // عدد الإشعارات غير المقروءة
+    isLoading: false,                       // هل يتم جلب الإشعارات حاليًا؟
+    error: null as string | null,           // رسالة الخطأ إن وجدت
+    hasFetchedOnce: false,                  // هل تم الجلب مرة واحدة على الأقل؟
+    subscriptionChannel: null as any,       // لتخزين قناة Realtime
+  }),
 
-  // 2. جلب البروفايل الأولي إذا كان المستخدم مسجلاً دخوله بالفعل
-  if (user.value) {
-    console.log('[Auth Plugin] Initial user detected, fetching profile...');
-    // لا تستخدم await هنا لتجنب حظر تحميل الـ plugin الأولي للصفحة
-    userStore.fetchProfile();
-  }
+  getters: {
+    // يمكنك إضافة getters أخرى إذا احتجت (مثل أحدث إشعار)
+  },
 
-  // 3. مراقبة تغييرات حالة Supabase Auth (للتسجيل، الخروج، تحديث التوكن)
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('[Auth Plugin] onAuthStateChange event:', event);
-    // قم بتحديث المستخدم في المتجر بناءً على المستخدم الحالي من Supabase
-    const currentUser = useSupabaseUser().value;
-    userStore.setSupabaseUser(currentUser);
+  actions: {
+    // --- دالة جلب الإشعارات ---
+    async fetchNotifications(userId: string, limit = 15) { // جلب آخر 15 افتراضيًا
+      if (this.isLoading) return; // منع الجلب المتعدد
+      console.log("[Notifications] Fetching notifications...");
+      this.isLoading = true;
+      this.error = null;
+      const client = useSupabaseClient<Database>();
 
-    // إذا تم تسجيل الدخول بنجاح أو تحديث الجلسة، حاول جلب البروفايل
-    if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && currentUser) {
-      console.log(`[Auth Plugin] ${event} event, fetching profile...`);
-      // يمكنك استخدام await هنا لأن onAuthStateChange يعمل بشكل غير متزامن
-      await userStore.fetchProfile();
-    }
-    // عند تسجيل الخروج، setSupabaseUser(null) في المتجر سيمسح البروفايل
-     else if (event === 'SIGNED_OUT') {
-         console.log('[Auth Plugin] SIGNED_OUT event.');
-         // لا حاجة لـ clearProfile هنا، setSupabaseUser يعالجها
-         // يمكن إضافة توجيه إضافي هنا إذا لزم الأمر
-         // await navigateTo('/login');
+      try {
+        // جلب الإشعارات الخاصة بالمستخدم والإشعارات العامة (user_id is null)
+        // مرتبة بالأحدث أولاً
+        const { data, error, count } = await client
+          .from('notifications')
+          .select('*', { count: 'exact' }) // جلب العدد الإجمالي غير المقروء
+          .or(`user_id.eq.${userId},user_id.is.null`) // للمستخدم أو عام
+          .order('created_at', { ascending: false })
+          .limit(limit); // تحديد العدد المطلوب
+
+        if (error) throw error;
+
+        this.notifications = data || [];
+
+        // حساب العدد غير المقروء من البيانات المجلوبة
+        this.unreadCount = this.notifications.filter(n => !n.is_read).length;
+        // ملاحظة: الـ count من Supabase قد لا يكون دقيقًا للـ unread count إذا لم نفلتر بـ is_read=false في الاستعلام
+
+        this.hasFetchedOnce = true;
+        console.log(`[Notifications] Fetched ${data?.length ?? 0} notifications. Unread: ${this.unreadCount}`);
+
+      } catch (err: any) {
+        console.error("Error fetching notifications:", err);
+        this.error = "فشل تحميل الإشعارات.";
+        this.notifications = [];
+        this.unreadCount = 0;
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    // --- دالة تعليم إشعار كمقروء ---
+    async markAsRead(notificationId: number) {
+      const notification = this.notifications.find(n => n.id === notificationId);
+      // تحديث الواجهة فورًا لتحسين التجربة (Optimistic Update)
+      if (notification && !notification.is_read) {
+        notification.is_read = true;
+        this.unreadCount = Math.max(0, this.unreadCount - 1); // إنقاص العدد
+      } else {
+         // إذا كان مقروءًا بالفعل أو غير موجود في القائمة الحالية، لا تفعل شيئًا
+         return;
+      }
+
+      const client = useSupabaseClient<Database>();
+      try {
+        const { error } = await client
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('id', notificationId);
+          // يمكنك إضافة .eq('user_id', userId) إذا كانت الإشعارات دائمًا خاصة بالمستخدم
+
+        if (error) {
+          console.error(`Error marking notification ${notificationId} as read:`, error);
+          // إعادة الحالة الأصلية في حالة الفشل (Rollback Optimistic Update)
+          if (notification) {
+            notification.is_read = false;
+            this.unreadCount++;
+          }
+          // TODO: Show error notification
+        } else {
+             console.log(`[Notifications] Marked ${notificationId} as read.`);
+        }
+      } catch (err) {
+        console.error("Unexpected error marking notification as read:", err);
+         if (notification) { // Rollback on unexpected errors too
+            notification.is_read = false;
+            this.unreadCount++;
+          }
+         // TODO: Show error notification
+      }
+    },
+
+    // --- دالة تعليم كل الإشعارات كمقروءة ---
+    async markAllAsRead(userId: string) {
+       if (this.unreadCount === 0) return; // لا تفعل شيئًا إذا لم يكن هناك إشعارات غير مقروءة
+
+       // تحديث الواجهة فورًا
+       const previouslyUnreadIds = this.notifications.filter(n => !n.is_read).map(n => n.id);
+       this.notifications.forEach(n => { if (!n.is_read) n.is_read = true; });
+       const oldUnreadCount = this.unreadCount;
+       this.unreadCount = 0;
+
+      const client = useSupabaseClient<Database>();
+      try {
+        const { error } = await client
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('user_id', userId) // تعليم الخاص بالمستخدم فقط
+          .eq('is_read', false); // فقط غير المقروءة
+
+        if (error) {
+          console.error("Error marking all notifications as read:", error);
+          // إعادة الحالة الأصلية في حالة الفشل
+           this.notifications.forEach(n => { if (previouslyUnreadIds.includes(n.id)) n.is_read = false; });
+           this.unreadCount = oldUnreadCount;
+           // TODO: Show error notification
+        } else {
+             console.log("[Notifications] Marked all as read.");
+        }
+      } catch (err) {
+        console.error("Unexpected error marking all notifications as read:", err);
+         this.notifications.forEach(n => { if (previouslyUnreadIds.includes(n.id)) n.is_read = false; });
+         this.unreadCount = oldUnreadCount;
+         // TODO: Show error notification
+      }
+    },
+
+    // --- (اختياري) إعداد Realtime ---
+    subscribeToNotifications(userId: string) {
+        // التأكد من عدم وجود اشتراك قائم
+        if (this.subscriptionChannel) {
+             console.log("[Notifications] Already subscribed.");
+            return;
+        }
+
+        console.log("[Notifications] Subscribing to realtime channel...");
+        const client = useSupabaseClient<Database>();
+        this.subscriptionChannel = client
+            .channel(`public:notifications:user_id=eq.${userId}`) // قناة خاصة بإشعارات هذا المستخدم
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT', // الاستماع لإضافة سجلات جديدة فقط
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${userId}` // فلتر إضافي للتأكيد
+                },
+                (payload) => {
+                    console.log('Realtime Notification Received:', payload);
+                    const newNotification = payload.new as NotificationWithState;
+                    // إضافة الإشعار الجديد في بداية القائمة
+                    this.notifications.unshift(newNotification);
+                    // زيادة العدد غير المقروء إذا كان الإشعار جديدًا وغير مقروء
+                    if (!newNotification.is_read) {
+                        this.unreadCount++;
+                    }
+                    // TODO: يمكنك هنا إظهار إشعار Toast للمستخدم
+                    // this.showRealtimeNotificationToast(newNotification);
+                }
+            )
+            .subscribe((status, err) => {
+                 if (status === 'SUBSCRIBED') {
+                    console.log('[Notifications] Realtime channel subscribed successfully!');
+                 }
+                 if (status === 'CHANNEL_ERROR' || err) {
+                    console.error('[Notifications] Realtime subscription error:', err || 'Channel Error');
+                 }
+                  if (status === 'TIMED_OUT') {
+                    console.warn('[Notifications] Realtime subscription timed out.');
+                  }
+            });
+    },
+
+    // --- (اختياري) إلغاء اشتراك Realtime ---
+    unsubscribeFromNotifications() {
+        if (this.subscriptionChannel) {
+            console.log("[Notifications] Unsubscribing from realtime channel...");
+            this.subscriptionChannel.unsubscribe();
+            this.subscriptionChannel = null;
+        }
+    },
+
+     // --- دالة لمسح الحالة عند تسجيل الخروج ---
+     clearNotifications() {
+        this.unsubscribeFromNotifications(); // إلغاء الاشتراك
+        this.notifications = [];
+        this.unreadCount = 0;
+        this.isLoading = false;
+        this.error = null;
+        this.hasFetchedOnce = false;
+         console.log("[Notifications] State cleared.");
      }
-  });
 
-  // 4. مراقبة تغييرات user composable مباشرة (قد يكون زائدًا عن الحاجة مع onAuthStateChange لكنه لا يضر)
-  // watch(user, (newUser) => {
-  //   console.log("[Auth Plugin] Watcher: Supabase user changed:", newUser?.id);
-  //   userStore.setSupabaseUser(newUser);
-  //   if (newUser) {
-  //     userStore.fetchProfile();
-  //   }
-  // }, { immediate: false }); // immediate: false لأننا عالجنا الحالة الأولية أعلاه
+  }
 });

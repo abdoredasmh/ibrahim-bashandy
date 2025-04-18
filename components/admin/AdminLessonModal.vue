@@ -44,15 +44,23 @@
                    <p v-if="validationErrors.youtube_url" class="form-error" id="youtube-error">{{ validationErrors.youtube_url }}</p>
                 </div>
 
-                 <!-- Category Select Field -->
+                 <!-- Category Select Field (Mandatory) -->
                   <div>
-                      <label for="category_id" class="admin-label">الفئة</label>
+                      <label for="category_id" class="admin-label">الفئة *</label>
                        <div v-if="loadingCategories" class="form-loading-text">جار تحميل الفئات...</div>
-                      <select v-else id="category_id" v-model="form.category_id" class="admin-select">
-                          <option :value="null">-- اختر فئة (اختياري) --</option>
+                      <select
+                          v-else
+                          id="category_id"
+                          v-model="form.category_id"
+                          required 
+                          class="admin-select"
+                          aria-describedby="category-error" 
+                      >
+                          <option :value="null" disabled>-- اختر فئة * --</option> {/* تم تغيير النص الافتراضي */}
                           <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                           <option v-if="!loadingCategories && categories.length === 0" disabled>-- لا توجد فئات متاحة --</option>
                       </select>
+                       <p v-if="validationErrors.category_id" class="form-error" id="category-error">{{ validationErrors.category_id }}</p> {/* تمت إضافة عنصر الخطأ */}
                   </div>
 
                   <!-- Course Select Field -->
@@ -78,7 +86,7 @@
                  <!-- Module & Order Fields (Conditional on Course) -->
                  <!-- =========================================== -->
                   <div v-if="form.course_id" class="space-y-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    
+
                       <div>
                           <label for="module_number" class="admin-label">الوحدة داخل الدورة</label>
                            <div v-if="loadingModules" class="form-loading-text">جار تحميل الوحدات...</div>
@@ -89,7 +97,7 @@
                           <select
                               v-else-if="courseModules.length > 0"
                               id="module_number"
-                              v-model.number="form.module_number" 
+                              v-model.number="form.module_number"
                               class="admin-select"
                           >
                               <option :value="null">-- درس بدون وحدة (عام داخل الدورة) --</option>
@@ -143,14 +151,16 @@
 <script setup lang="ts">
 import { ref, watch, computed, reactive } from 'vue';
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue';
-import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types';
+import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types'; // تأكد أن المسار صحيح
 import { useSupabaseClient } from '#imports';
+import { useToast } from 'vue-toastification'; // استيراد useToast
 
 // Define Types
 type Lesson = Tables<'lessons'>;
 type Category = Pick<Tables<'categories'>, 'id' | 'name'>;
 type Course = Pick<Tables<'study_courses'>, 'id' | 'title'>;
 type CourseModule = Pick<Tables<'course_modules'>, 'id' | 'title' | 'module_number'>;
+type NotificationInsert = TablesInsert<'notifications'>; // تعريف نوع الإشعار
 
 // Props and Emits
 const props = defineProps<{
@@ -160,20 +170,21 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(['close', 'saved']);
 
-// Supabase Client
+// Supabase Client & Toast
 const supabase = useSupabaseClient<Database>();
+const toast = useToast(); // تهيئة Toast
 
 // Component State
 const isSaving = ref(false);
 const errorMessage = ref<string | null>(null);
-const validationErrors = reactive({ title: '', youtube_url: '' });
+const validationErrors = reactive({ title: '', youtube_url: '', category_id: '' }); // إضافة category_id
 
 // Form State - Initialize with potential fields
 const form = ref<Partial<Lesson>>({
     title: '',
     description: null,
     youtube_url: '',
-    category_id: null,
+    category_id: null, // قيمة أولية null
     course_id: null,
     module_number: null,
     lesson_order: null,
@@ -193,7 +204,7 @@ const isEditing = computed(() => !!props.lessonData?.id);
 
 // --- Helper Functions ---
 
-// Fetch course modules based on course ID
+// Fetch course modules based on course ID (الكود الأصلي بدون تغيير)
 async function fetchCourseModules(courseId: number | null | undefined) {
   if (!courseId) {
     courseModules.value = [];
@@ -223,128 +234,224 @@ async function fetchCourseModules(courseId: number | null | undefined) {
   }
 }
 
-// Reset form fields
+// Reset form fields (مع إضافة category_id للتحقق)
 const resetForm = (initialCourseId: number | null = null) => {
     console.log("Resetting form. Initial Course ID:", initialCourseId);
     form.value = {
         title: '',
         description: null,
         youtube_url: '',
-        category_id: null,
-        course_id: initialCourseId, // Use the passed or default null
+        category_id: null, // إعادة تعيين الفئة إلى null
+        course_id: initialCourseId,
         module_number: null,
         lesson_order: null,
     };
     errorMessage.value = null;
     validationErrors.title = '';
     validationErrors.youtube_url = '';
-    courseModules.value = []; // Clear modules list on reset
+    validationErrors.category_id = ''; // إعادة تعيين خطأ الفئة
+    courseModules.value = [];
     loadingModules.value = false;
     modulesError.value = null;
-
-    // If there's an initial course ID, fetch its modules
     if (initialCourseId) {
         fetchCourseModules(initialCourseId);
     }
 };
 
-// Fetch static dropdown data (Categories and Courses)
+// Fetch static dropdown data (Categories and Courses) (الكود الأصلي بدون فلتر type)
 async function fetchStaticDropdownData() {
-    // Prevent refetching if already loading or data exists (optional optimization)
     if ((categories.value.length > 0 && courses.value.length > 0) || loadingCategories.value || loadingCourses.value) {
       console.log('[fetchStaticDropdownData] Skipping fetch (already loaded or loading).');
       return;
     }
-
     console.log('[fetchStaticDropdownData] Starting...');
     loadingCategories.value = true;
     loadingCourses.value = true;
-    // Clear previous errors if any
     errorMessage.value = null;
     try {
+        // جلب جميع الفئات بدون فلتر type
         const [catResult, courseResult] = await Promise.all([
-            supabase.from('categories').select('id, name').order('name'),
+            supabase.from('categories').select('id, name').order('name'), // <-- الكود الأصلي لجلب الفئات
             supabase.from('study_courses').select('id, title').order('title')
         ]);
+
         if (catResult.error) throw new Error(`فشل تحميل الفئات: ${catResult.error.message}`);
         categories.value = catResult.data ?? [];
+
         if (courseResult.error) throw new Error(`فشل تحميل الدورات: ${courseResult.error.message}`);
         courses.value = courseResult.data ?? [];
+
         console.log(`[fetchStaticDropdownData] ${categories.value.length} categories, ${courses.value.length} courses loaded.`);
     } catch (err: any) {
         console.error("Error in fetchStaticDropdownData:", err);
-        // Keep existing data if fetch fails partially? Or clear all? Clearing is safer.
         categories.value = [];
         courses.value = [];
         errorMessage.value = err.message || "فشل تحميل بيانات القوائم.";
+        toast.error(errorMessage.value); // عرض خطأ تحميل القوائم
     } finally {
         loadingCategories.value = false;
         loadingCourses.value = false;
     }
 }
 
-// Handler for when the selected course changes
+// Handler for when the selected course changes (الكود الأصلي بدون تغيير)
 function handleCourseChange() {
   const selectedCourseId = form.value.course_id;
   console.log("Course changed to:", selectedCourseId);
-  // Reset module and order specifically when course changes
   form.value.module_number = null;
   form.value.lesson_order = null;
-  // Fetch modules for the newly selected course (or clear if null)
   fetchCourseModules(selectedCourseId);
 }
 
-
-// --- Watchers ---
-
-// Watch props.show: Fetch static data and initialize form when modal opens
+// --- Watchers --- (الكود الأصلي مع تعديل resetForm)
 watch(() => props.show, (newVal, oldVal) => {
-    if (newVal && !oldVal) { // Only trigger when opening
+    if (newVal && !oldVal) {
         console.log("Modal opened. Fetching static data and initializing form.");
-        fetchStaticDropdownData(); // Fetch categories & courses
+        fetchStaticDropdownData();
 
-        // Initialize form based on props
-        if (props.lessonData?.id) { // Editing
+        if (props.lessonData?.id) {
             console.log("Watcher (show=true): Initializing for edit");
-            // Populate form directly from lessonData prop
             const { id, title, description, youtube_url, category_id, course_id, module_number, lesson_order } = props.lessonData;
             form.value = { id, title, description, youtube_url, category_id, course_id, module_number, lesson_order };
-            // Fetch modules if editing a lesson linked to a course
             if (course_id) {
                 fetchCourseModules(course_id);
             } else {
-                courseModules.value = []; // Clear modules if not linked
+                courseModules.value = [];
             }
-        } else { // Adding
+        } else {
             console.log("Watcher (show=true): Initializing for add with preselected:", props.preselectedCourseId);
-            resetForm(props.preselectedCourseId ?? null); // Reset with potential preselected course
+            resetForm(props.preselectedCourseId ?? null);
         }
-        // Clear previous errors
         errorMessage.value = null;
         validationErrors.title = '';
         validationErrors.youtube_url = '';
+        validationErrors.category_id = ''; // التأكد من مسح خطأ الفئة عند الفتح
     } else if (!newVal && oldVal) {
-        // Optional: Cleanup or reset state when modal closes if needed
          console.log("Modal closed.");
     }
-}, { immediate: true }); // immediate: true ensures initialization on mount if show is initially true
-
+}, { immediate: true });
 
 // --- Form Actions ---
 
 function closeModal() { if (!isSaving.value) emit('close'); }
 
+// Validate Form (مع إضافة التحقق من الفئة)
 const validateForm = (): boolean => {
     let isValid = true;
     validationErrors.title = '';
     validationErrors.youtube_url = '';
+    validationErrors.category_id = ''; // مسح خطأ الفئة السابق
     errorMessage.value = null;
-    if (!form.value.title?.trim()) { validationErrors.title = 'حقل العنوان مطلوب.'; isValid = false; }
-    if (!form.value.youtube_url?.trim()) { validationErrors.youtube_url = 'حقل رابط يوتيوب مطلوب.'; isValid = false; }
-    else { try { const url = new URL(form.value.youtube_url); if (!['www.youtube.com', 'youtube.com', 'youtu.be'].includes(url.hostname)) { validationErrors.youtube_url = 'رابط يوتيوب غير صالح.'; isValid = false; } } catch (_) { validationErrors.youtube_url = 'صيغة الرابط غير صحيحة.'; isValid = false; } }
+
+    if (!form.value.title?.trim()) {
+        validationErrors.title = 'حقل العنوان مطلوب.';
+        isValid = false;
+    }
+    if (!form.value.youtube_url?.trim()) {
+        validationErrors.youtube_url = 'حقل رابط يوتيوب مطلوب.';
+        isValid = false;
+    } else {
+        try {
+            const url = new URL(form.value.youtube_url);
+            if (!['www.youtube.com', 'youtube.com', 'youtu.be'].includes(url.hostname)) {
+                validationErrors.youtube_url = 'رابط يوتيوب غير صالح.';
+                isValid = false;
+            }
+        } catch (_) {
+            validationErrors.youtube_url = 'صيغة الرابط غير صحيحة.';
+            isValid = false;
+        }
+    }
+    // --- إضافة التحقق من الفئة ---
+    if (!form.value.category_id) {
+        validationErrors.category_id = 'حقل الفئة مطلوب.';
+        isValid = false;
+    }
+    // -----------------------------
     return isValid;
 };
 
+// ================================================
+// دالة لإرسال الإشعارات (جديدة)
+// ================================================
+async function sendNewLessonNotifications(lesson: Lesson) {
+    // التأكد من وجود البيانات الأساسية للإشعار
+    if (!lesson.course_id || !lesson.id || !lesson.title) {
+        console.warn('Notification skipped: Lesson missing course_id, id, or title.');
+        return;
+    }
+
+    const courseId = lesson.course_id;
+    const lessonId = lesson.id;
+    const lessonTitle = lesson.title;
+
+    // البحث عن عنوان الدورة من قائمة الدورات المحملة مسبقًا
+    const course = courses.value.find(c => c.id === courseId);
+    const courseTitle = course?.title ?? `الدورة #${courseId}`; // عنوان احتياطي
+
+    console.log(`Sending notifications for new lesson "${lessonTitle}" (ID: ${lessonId}) in course "${courseTitle}" (ID: ${courseId})`);
+
+    try {
+        // 1. الحصول على المستخدمين المسجلين في هذه الدورة
+        const { data: enrollments, error: enrollError } = await supabase
+            .from('course_enrollments')
+            .select('user_id')
+            .eq('course_id', courseId);
+
+        if (enrollError) {
+            console.error('Error fetching enrollments for notification:', enrollError);
+            toast.warning(`تم حفظ الدرس، لكن فشل جلب الطلاب المسجلين لإرسال الإشعارات: ${enrollError.message}`);
+            return; // التوقف هنا لأننا لا نعرف لمن نرسل
+        }
+
+        if (!enrollments || enrollments.length === 0) {
+            console.log('No users enrolled in this course. Skipping notifications.');
+            return;
+        }
+
+        // 2. تجهيز بيانات الإشعار لكل مستخدم مسجل
+        const notificationsToSend: NotificationInsert[] = enrollments.map(enrollment => {
+            if (!enrollment.user_id) return null; // تجاوز إذا كان user_id غير موجود
+
+            // بناء الرابط للدرس داخل الدورة
+            const link = `study/courses/${courseId}/lessons/${lessonId}`;
+            const message = `درس جديد: "${lessonTitle}" أُضيف إلى دورة "${courseTitle}".`;
+
+            return {
+                user_id: enrollment.user_id,
+                message: message,
+                link: link,
+                is_read: false,
+                // created_at يتم التعامل معه بواسطة قاعدة البيانات
+            };
+        }).filter((n): n is NotificationInsert => n !== null); // تصفية أي إدخالات null
+
+        if (notificationsToSend.length === 0) {
+             console.log('Filtered notifications array is empty. Skipping insert.');
+             return;
+        }
+
+        // 3. إدراج الإشعارات دفعة واحدة
+        console.log(`Attempting to insert ${notificationsToSend.length} notifications.`);
+        const { error: insertError } = await supabase
+            .from('notifications')
+            .insert(notificationsToSend);
+
+        if (insertError) {
+            console.error('Error inserting notifications:', insertError);
+             toast.warning(`تم حفظ الدرس، لكن فشل إرسال بعض أو كل الإشعارات للطلاب: ${insertError.message}`);
+        } else {
+            console.log(`${notificationsToSend.length} notifications sent successfully.`);
+            // toast.info(`تم إرسال ${notificationsToSend.length} إشعارًا للطلاب المسجلين.`); // اختياري
+        }
+
+    } catch (err: any) {
+        console.error('Unexpected error sending notifications:', err);
+         toast.error(`حدث خطأ غير متوقع أثناء محاولة إرسال الإشعارات: ${err.message}`);
+    }
+}
+
+// Save Lesson (مع التعديلات للحصول على البيانات وإرسال الإشعارات)
 async function saveLesson() {
   console.log('Attempting to save lesson...');
   if (!validateForm()) { console.log('Validation failed.'); return; }
@@ -352,19 +459,17 @@ async function saveLesson() {
   isSaving.value = true;
   errorMessage.value = null;
 
-  // Prepare data payload
+  // تجهيز البيانات (مع التأكد من تحويل الأرقام)
   const lessonPayload: Partial<TablesInsert<'lessons'> | TablesUpdate<'lessons'>> = {
     title: form.value.title!,
     description: form.value.description?.trim() || null,
     youtube_url: form.value.youtube_url!,
-    category_id: form.value.category_id ? Number(form.value.category_id) : null,
+    category_id: form.value.category_id ? Number(form.value.category_id) : null, // تأكد من تحويل الفئة
     course_id: form.value.course_id ? Number(form.value.course_id) : null,
-    // Only include module/order if a course is selected
     module_number: form.value.course_id ? (form.value.module_number ? Number(form.value.module_number) : null) : null,
     lesson_order: form.value.course_id ? (form.value.lesson_order ? Number(form.value.lesson_order) : null) : null,
   };
 
-  // Ensure module/order are null if no course_id
   if (lessonPayload.course_id === null) {
       lessonPayload.module_number = null;
       lessonPayload.lesson_order = null;
@@ -373,45 +478,70 @@ async function saveLesson() {
   console.log('Payload to send:', JSON.stringify(lessonPayload, null, 2));
 
   try {
-    let error: any = null;
-    let data: any = null;
+    let supabaseError: any = null;
+    let savedLessonData: Lesson | null = null; // لتخزين بيانات الدرس المحفوظة/المحدثة
 
-    if (isEditing.value && form.value.id) {
-       console.log(`Attempting UPDATE for lesson ID: ${form.value.id}`);
-       // Exclude 'id' from the payload for update operation
-       const { id, ...updateData } = lessonPayload;
+    if (isEditing.value && props.lessonData?.id) { // استخدام props.lessonData.id للتحقق والتحديث
+       console.log(`Attempting UPDATE for lesson ID: ${props.lessonData.id}`);
        const result = await supabase.from('lessons')
-         .update(updateData as TablesUpdate<'lessons'>) // Use the payload without id
-         .eq('id', form.value.id)
-         .select();
-       error = result.error; data = result.data;
+         .update(lessonPayload as TablesUpdate<'lessons'>)
+         .eq('id', props.lessonData.id)
+         .select() // اختيار الصف المحدث
+         .single(); // توقع صف واحد
+       supabaseError = result.error;
+       savedLessonData = result.data;
     } else {
       console.log('Attempting INSERT for new lesson');
       const result = await supabase.from('lessons')
-        .insert(lessonPayload as TablesInsert<'lessons'>) // Payload is ready for insert
-        .select();
-      error = result.error; data = result.data;
+        .insert(lessonPayload as TablesInsert<'lessons'>)
+        .select() // اختيار الصف المُدرج حديثًا
+        .single(); // توقع صف واحد
+      supabaseError = result.error;
+      savedLessonData = result.data;
     }
 
-    console.log('Supabase response error:', JSON.stringify(error, null, 2));
-    console.log('Supabase response data:', JSON.stringify(data, null, 2));
+    console.log('Supabase response error:', JSON.stringify(supabaseError, null, 2));
+    console.log('Supabase response data:', JSON.stringify(savedLessonData, null, 2));
 
-    if (error) throw error;
+    if (supabaseError) throw supabaseError;
 
-    console.log('Save successful, emitting saved event.');
-    emit('saved'); // Emit event to parent component
-    closeModal(); // Close the modal on successful save
+    if (!savedLessonData) {
+        throw new Error("تم الحفظ بنجاح ولكن لم يتم إرجاع بيانات الدرس.");
+    }
+
+    console.log('Save successful.');
+    toast.success(isEditing.value ? 'تم تحديث الدرس بنجاح!' : 'تم إضافة الدرس بنجاح!');
+
+    // --- إرسال الإشعارات فقط للدروس الجديدة المضافة إلى دورة ---
+    if (!isEditing.value && savedLessonData.course_id && savedLessonData.id) {
+        console.log('Triggering notifications for new lesson in course...');
+        // انتظر اكتمال محاولة إرسال الإشعارات قبل الإغلاق
+        await sendNewLessonNotifications(savedLessonData);
+    } else {
+        console.log('Skipping notifications (editing or not a course lesson).');
+    }
+    // --------------------------------------------------------------
+
+    emit('saved');
+    closeModal();
 
   } catch (err: any) {
     console.error('Error during save operation:', JSON.stringify(err, null, 2));
-     // Handle specific errors if needed
+     let displayError = `فشل حفظ الدرس: ${err.message || 'خطأ غير متوقع'}`;
      if (err.message?.includes('violates foreign key constraint')) {
-          errorMessage.value = 'فشل الحفظ: الفئة أو الدورة المحددة غير موجودة.';
-     } else if (err.code === '23505') {
-         errorMessage.value = `فشل الحفظ: ${err.message}`;
-     } else {
-         errorMessage.value = `فشل حفظ الدرس: ${err.message || 'خطأ غير متوقع'}`;
+          // Check if it's category_id or course_id related
+          if (err.message.includes('lessons_category_id_fkey')) {
+             displayError = 'فشل الحفظ: الفئة المحددة غير موجودة أو غير صالحة.';
+          } else if (err.message.includes('lessons_course_id_fkey')) {
+             displayError = 'فشل الحفظ: الدورة المحددة غير موجودة أو غير صالحة.';
+          } else {
+             displayError = 'فشل الحفظ بسبب قيد مفتاح أجنبي غير معروف.';
+          }
+     } else if (err.code === '23505') { // Unique constraint violation
+         displayError = `فشل الحفظ: قد يكون هناك درس آخر بنفس الترتيب في هذه الوحدة/الدورة. (${err.details || err.message})`;
      }
+     errorMessage.value = displayError;
+     toast.error(displayError); // عرض الخطأ في toast أيضًا
   } finally {
     isSaving.value = false;
     console.log('saveLesson finished.');
@@ -421,7 +551,7 @@ async function saveLesson() {
 </script>
 
 <style scoped>
-/* Using consistent admin styles */
+/* Using consistent admin styles (الكود الأصلي بدون تغيير) */
 .admin-modal-title { @apply text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 border-b pb-3 mb-4 dark:border-gray-700; }
 .admin-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; }
 .admin-input, .admin-select, .admin-textarea {

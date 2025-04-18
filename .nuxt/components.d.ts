@@ -23,6 +23,7 @@ interface _GlobalComponents {
     'CourseCard': typeof import("../components/CourseCard.vue")['default']
     'LessonCard': typeof import("../components/LessonCard.vue")['default']
     'LoadingSpinner': typeof import("../components/LoadingSpinner.vue")['default']
+    'NotificationsDropdown': typeof import("../components/NotificationsDropdown.vue")['default']
     'PdfViewerModal': typeof import("../components/PdfViewerModal.vue")['default']
     'ReplyItem': typeof import("../components/ReplyItem.vue")['default']
     'UserAvatar': typeof import("../components/UserAvatar.vue")['default']
@@ -76,6 +77,7 @@ interface _GlobalComponents {
     'LazyCourseCard': LazyComponent<typeof import("../components/CourseCard.vue")['default']>
     'LazyLessonCard': LazyComponent<typeof import("../components/LessonCard.vue")['default']>
     'LazyLoadingSpinner': LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
+    'LazyNotificationsDropdown': LazyComponent<typeof import("../components/NotificationsDropdown.vue")['default']>
     'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
     'LazyReplyItem': LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
     'LazyUserAvatar': LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
@@ -135,6 +137,7 @@ export const ConfirmationModal: typeof import("../components/ConfirmationModal.v
 export const CourseCard: typeof import("../components/CourseCard.vue")['default']
 export const LessonCard: typeof import("../components/LessonCard.vue")['default']
 export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['default']
+export const NotificationsDropdown: typeof import("../components/NotificationsDropdown.vue")['default']
 export const PdfViewerModal: typeof import("../components/PdfViewerModal.vue")['default']
 export const ReplyItem: typeof import("../components/ReplyItem.vue")['default']
 export const UserAvatar: typeof import("../components/UserAvatar.vue")['default']
@@ -188,6 +191,7 @@ export const LazyConfirmationModal: LazyComponent<typeof import("../components/C
 export const LazyCourseCard: LazyComponent<typeof import("../components/CourseCard.vue")['default']>
 export const LazyLessonCard: LazyComponent<typeof import("../components/LessonCard.vue")['default']>
 export const LazyLoadingSpinner: LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
+export const LazyNotificationsDropdown: LazyComponent<typeof import("../components/NotificationsDropdown.vue")['default']>
 export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
 export const LazyReplyItem: LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
 export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvatar.vue")['default']>

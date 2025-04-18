@@ -438,6 +438,9 @@ const selectQuestion = (question: Question) => {
     replyForm.category_id = question.category_id; // Pre-fill category
     clearMessages(); // Clear all feedback messages on new selection
 };
+// داخل <script setup lang="ts"> في pages/admin/ask-sheikh.vue
+
+// ... (باقي الكود: imports, state, computed, fetchQuestions, etc.)
 
 /** Submit the reply */
 const submitReply = async () => {
@@ -446,7 +449,8 @@ const submitReply = async () => {
     // Basic Validation
     replyError.value = null; // Clear previous reply errors
     if (!replyForm.answer_text.trim()) { replyError.value = "نص الإجابة لا يمكن أن يكون فارغًا."; return; }
-    if (!replyForm.is_public && !replyForm.send_private) { replyError.value = "يجب تحديد خيار للنشر (عام أو خاص)."; return; }
+    // Ensure at least one option is chosen (This validation is already handled by the button's :disabled state)
+    // if (!replyForm.is_public && !replyForm.send_private) { replyError.value = "يجب تحديد خيار للنشر (عام أو خاص)."; return; }
 
     isSubmitting.value = true;
     clearMessages(false); // Clear general messages, keep potential replyError
@@ -461,6 +465,7 @@ const submitReply = async () => {
             category_id: replyForm.category_id ? Number(replyForm.category_id) : null
         };
 
+        // 1. Update the question itself
         const { error: updateError } = await supabase
             .from('questions_to_sheikh')
             .update(updatePayload)
@@ -468,29 +473,61 @@ const submitReply = async () => {
 
         if (updateError) throw new Error(`فشل تحديث السؤال: ${updateError.message}`);
 
-        let messageSentSuccessfully = true; // Assume success unless proven otherwise
-        // Send private message if requested and user ID exists
+        let messageSentSuccessfully = true; // For private message
+        let notificationSentSuccessfully = true; // For notification
+
+        // 2. Handle Private Reply (Message & Notification) if requested and user exists
         if (replyForm.send_private && selectedQuestion.value.user_id) {
-             const messagePayload = {
+
+            // 2a. Send Private Message (Existing Logic)
+            const messagePayload = {
                 user_id: selectedQuestion.value.user_id,
                 title: `رد على سؤالك: "${selectedQuestion.value.question_text?.substring(0, 30) ?? ''}..."`,
                 content: `**السؤال:**\n${selectedQuestion.value.question_text}\n\n**الإجابة:**\n${replyForm.answer_text.trim()}`, // Include question for context
                 source: 'ask_sheikh_reply',
-                related_question_id: selectedQuestion.value.id
-             };
+                related_question_id: selectedQuestion.value.id,
+                is_read: false // Ensure message starts as unread
+            };
             const { error: messageError } = await supabase.from('user_private_messages').insert(messagePayload);
-            if (messageError) {
-                 console.error("Error sending private message:", messageError);
-                 // Set actionError, but don't throw, as the main update succeeded
-                 setActionError(`تحذير: تم حفظ الرد بنجاح، ولكن فشل إرسال الرسالة الخاصة للسائل. الخطأ: ${messageError.message}`);
-                 messageSentSuccessfully = false;
-            }
-        }
 
-        // Set success message based on outcome
-        if (messageSentSuccessfully || !replyForm.send_private) { // Show general success if message sent or wasn't needed
-             setSuccessMessage('تم حفظ وإرسال الرد بنجاح.');
+            if (messageError) {
+                console.error("Error sending private message:", messageError);
+                setActionError(`تحذير: تم حفظ الرد، لكن فشل إرسال الرسالة الخاصة. الخطأ: ${messageError.message}`);
+                messageSentSuccessfully = false;
+            }
+
+            // 2b. Create Notification (NEW LOGIC)
+            // Only attempt if the user ID is valid
+            const notificationPayload = {
+                user_id: selectedQuestion.value.user_id, // Target user
+                message: `تم الرد على سؤالك في قسم "اسأل الشيخ".`, // Notification text
+                // IMPORTANT: Ensure this link works in your frontend routing
+                link: `/my-questions/${selectedQuestion.value.id}`,
+                is_read: false // Starts as unread
+                // created_at is handled by Supabase default
+            };
+
+            const { error: notificationError } = await supabase
+                .from('notifications')
+                .insert(notificationPayload);
+
+            if (notificationError) {
+                console.error("Error creating notification:", notificationError);
+                // Log the error, maybe add a specific warning if needed, but don't stop the process
+                // Example: Add to existing actionError or create a separate warning state
+                setActionError( (actionError.value ? actionError.value + " " : "") + `فشل إنشاء تنبيه الرد.` );
+                 notificationSentSuccessfully = false;
+            }
+        } // End if send_private
+
+        // 3. Set Success Message based on overall outcome
+        if (messageSentSuccessfully && notificationSentSuccessfully) {
+             setSuccessMessage('تم حفظ الرد وإرسال الإشعار/الرسالة بنجاح.');
+        } else if (messageSentSuccessfully && !replyForm.send_private) {
+             // Handle case where only public reply was saved successfully
+             setSuccessMessage('تم حفظ الرد العام بنجاح.');
         }
+        // Note: The setActionError handles cases where message/notification failed partially
 
         // --- Success Routine ---
         selectedQuestion.value = null; // Clear selection
@@ -511,6 +548,8 @@ const submitReply = async () => {
         isSubmitting.value = false;
     }
 };
+
+
 
 // --- Helper Functions ---
 const formatDate = (dateString: string | null): string => {

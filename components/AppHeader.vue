@@ -26,15 +26,34 @@
           </svg>
         </button>
 
-        <NuxtLink to="/" class="relative text-brown-dark dark:text-gray-300 hover:text-olive-green dark:hover:text-yellow-400 transition-colors" aria-label="الإشعارات">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <!-- استخدام unreadNotifications من ref -->
-          <span v-if="unreadNotifications > 0" class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900">
-            {{ unreadNotifications > 9 ? '9+' : unreadNotifications }}
-          </span>
-        </NuxtLink>
+        <!-- === START: تعديل قسم الإشعارات === -->
+        <div class="relative">
+           <!-- تحويل NuxtLink إلى button واستدعاء toggleNotifications -->
+           <button
+             @click="toggleNotifications"
+             ref="notificationsButtonRef" 
+             class="relative p-1 rounded-full text-brown-dark dark:text-gray-300 hover:text-olive-green dark:hover:text-yellow-400 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900"
+             aria-label="الإشعارات"
+             aria-haspopup="true"
+             :aria-expanded="isNotificationsOpen.toString()" 
+            >
+             <span class="sr-only">عرض الإشعارات</span>
+            
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            
+             <span v-if="unreadCount > 0" class="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-gray-900">
+               {{ unreadCount > 9 ? '9+' : unreadCount }}
+             </span>
+           </button>
+
+           <!-- إضافة مكون القائمة المنسدلة -->
+           <NotificationsDropdown
+             :is-open="isNotificationsOpen"
+             @close="closeNotifications(true)"
+             ref="notificationsDropdownRef" 
+           />
+        </div>
+        <!-- === END: تعديل قسم الإشعارات === -->
 
         <button @click="toggleTheme" class="text-brown-dark dark:text-gray-300 hover:text-olive-green dark:hover:text-yellow-400 transition-colors" aria-label="تبديل الوضع الداكن">
            <!-- SVG للوضع الفاتح (يظهر عندما isDark = false) -->
@@ -171,18 +190,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'; // استيراد watch و nextTick
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { useUserStore } from '~/stores/user';
 import { storeToRefs } from 'pinia';
 import { useColorMode } from '#imports';
+// --- === أضف هذه الاستيرادات === ---
+import { useNotificationStore } from '~/stores/notifications';
+import NotificationsDropdown from '~/components/NotificationsDropdown.vue';
+// ------------------------------------
 
 const userStore = useUserStore();
-const { isLoggedIn, displayName, userAvatar, isAdmin } = storeToRefs(userStore);
+const { isLoggedIn, displayName, userAvatar, isAdmin, profile } = storeToRefs(userStore); // <-- أضف profile هنا
+
+// --- === أضف هذه الأسطر === ---
+const notificationStore = useNotificationStore();
+const { unreadCount } = storeToRefs(notificationStore); // <-- استخدم unreadCount من المخزن
+const isNotificationsOpen = ref(false); // حالة فتح/إغلاق قائمة الإشعارات
+const notificationsButtonRef = ref<HTMLButtonElement | null>(null); // Ref لزر الإشعارات
+const notificationsDropdownRef = ref<InstanceType<typeof NotificationsDropdown> | null>(null); // Ref للمكون
+// --------------------------
 
 // --- حالة الواجهة ---
 const isDropdownOpen = ref(false);
 const isSidebarOpen = ref(false);
-const unreadNotifications = ref(0); // سيتم تحديثها من fetchNotifications
+// const unreadNotifications = ref(0); // <-- احذف هذا السطر (تم استبداله بـ unreadCount من المخزن)
 
 // --- Refs للعناصر لإدارة التركيز والـ dropdown ---
 const dropdownRef = ref<HTMLDivElement | null>(null); // Ref لحاوية القائمة المنسدلة
@@ -209,13 +240,23 @@ const colorMode = useColorMode();
 onMounted(() => {
   isDark.value = colorMode.value === 'dark';
   window.addEventListener('storage', handleStorageChange);
-  document.addEventListener('click', handleClickOutside);
-  fetchNotifications(); // جلب الإشعارات عند تحميل المكون
+  document.addEventListener('click', handleClickOutside, true); // <-- تأكد من إضافة true هنا
+  document.addEventListener('keydown', handleEscapeKey); // <-- أضف هذا السطر
+
+  // --- === استبدل fetchNotifications الوهمي بهذا === ---
+  // جلب الإشعارات والاشتراك عند التحميل إذا كان المستخدم مسجل الدخول بالفعل
+  // (تم نقل المنطق إلى watch(profile) للتعامل مع التغييرات والحالة الأولية)
+  // --------------------------------------------------
+
 });
 
 onBeforeUnmount(() => {
    window.removeEventListener('storage', handleStorageChange);
-   document.removeEventListener('click', handleClickOutside);
+   document.removeEventListener('click', handleClickOutside, true); // <-- تأكد من إضافة true هنا
+   document.removeEventListener('keydown', handleEscapeKey); // <-- أضف هذا السطر
+   // --- === أضف هذا السطر === ---
+   notificationStore.unsubscribeFromNotifications(); // إلغاء الاشتراك عند المغادرة
+   // --------------------------
 });
 
 const toggleTheme = () => {
@@ -240,6 +281,7 @@ function handleStorageChange(event: StorageEvent) {
 // --- وظائف فتح/إغلاق القوائم مع إدارة التركيز ---
 const toggleDropdown = async () => {
   if (!isDropdownOpen.value) {
+    closeNotifications(false); // <-- أضف هذا لإغلاق قائمة الإشعارات
     previouslyFocusedElement.value = document.activeElement as HTMLElement;
     isDropdownOpen.value = true;
     await nextTick(); // انتظر حتى يتم رسم القائمة
@@ -284,70 +326,104 @@ const closeSidebar = (refocus = true) => {
       }
   }
 };
-// --- نهاية وظائف القوائم ---
+// --- نهاية وظائف القوائم للمستخدم والجوال ---
 
-// --- إغلاق القائمة المنسدلة عند النقر خارجها ---
+// --- === أضف هذه الدوال الجديدة === ---
+// وظائف جديدة لقائمة الإشعارات
+const toggleNotifications = async () => {
+   if (!isNotificationsOpen.value) {
+      closeDropdown(false); // أغلق قائمة المستخدم إذا كانت مفتوحة
+      previouslyFocusedElement.value = document.activeElement as HTMLElement;
+      isNotificationsOpen.value = true;
+      // لا حاجة للتركيز التلقائي داخل القائمة هنا، يمكن للمستخدم التنقل إليها
+   } else {
+      closeNotifications();
+   }
+};
+const closeNotifications = (refocus = true) => {
+    if(isNotificationsOpen.value) {
+        isNotificationsOpen.value = false;
+         if (refocus && previouslyFocusedElement.value && document.body.contains(previouslyFocusedElement.value)) {
+             previouslyFocusedElement.value?.focus(); // استخدام optional chaining لاستعادة التركيز على الزر
+         }
+    }
+};
+// ------------------------------------
+
+// --- إغلاق القوائم عند النقر خارجها (مُعدَّل) ---
 const handleClickOutside = (e: MouseEvent) => {
-  // أغلق القائمة المنسدلة فقط إذا كانت مفتوحة والنقرة خارجها
-  if (isDropdownOpen.value && dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
-    // لا نعيد التركيز هنا لأن المستخدم نقر في مكان آخر
+  const target = e.target as Node;
+
+  // إغلاق قائمة المستخدم
+  if (isDropdownOpen.value && dropdownRef.value && !dropdownRef.value.contains(target) && userMenuButtonRef.value && !userMenuButtonRef.value.contains(target)) {
     closeDropdown(false);
   }
+
+  // --- === أضف هذا الشرط === ---
+  // إغلاق قائمة الإشعارات
+  // تحقق من أن النقرة ليست داخل المكون notificationsDropdownRef.$el وليست على زر notificationsButtonRef
+  if (isNotificationsOpen.value && notificationsDropdownRef.value?.$el && !notificationsDropdownRef.value.$el.contains(target) && notificationsButtonRef.value && !notificationsButtonRef.value.contains(target)) {
+    closeNotifications(false);
+  }
+  // --------------------------
+
   // لا حاجة لإغلاق القائمة الجانبية هنا لأن الخلفية تقوم بذلك وتعيد التركيز
-}
+};
+
+// --- === أضف هذه الدالة === ---
+// إغلاق القوائم عند الضغط على Escape
+const handleEscapeKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+        if (isNotificationsOpen.value) {
+            closeNotifications(); // أغلق الإشعارات وأعد التركيز إلى الزر
+        } else if (isDropdownOpen.value) {
+            closeDropdown(); // أغلق قائمة المستخدم وأعد التركيز إلى الزر
+        } else if (isSidebarOpen.value) {
+             closeSidebar(); // أغلق القائمة الجانبية وأعد التركيز إلى زر الفتح
+        }
+    }
+};
+// --------------------------
 
 // --- جلب الإشعارات (مثال وهمي) ---
-async function fetchNotifications() {
-  if (isLoggedIn.value) {
-    console.log("Fetching notifications...");
-    // استبدل هذا باستدعاء API حقيقي
-    await new Promise(resolve => setTimeout(resolve, 500)); // محاكاة تأخير الشبكة
-    try {
-      // const count = await getNotificationCountAPI();
-      // unreadNotifications.value = count;
-      unreadNotifications.value = 3; // قيمة وهمية للتجربة
-      console.log("Notifications fetched:", unreadNotifications.value);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      unreadNotifications.value = 0;
-    }
-  } else {
-    unreadNotifications.value = 0; // لا إشعارات للمستخدم غير المسجل
+// async function fetchNotifications() { ... } // <-- احذف هذه الدالة الوهمية (استخدم watch بدلاً منها)
+
+// --- مراقبة حالة تسجيل الدخول لجلب/مسح الإشعارات (مُعدَّل) ---
+watch(profile, (newProfile, oldProfile) => { // <-- راقب profile بدلاً من isLoggedIn
+  if (newProfile?.id && (!oldProfile || newProfile.id !== oldProfile.id)) {
+      console.log("[AppHeader] User profile available/changed, fetching notifications and subscribing.");
+      notificationStore.fetchNotifications(newProfile.id);
+      notificationStore.subscribeToNotifications(newProfile.id);
+  } else if (!newProfile && oldProfile) {
+      console.log("[AppHeader] User logged out, clearing notifications.");
+      notificationStore.clearNotifications(); // <-- استدعاء دالة المسح من المخزن
+      closeDropdown(false); // أغلق قائمة المستخدم
+      closeSidebar(false); // أغلق القائمة الجانبية
+      closeNotifications(false); // <-- أضف إغلاق قائمة الإشعارات
   }
-}
+}, { immediate: true }); // immediate: true لتشغيل الواچر عند تحميل المكون لأول مرة
 
-// --- مراقبة حالة تسجيل الدخول لجلب/مسح الإشعارات ---
-watch(isLoggedIn, (newValue, oldValue) => {
-   // جلب الإشعارات فقط عند تسجيل الدخول (وليس عند التحميل الأولي إذا كان مسجلاً بالفعل)
-   if (newValue === true && oldValue === false) {
-     fetchNotifications();
-   } else if (newValue === false) {
-     unreadNotifications.value = 0; // مسح الإشعارات عند تسجيل الخروج
-     closeDropdown(false); // أغلق القائمة المنسدلة إذا كانت مفتوحة
-     closeSidebar(false); // أغلق القائمة الجانبية إذا كانت مفتوحة
-   }
-});
-
-// --- تسجيل الخروج ---
+// --- تسجيل الخروج (مُعدَّل) ---
 const logoutAndClose = async () => {
-  const wasDropdownOpen = isDropdownOpen.value;
+  const wasDropdownOpen = isDropdownOpen.value; // تتبع الحالة قبل الإغلاق
   const wasSidebarOpen = isSidebarOpen.value;
+  const wasNotificationsOpen = isNotificationsOpen.value; // <-- أضف هذا
 
-  closeDropdown(false); // أغلق القائمة المنسدلة دون إعادة التركيز فوراً
-  closeSidebar(false); // أغلق القائمة الجانبية دون إعادة التركيز فوراً
+  closeDropdown(false); // أغلق القوائم دون إعادة التركيز فوراً
+  closeSidebar(false);
+  closeNotifications(false); // <-- أضف هذا
 
   try {
     await userStore.logout();
-    // بعد تسجيل الخروج الناجح، قد يتم توجيه المستخدم أو تحديث الواجهة
-    // لا حاجة لإعادة التركيز هنا لأن الواجهة قد تتغير بالكامل
-    // يمكنك إضافة رسالة نجاح إذا أردت
+    // بعد تسجيل الخروج الناجح، الواجهة ستتغير (أزرار الدخول/التسجيل)
+    // لا حاجة لإعادة التركيز يدوياً هنا
   } catch (error) {
     console.error("Logout failed:", error);
-    // أظهر رسالة خطأ للمستخدم
     alert('حدث خطأ أثناء تسجيل الخروج. يرجى المحاولة مرة أخرى.');
-    // أعد فتح القوائم إذا كانت مفتوحة قبل المحاولة الفاشلة (اختياري)
+    // اختياري: أعد فتح القوائم إذا فشل تسجيل الخروج وكانت مفتوحة
     // if (wasDropdownOpen) isDropdownOpen.value = true;
     // if (wasSidebarOpen) isSidebarOpen.value = true;
+    // if (wasNotificationsOpen) isNotificationsOpen.value = true;
   }
 }
 
@@ -363,7 +439,7 @@ const logoutAndClose = async () => {
    @apply text-red-700 dark:text-red-500 font-bold;
 }
 
-/* Transition للقائمة المنسدلة */
+/* Transition للقائمة المنسدلة للمستخدم */
 .dropdown-fade-enter-active,
 .dropdown-fade-leave-active {
   transition: opacity 0.2s ease-out, transform 0.2s ease-out;
@@ -390,13 +466,5 @@ html:not([dir="rtl"]) .slide-fade-leave-to {
    transform: translateX(-100%); /* تنزلق من اليسار - قد تحتاج لتعديل حسب التصميم */
 }
 
-/* يمكنك إضافة كلاسات مجمعة هنا باستخدام @apply إذا أردت */
-/* مثال:
-.nav-link-base {
-  @apply transition-colors duration-200;
-}
-.nav-link-hover {
-  @apply hover:text-olive-green dark:hover:text-yellow-400;
-}
-*/
+/* (لا تغيير هنا، يمكنك إضافة تنسيقات أخرى إذا احتجت) */
 </style>

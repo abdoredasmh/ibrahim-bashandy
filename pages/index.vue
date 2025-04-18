@@ -117,11 +117,11 @@
         <div v-else-if="!latestQuestions?.length" class="text-center py-10 text-gray-500 dark:text-gray-400">لا توجد أسئلة مجابة حاليًا.</div>
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div v-for="question in latestQuestions" :key="question.id" class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border border-cream-gray dark:border-gray-700 hover:shadow-lg transition-shadow flex flex-col">
-            <NuxtLink :to="`/ask/${question.id}`" class="hover:text-primary group flex-grow">
+            <NuxtLink :to="`/ask`" class="hover:text-primary group flex-grow">
               <h3 class="font-semibold text-lg mb-2 line-clamp-2 group-hover:underline text-brown-dark dark:text-beige-light">{{ question.title }}</h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{{ question.answerSnippet }}</p>
             </NuxtLink>
-            <NuxtLink :to="`/ask/${question.id}`" class="text-xs text-primary hover:underline mt-3 self-start">اقرأ الإجابة كاملة →</NuxtLink>
+            <NuxtLink :to="`/ask`" class="text-xs text-primary hover:underline mt-3 self-start">اقرأ الإجابة كاملة →</NuxtLink>
           </div>
         </div>
         <div class="text-center mt-10">

@@ -16,28 +16,27 @@
          <LoadingSpinner v-if="pendingAction === 'role'" class="w-4 h-4 inline-block ml-1 animate-spin text-indigo-500"/>
     </div>
 
-    <!-- Ban/Unban Button -->
+    <!-- ====================== -->
+    <!-- Ban/Unban Buttons REMOVED -->
+    <!-- ====================== -->
+    <!--
     <button
         v-if="!userProfile.is_banned"
         @click="confirmAction('ban')"
         :disabled="isLoading || pendingAction === 'ban'"
-        class="px-3 py-1.5 text-sm rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 flex items-center gap-1"
+        class="..."
     >
-        <LoadingSpinner v-if="pendingAction === 'ban'" class="w-4 h-4"/>
-        <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm3.84-10.73a.75.75 0 1 0-1.18-.94l-1.66 2.08-.94-1.18a.75.75 0 1 0-.94 1.18l1.5 1.875a.75.75 0 0 0 1.18 0l2-2.5Z" clip-rule="evenodd" /></svg> -->
-         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM4.75 7.25A.75.75 0 0 1 5.5 8h5a.75.75 0 0 1 0 1.5h-5A.75.75 0 0 1 4 8.75a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" /></svg>
-        <span>حظر</span>
+        ... حظر ...
     </button>
      <button
         v-else
         @click="confirmAction('unban')"
         :disabled="isLoading || pendingAction === 'unban'"
-        class="px-3 py-1.5 text-sm rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 flex items-center gap-1"
+        class="..."
     >
-        <LoadingSpinner v-if="pendingAction === 'unban'" class="w-4 h-4"/>
-         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm3.84-10.73a.75.75 0 1 0-1.18-.94l-1.66 2.08-.94-1.18a.75.75 0 1 0-.94 1.18l1.5 1.875a.75.75 0 0 0 1.18 0l2-2.5Z" clip-rule="evenodd" /></svg>
-        <span>إلغاء الحظر</span>
+        ... إلغاء الحظر ...
     </button>
+    -->
 
     <!-- Suspend/Unsuspend Button -->
      <button
@@ -97,10 +96,12 @@ const props = defineProps({
         type: Boolean,
         default: false,
     }
+   // Removed showBanActions prop as buttons are fully removed
 });
 
 const emit = defineEmits<{
-  (e: 'action-start', actionType: 'role' | 'ban' | 'unban' | 'unsuspend'): void;
+  // Removed 'ban' and 'unban' from action types
+  (e: 'action-start', actionType: 'role' | 'unsuspend'): void;
   (e: 'action-complete', success: boolean, message: string, updatedProfile?: Partial<Profile>): void;
   (e: 'send-message'): void;
   (e: 'suspend-comments'): void;
@@ -109,13 +110,15 @@ const emit = defineEmits<{
 const supabase = useSupabaseClient<Database>();
 
 // Internal state
-const pendingAction = ref<'role' | 'ban' | 'unban' | 'unsuspend' | null>(null);
+// Removed 'ban' and 'unban' from possible pending actions
+const pendingAction = ref<'role' | 'unsuspend' | null>(null);
 const currentRole = ref(props.userProfile.role); // Local state for dropdown
 
 // Confirmation Modal State
 const showConfirm = ref(false);
 const confirmModalConfig = ref<ConfirmationConfig | null>(null);
-let actionToConfirm: { type: 'ban' | 'unban' | 'unsuspend' } | null = null;
+// Removed 'ban' and 'unban' from possible actions to confirm
+let actionToConfirm: { type: 'unsuspend' } | null = null;
 
 
 // Computed property to check suspension status
@@ -136,7 +139,7 @@ watch(() => props.userProfile, (newProfile) => {
 const updateUserRole = async (newRole: 'user' | 'admin') => {
     if (pendingAction.value || props.userProfile.role === newRole) return;
     pendingAction.value = 'role';
-    emit('action-start', 'role'); // Inform parent action started
+    emit('action-start', 'role');
 
     try {
         const { error } = await supabase
@@ -145,13 +148,11 @@ const updateUserRole = async (newRole: 'user' | 'admin') => {
             .eq('id', props.userProfile.id);
         if (error) throw error;
 
-        // Update local state after successful DB update
         currentRole.value = newRole;
         emit('action-complete', true, `تم تغيير دور المستخدم إلى ${newRole}.`, { role: newRole });
 
     } catch (err: any) {
         console.error("Error updating role:", err);
-         // Revert local state on error
          currentRole.value = props.userProfile.role;
         emit('action-complete', false, `فشل تغيير دور المستخدم: ${err.message}`);
     } finally {
@@ -159,29 +160,7 @@ const updateUserRole = async (newRole: 'user' | 'admin') => {
     }
 };
 
-const toggleBanStatus = async (ban: boolean) => {
-    const actionType = ban ? 'ban' : 'unban';
-    if (pendingAction.value) return;
-    pendingAction.value = actionType;
-    emit('action-start', actionType);
-
-    try {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ is_banned: ban, updated_at: new Date().toISOString() })
-            .eq('id', props.userProfile.id);
-        if (error) throw error;
-
-        const message = ban ? `تم حظر المستخدم بنجاح.` : `تم إلغاء حظر المستخدم بنجاح.`;
-        emit('action-complete', true, message, { is_banned: ban });
-
-    } catch (err: any) {
-        console.error("Error toggling ban status:", err);
-        emit('action-complete', false, `فشل تحديث حالة الحظر: ${err.message}`);
-    } finally {
-        pendingAction.value = null;
-    }
-};
+// REMOVED toggleBanStatus function
 
 const removeCommentSuspension = async () => {
      if (pendingAction.value) return;
@@ -205,15 +184,18 @@ const removeCommentSuspension = async () => {
      }
 };
 
-// Confirmation Modal Logic
-const confirmAction = (type: 'ban' | 'unban' | 'unsuspend') => {
+// Confirmation Modal Logic (Removed ban/unban cases)
+const confirmAction = (type: 'unsuspend') => { // Only unsuspend needs confirmation now
     actionToConfirm = { type };
-    let title = '', message = '', confirmText = '', cancelText = 'إلغاء', confirmClass = 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
-    const userName = props.userProfile.full_name || props.userProfile.id; // Use ID as fallback
+    let title = '', message = '', confirmText = '', cancelText = 'إلغاء', confirmClass = 'bg-green-600 hover:bg-green-700 focus:ring-green-500';
+    const userName = props.userProfile.full_name || props.userProfile.id;
 
-    if (type === 'ban') { title = 'تأكيد الحظر'; message = `هل أنت متأكد من حظر ${userName}؟`; confirmText = 'نعم، حظر'; }
-    else if (type === 'unban') { title = 'تأكيد إلغاء الحظر'; message = `هل أنت متأكد من إلغاء حظر ${userName}؟`; confirmText = 'نعم، إلغاء الحظر'; confirmClass = 'bg-green-600 hover:bg-green-700 focus:ring-green-500'; }
-    else if (type === 'unsuspend') { title = 'تأكيد إلغاء إيقاف التعليق'; message = `هل أنت متأكد من السماح لـ ${userName} بالتعليق؟`; confirmText = 'نعم، إلغاء الإيقاف'; confirmClass = 'bg-green-600 hover:bg-green-700 focus:ring-green-500'; }
+    if (type === 'unsuspend') {
+        title = 'تأكيد إلغاء إيقاف التعليق';
+        message = `هل أنت متأكد من السماح لـ ${userName} بالتعليق؟`;
+        confirmText = 'نعم، إلغاء الإيقاف';
+    }
+    // Removed 'ban' and 'unban' cases
 
     confirmModalConfig.value = { title, message, confirmText, cancelText, confirmClass };
     showConfirm.value = true;
@@ -222,10 +204,9 @@ const confirmAction = (type: 'ban' | 'unban' | 'unsuspend') => {
 const executeConfirmedAction = () => {
     if (!actionToConfirm) return;
     const { type } = actionToConfirm;
-    if (type === 'ban') { toggleBanStatus(true); }
-    else if (type === 'unban') { toggleBanStatus(false); }
-    else if (type === 'unsuspend') { removeCommentSuspension(); }
-    showConfirm.value = false; // Close modal after action initiated
+    if (type === 'unsuspend') { removeCommentSuspension(); }
+    // Removed 'ban' and 'unban' execution
+    showConfirm.value = false;
     actionToConfirm = null;
 };
 
