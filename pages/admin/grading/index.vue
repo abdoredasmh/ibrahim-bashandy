@@ -292,7 +292,7 @@ const fetchStudentsDebounced = async (searchTerm: string) => {
     return;
   }
   loadingStudents.value = true;
-  // console.log(`Searching for students like: ${searchTerm.trim()}`);
+  // 
   try {
       const { data, error: fetchError } = await supabase
         .from('profiles')
@@ -363,7 +363,7 @@ const loadAttempts = async (reset: boolean = false) => {
     const rangeFrom = pageToFetch * ITEMS_PER_PAGE;
     const rangeTo = rangeFrom + ITEMS_PER_PAGE - 1;
 
-    // console.log(`Loading attempts page ${pageToFetch + 1} (Range: ${rangeFrom}-${rangeTo}) with filters:`, { status: selectedStatus.value, course: selectedCourseId.value, quiz: selectedQuizId.value, student: selectedStudentId.value });
+    // 
 
     try {
         let query = supabase
@@ -400,7 +400,7 @@ const loadAttempts = async (reset: boolean = false) => {
         if (fetchError) throw fetchError;
 
         const newAttempts = data ?? [];
-        // console.log(`Fetched ${newAttempts.length} new attempts.`);
+        // 
 
         // Use shallowRef correctly by replacing the array
         attempts.value = reset ? newAttempts : [...attempts.value, ...newAttempts];
@@ -432,7 +432,7 @@ const setupIntersectionObserver = () => {
   observer = new IntersectionObserver((entries) => {
     const entry = entries[0];
     if (entry.isIntersecting && !loadingMore.value && hasMoreAttempts.value && !pending.value) {
-        // console.log("Scroll trigger intersected, loading more attempts...");
+        // 
         loadAttempts(); // Load next page
     }
   }, options);

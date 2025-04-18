@@ -245,7 +245,7 @@ const commentToDelete = ref<CommentWithState | null>(null);
 // --- Core Logic: Fetching Comments ---
 const loadComments = async (reset: boolean = false) => {
   if (reset) {
-    console.log("Resetting comments...");
+    
     pending.value = true;
     error.value = null;
     currentPage.value = 0;
@@ -256,7 +256,7 @@ const loadComments = async (reset: boolean = false) => {
 
   // Prevent concurrent loads or loading when no more data exists
   if (loadingMore.value || !hasMore.value) {
-    console.log(`Load skipped: loadingMore=${loadingMore.value}, hasMore=${hasMore.value}`);
+    
     return;
   }
 
@@ -267,7 +267,7 @@ const loadComments = async (reset: boolean = false) => {
   const rangeFrom = pageToFetch * ITEMS_PER_PAGE;
   const rangeTo = rangeFrom + ITEMS_PER_PAGE - 1;
 
-  console.log(`Loading comments page ${pageToFetch + 1} (Range: ${rangeFrom}-${rangeTo}). Filters: Term=${searchTerm.value || 'N/A'}, User=${selectedUserId.value || 'N/A'}`);
+  
 
   try {
     let query = supabase
@@ -297,7 +297,7 @@ const loadComments = async (reset: boolean = false) => {
 
     // Ensure data is not null and cast correctly
     const newComments = (data ?? []) as CommentWithState[];
-    console.log(`Fetched ${newComments.length} new comments. Total count matching filters: ${count}`);
+    
 
     if (reset) {
       comments.value = newComments;
@@ -311,7 +311,7 @@ const loadComments = async (reset: boolean = false) => {
     hasMore.value = count !== null ? comments.value.length < count : newComments.length === ITEMS_PER_PAGE;
     currentPage.value += 1; // Increment page number for the next fetch
 
-    console.log(`Update state: hasMore=${hasMore.value}, nextPage=${currentPage.value}`);
+    
 
   } catch (err: any) {
     console.error("Error loading comments:", err);
@@ -333,7 +333,7 @@ const fetchUsers = async (term: string) => {
     loadingUsers.value = false;
     return;
   }
-  console.log(`Searching users for: ${term}`);
+  
   loadingUsers.value = true;
   try {
       const { data, error: fetchError } = await supabase
@@ -344,7 +344,7 @@ const fetchUsers = async (term: string) => {
 
       if (fetchError) throw fetchError;
       filteredUsersList.value = data ?? [];
-      console.log(`Found ${filteredUsersList.value.length} users matching "${term}"`);
+      
   } catch(err: any) {
       console.error("Error searching users:", err);
       filteredUsersList.value = [];
@@ -357,7 +357,7 @@ const debouncedFetchUsers = debounce(fetchUsers, 300);
 
 // Select a user from the dropdown
 const selectUser = (user: UserBasicInfo) => {
-    console.log(`User selected: ${user.full_name} (${user.id})`);
+    
     selectedUserId.value = user.id;
     selectedUserName.value = user.full_name; // Store name
     userSearchTerm.value = user.full_name; // Update input field to show selected name
@@ -368,7 +368,7 @@ const selectUser = (user: UserBasicInfo) => {
 
 // Clear the selected user filter
 const clearUserSelection = () => {
-    console.log("Clearing user selection.");
+    
     selectedUserId.value = null;
     selectedUserName.value = null;
     userSearchTerm.value = ''; // Clear search input
@@ -402,7 +402,7 @@ const debouncedRefresh = debounce(refreshComments, 500);
 
 // Reset all filters to their default state
 const resetFilters = () => {
-    console.log("Resetting all filters.");
+    
     searchTerm.value = '';
     selectedUserId.value = null;
     selectedUserName.value = null;
@@ -430,7 +430,7 @@ const setupIntersectionObserver = () => {
   observer = new IntersectionObserver((entries) => {
     // Check if the trigger element is intersecting and we are not already loading
     if (entries[0].isIntersecting && !loadingMore.value && hasMore.value) {
-      console.log("Scroll trigger intersected, loading more comments...");
+      
       loadComments(); // Load the next page
     }
   }, options);
@@ -438,7 +438,7 @@ const setupIntersectionObserver = () => {
   // Observe the scroll trigger element
   if (scrollTrigger.value) {
     observer.observe(scrollTrigger.value);
-    console.log("Intersection Observer attached to scroll trigger.");
+    
   } else {
       console.warn("Scroll trigger element not found for Intersection Observer.");
   }
@@ -446,7 +446,7 @@ const setupIntersectionObserver = () => {
 
 // --- Lifecycle Hooks ---
 onMounted(() => {
-    console.log("Component mounted. Initializing...");
+    
     // Fetch initial batch of comments
     loadComments(true);
     // Set up the observer for infinite scrolling
@@ -454,12 +454,12 @@ onMounted(() => {
 
      // Attempt to fetch user name if userId is present in URL query on initial load
      if (selectedUserId.value && !selectedUserName.value) {
-         console.log(`Fetching name for initial user ID: ${selectedUserId.value}`);
+         
          supabase.from('profiles').select('full_name').eq('id', selectedUserId.value).maybeSingle().then(({ data, error: nameError }) => {
              if (nameError) {
                  console.error(`Error fetching name for user ${selectedUserId.value}:`, nameError);
              } else if (data) {
-                 console.log(`Found name: ${data.full_name}`);
+                 
                  selectedUserName.value = data.full_name;
                  // Update the search input field to reflect the loaded user filter
                  userSearchTerm.value = data.full_name;
@@ -476,7 +476,7 @@ onUnmounted(() => {
   // Clean up the observer when the component is unmounted to prevent memory leaks
   if (observer) {
     observer.disconnect();
-    console.log("Intersection Observer disconnected.");
+    
   }
 });
 
@@ -529,7 +529,7 @@ const executeDeleteComment = async () => {
     if (!commentToDelete.value) return;
 
     const comment = commentToDelete.value;
-    console.log(`Attempting to delete comment ${comment.id}...`);
+    
     // Set UI state to indicate deletion is in progress
     comment.isDeleting = true;
     showDeleteConfirm.value = false; // Close confirmation modal
@@ -542,7 +542,7 @@ const executeDeleteComment = async () => {
 
         if (deleteError) throw deleteError; // Throw error to be caught below
 
-        console.log(`Comment ${comment.id} deleted successfully.`);
+        
         // Remove the comment from the local list for immediate UI update
         comments.value = comments.value.filter(c => c.id !== comment.id);
 

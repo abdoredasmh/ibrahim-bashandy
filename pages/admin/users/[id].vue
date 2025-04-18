@@ -22,13 +22,11 @@
         <UserAvatar :src="userData.profile.avatar_url || undefined" :alt="userData.profile.full_name || 'مستخدم'" size="lg" />
         <div>
           <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-100">{{ userData.profile.full_name || 'لم يحدد اسم' }}</h1>
-          <!-- Display email from profile if available -->
-          <p class="text-sm text-gray-500 dark:text-gray-400">{{ userData.profile.email || userData.auth.email || 'لا يوجد بريد إلكتروني' }}</p>
+          <!-- Removed email display -->
           <div class="mt-1 flex flex-wrap gap-2 text-xs">
              <span :class="['px-2 py-0.5 rounded-full', getRoleClass(userData.profile.role)]">
                {{ userData.profile.role === 'admin' ? 'مشرف' : 'مستخدم' }}
              </span>
-              <!-- Removed Ban Status Badge -->
               <span v-if="isCommentSuspended(userData.profile.comment_suspended_until)" class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">تعليق موقوف</span>
               <span v-else class="px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">نشط</span>
           </div>
@@ -46,7 +44,7 @@
          <span class="ml-2 text-gray-700 dark:text-gray-300">جاري تنفيذ الإجراء...</span>
      </div>
 
-  
+
     <AdminUserActions
         v-if="userData?.profile"
         :user-profile="userData.profile"
@@ -77,7 +75,6 @@
                    </div>
                     <div class="flex justify-between">
                      <dt class="font-medium text-gray-500 dark:text-gray-400">آخر تسجيل دخول:</dt>
-                     <!-- Removed last_sign_in_at -->
                      <dd class="text-gray-700 dark:text-gray-200 italic">غير متاح</dd>
                    </div>
                     <div class="flex justify-between">
@@ -129,10 +126,8 @@
              </template>
              <template #content>
                 <div v-if="isLoadingMessages" class="text-center py-10"><LoadingSpinner /></div>
-                <!-- Changed v-if condition to use computed property -->
                 <div v-else-if="filteredAdminMessages.length === 0" class="text-center py-10 text-gray-500 dark:text-gray-400">لا توجد رسائل إدارية متبادلة.</div>
                 <div v-else class="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-                   <!-- Changed v-for to iterate over computed property -->
                    <div v-for="message in filteredAdminMessages" :key="message.id" class="border-b dark:border-gray-700 pb-4 last:border-b-0">
 
                       <div class="p-3 rounded-lg bg-gray-100 dark:bg-gray-700/80 shadow-sm">
@@ -145,7 +140,6 @@
                           <p class="text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{{ message.content }}</p>
                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                <span class="font-medium">المصدر:</span> {{ getMessageSourceText(message.source) }}
-                               <!-- Removed link to ask-sheikh question as these messages are filtered -->
                            </p>
                       </div>
 
@@ -188,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import type { Database, Tables, Enums } from '~/types/database.types';
 import LoadingSpinner from '~/components/LoadingSpinner.vue';
 import UserAvatar from '~/components/UserAvatar.vue';
@@ -197,14 +191,14 @@ const AdminSendMessageModal = resolveComponent('LazyAdminSendMessageModal');
 const AdminSuspendCommentModal = resolveComponent('LazyAdminSuspendCommentModal');
 import AdminUserActions from '~/components/admin/AdminUserActions.vue';
 import { useSupabaseClient, definePageMeta, useNuxtApp, useRoute, navigateTo } from '#imports';
-import type { PostgrestError, User } from '@supabase/supabase-js';
+import type { PostgrestError } from '@supabase/supabase-js'; // Removed User type
 
 // --- Define Types ---
 type Profile = Tables<'profiles'>;
-// Reduced AuthUser type
+// Reduced AuthUser type - Email removed as it's not fetched reliably
 type AuthUser = {
     id: string;
-    email?: string | undefined;
+    email?: string | undefined; // Kept optional for flexibility if profile has it
     created_at?: string | undefined;
     last_sign_in_at?: string | undefined; // Will be undefined
 };
@@ -259,7 +253,12 @@ const fetchData = async () => {
   try {
     // Fetch profile, messages, and courses concurrently
     const [profileResult, messagesResult, coursesResult] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', userId.value).single(),
+      supabase.from('profiles')
+        // Select all fields from profiles EXCEPT email if it doesn't exist
+        // Adjust the select string based on your actual 'profiles' table columns
+        .select(`id, full_name, avatar_url, role, points, bio, is_banned, comment_suspended_until, created_at, updated_at`)
+        .eq('id', userId.value)
+        .single(),
       supabase.from('user_private_messages').select('*').eq('user_id', userId.value).order('created_at', { ascending: false }),
       supabase.from('course_enrollments').select(`course_id, enrolled_at, study_courses (title)`).eq('user_id', userId.value).order('enrolled_at', { ascending: false })
     ]);
@@ -267,12 +266,13 @@ const fetchData = async () => {
     // Process Profile
     if (profileResult.error) throw profileResult.error;
     if (!profileResult.data) throw new Error('لم يتم العثور على ملف المستخدم.');
-    const profileData = profileResult.data;
+    // Cast to Profile, acknowledging email might not be present
+    const profileData = profileResult.data as Profile;
 
-    // Construct AuthUser object with available data
+    // Construct AuthUser object (email will likely be undefined here)
     const authData: AuthUser = {
         id: profileData.id,
-        email: profileData.email || undefined,
+        email: profileData.email || undefined, // Will be undefined if 'email' not in profiles
         created_at: profileData.created_at || undefined,
         last_sign_in_at: undefined // Cannot get this safely client-side
     };
@@ -302,13 +302,12 @@ const fetchData = async () => {
 
 // --- Action Handlers ---
 const handleActionStart = (actionType: string) => {
-    // Set general loading to true only for non-read actions
     isLoadingAction.value = (actionType !== 'read');
     console.log(`Action started: ${actionType}`);
 };
 
 const handleActionComplete = (success: boolean, message: string, updatedProfile?: Partial<Profile>) => {
-    isLoadingAction.value = false; // Reset general loading
+    isLoadingAction.value = false;
     if (success && userData.value && updatedProfile) {
         Object.assign(userData.value.profile, updatedProfile);
         showToast(message, 'success');
@@ -323,7 +322,6 @@ const markReplyAsReadByAdmin = async (messageId: number) => {
     try {
         const { error } = await supabase.from('user_private_messages').update({ admin_read_reply: true }).eq('id', messageId);
         if (error) throw error;
-        // Update the original list for reactivity
         const msgIndex = userMessages.value?.findIndex(m => m.id === messageId);
         if (msgIndex !== undefined && msgIndex !== -1 && userMessages.value) {
              userMessages.value[msgIndex].admin_read_reply = true;
@@ -344,24 +342,34 @@ const openSuspendModal = (userProfile: Profile | null) => { if (!userProfile) re
 
 // --- Send Notification Function ---
 async function sendNotificationToUser(targetUserId: string, title: string, link: string) {
+    // Basic validation
+    if (!targetUserId || !title || !link) {
+        console.error(">>> sendNotificationToUser: Missing required data.", { targetUserId, title, link });
+        showToast('فشل إرسال الإشعار: بيانات الإشعار غير مكتملة.', 'error');
+        return;
+    }
+
     const notificationData: Omit<NotificationInsert, 'id' | 'created_at'> = {
         user_id: targetUserId,
         message: `رسالة جديدة من الإدارة: ${title}`,
         link: link,
         is_read: false,
     };
-    console.log("Attempting to send notification:", notificationData);
+    console.log(">>> sendNotificationToUser: Attempting to send notification data:", notificationData);
+
     try {
         const { error } = await supabase.from('notifications').insert(notificationData);
+        console.log(">>> sendNotificationToUser: Supabase insert response error:", error); // Log error regardless
+
         if (error) {
-            console.error("Error sending notification:", error);
-            showToast('تم إرسال الرسالة، لكن فشل إرسال الإشعار للمستخدم.', 'warning');
+            console.error(">>> sendNotificationToUser: Error sending notification:", error);
+            showToast(`فشل إرسال الإشعار للمستخدم: ${error.message}`, 'error'); // Use error toast
         } else {
-             console.log("Notification sent successfully for message:", title);
+             console.log(">>> sendNotificationToUser: Notification insert successful for message:", title);
         }
-    } catch(err) {
-         console.error("Unexpected error sending notification:", err);
-         showToast('حدث خطأ غير متوقع أثناء إرسال الإشعار.', 'error');
+    } catch(err: any) {
+         console.error(">>> sendNotificationToUser: Unexpected catch block error sending notification:", err);
+         showToast(`حدث خطأ غير متوقع أثناء إرسال الإشعار: ${err.message || 'خطأ غير معروف'}`, 'error');
     }
 }
 
@@ -370,16 +378,20 @@ const handleMessageSent = (success: boolean, sentMessage?: PrivateMessage, error
     showSendMessageModal.value = false;
     if (success && sentMessage?.id && sentMessage?.user_id && sentMessage?.title) {
         showToast('تم إرسال الرسالة الخاصة بنجاح.', 'success');
-        // Construct a more specific link if possible, otherwise fallback
         const notificationLink = `/profile?messageId=${sentMessage.id}`;
+        // Call notification function asynchronously (don't necessarily wait for it)
         sendNotificationToUser(sentMessage.user_id, sentMessage.title, notificationLink);
         fetchMessages(); // Refresh messages list to show the new message
     } else if (!success) {
         showToast(`فشل إرسال الرسالة الخاصة: ${errorMsg || 'خطأ غير معروف'}`, 'error');
+    } else {
+        console.warn('handleMessageSent: Message sent successfully but required data is missing for notification.', sentMessage);
+        showToast('تم إرسال الرسالة، لكن لا يمكن إرسال الإشعار (بيانات ناقصة).', 'warning');
     }
 };
 
-const fetchMessages = async () => { // Function to refresh messages list
+
+const fetchMessages = async () => {
     if (!userId.value) return; isLoadingMessages.value = true;
     try {
         const { data, error } = await supabase.from('user_private_messages')
@@ -387,7 +399,7 @@ const fetchMessages = async () => { // Function to refresh messages list
             .eq('user_id', userId.value)
             .order('created_at', { ascending: false });
         if (error) throw error;
-        userMessages.value = data ?? []; // Update the main list
+        userMessages.value = data ?? [];
     } catch (err: any) {
         console.error("Error refreshing messages:", err);
         showToast("فشل تحديث قائمة الرسائل.", "error");
@@ -397,7 +409,7 @@ const fetchMessages = async () => { // Function to refresh messages list
 const handleUserSuspended = (userIdParam: string, suspended: boolean, suspended_until: string | null) => {
     if (userData.value?.profile.id === userIdParam) {
         userData.value.profile.comment_suspended_until = suspended_until;
-        const userName = userData.value.profile.full_name || userData.value.auth.email;
+        const userName = userData.value.profile.full_name || 'المستخدم'; // Fallback name
         if (suspended) { showToast(`تم إيقاف تعليقات المستخدم ${userName} حتى ${formatDate(suspended_until)}.`, 'success'); }
         else { showToast(`تم إلغاء إيقاف تعليقات المستخدم ${userName}.`, 'success'); }
     }
@@ -427,9 +439,9 @@ const getRoleClass = (role: string | null | undefined): string => {
 }
 
 const getMessageSourceText = (source: string | null | undefined): string => {
-    if (source === 'ask_sheikh_reply') return 'رد على سؤال'; // Will likely be filtered out now
+    // Removed 'ask_sheikh_reply' as it's filtered out
     if (source === 'admin_direct_message') return 'رسالة مباشرة من الإدارة';
-    return source || 'غير محدد';
+    return source || 'رسالة إدارية'; // Adjusted default
 };
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
@@ -439,6 +451,11 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warnin
 
 // --- Watchers ---
 watch(userId, (newId) => { if (newId) fetchData(); }, { immediate: true });
+
+// --- Lifecycle Hooks ---
+onMounted(() => {
+    // Initial fetch handled by watcher
+});
 
 </script>
 

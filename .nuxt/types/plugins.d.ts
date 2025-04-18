@@ -26,7 +26,9 @@ type NuxtAppInjections =
   InjectionType<typeof import("../../node_modules/@nuxtjs/supabase/dist/runtime/plugins/auth-redirect.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/dev-server-logs.js")> &
   InjectionType<typeof import("../../node_modules/nuxt/dist/app/plugins/check-if-layout-used.js")> &
+  InjectionType<typeof import("../../plugins/floating-vue.client")> &
   InjectionType<typeof import("../../plugins/nprogress.client")> &
+  InjectionType<typeof import("../../plugins/toast.client")> &
   InjectionType<typeof import("../../plugins/watch-auth.client")>
 
 declare module '#app' {

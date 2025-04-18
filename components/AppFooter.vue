@@ -71,7 +71,7 @@ const currentYear = ref(new Date().getFullYear()); // حساب السنة الح
 const { data: aboutData, pending, error } = await useAsyncData<{ contact_info: Json | null, short_bio?: string | null }>(
   'footer-about-data-v2', // استخدم مفتاح مختلف قليلاً إذا لزم الأمر
   async () => {
-    console.log("[AppFooter] Fetching about_sheikh data...");
+    
     // نفترض أن الصف المطلوب له id = 1. عدّل هذا إذا لزم الأمر.
     const { data, error } = await supabase
       .from('about_sheikh')

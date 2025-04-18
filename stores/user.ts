@@ -68,15 +68,15 @@ export const useUserStore = defineStore('user', {
       const user = this.supabaseUser;
       // --- Keep initial checks ---
       if (!user || this.isFetchingProfile) {
-         if (this.profile && !this.isFetchingProfile) { console.log('[UserStore] Profile already loaded.'); return; }
-         if (this.isFetchingProfile) { console.log('[UserStore] Profile fetch already in progress.'); return; }
-         if (!user) { console.log('[UserStore] No user to fetch profile for.'); return; }
+         if (this.profile && !this.isFetchingProfile) {  return; }
+         if (this.isFetchingProfile) {  return; }
+         if (!user) {  return; }
       }
 
       this.isFetchingProfile = true;
       this.fetchProfileError = null;
       const client = useSupabaseClient<Database>();
-      console.log('[UserStore] Fetching profile for user:', user.id);
+      
 
       try {
         // --- تأكد من طلب كل الأعمدة المطلوبة ---
@@ -104,7 +104,7 @@ export const useUserStore = defineStore('user', {
         }
 
         if (data) {
-          console.log('[UserStore] Profile fetched:', data);
+          
           this.profile = data; // النوع يجب أن يتطابق الآن بفضل الأنواع المنشأة
         } else {
           console.warn('[UserStore] No profile found for user (or RLS prevented fetch):', user.id);
@@ -117,13 +117,13 @@ export const useUserStore = defineStore('user', {
         this.fetchProfileError = error.message || 'Failed to fetch profile.';
       } finally {
         this.isFetchingProfile = false; // Crucial: Ensure this always runs
-        console.log('[UserStore] Fetch profile finished. Fetching state:', this.isFetchingProfile); // Log final state
+         // Log final state
       }
     },
 
     async logout() {
         const client = useSupabaseClient();
-        console.log('[UserStore] Logging out...');
+        
         // Reset state immediately for faster UI feedback
         this.profile = null;
         this.supabaseUser = null;
@@ -135,7 +135,7 @@ export const useUserStore = defineStore('user', {
             console.error('Error logging out:', error.message);
             // Maybe show toast error to user
         } else {
-            console.log('[UserStore] Logout successful, navigating to /');
+            
             // Navigate after state is cleared
             await navigateTo('/');
         }

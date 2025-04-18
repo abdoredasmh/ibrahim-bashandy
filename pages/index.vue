@@ -296,7 +296,7 @@ function generateContentLink(type: ContentItem['type'], id: number | string): st
 
 // --- Function to fetch homepage data ---
 async function fetchHomepageData() {
-  console.log("Fetching homepage data from Supabase...");
+  
    const aboutPromise = client.from('about_sheikh').select('short_bio, profile_image_url').eq('id', 1).maybeSingle();
    const lessonsPromise = client.from('lessons').select('id, title, created_at, youtube_url').is('course_id', null).order('created_at', { ascending: false }).limit(4);
    const booksPromise = client.from('books').select('id, title, cover_image_url, created_at').order('created_at', { ascending: false }).limit(4);

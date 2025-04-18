@@ -39,9 +39,11 @@ interface _GlobalComponents {
     'AdminCourseAddEditModal': typeof import("../components/admin/CourseAddEditModal.vue")['default']
     'AdminInfoItem': typeof import("../components/admin/InfoItem.vue")['default']
     'AdminQuizCreateEditModal': typeof import("../components/admin/QuizCreateEditModal.vue")['default']
+    'AdminSearchableLessonSelect': typeof import("../components/admin/SearchableLessonSelect.vue")['default']
     'AdminSendMessageModal': typeof import("../components/admin/SendMessageModal.vue")['default']
     'AdminSuspendCommentModal': typeof import("../components/admin/SuspendCommentModal.vue")['default']
     'AdminVideoPreviewModal': typeof import("../components/admin/VideoPreviewModal.vue")['default']
+    'CommonSortIcon': typeof import("../components/common/SortIcon.vue")['default']
     'NuxtWelcome': typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
     'NuxtLayout': typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
     'NuxtErrorBoundary': typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']
@@ -93,9 +95,11 @@ interface _GlobalComponents {
     'LazyAdminCourseAddEditModal': LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
     'LazyAdminInfoItem': LazyComponent<typeof import("../components/admin/InfoItem.vue")['default']>
     'LazyAdminQuizCreateEditModal': LazyComponent<typeof import("../components/admin/QuizCreateEditModal.vue")['default']>
+    'LazyAdminSearchableLessonSelect': LazyComponent<typeof import("../components/admin/SearchableLessonSelect.vue")['default']>
     'LazyAdminSendMessageModal': LazyComponent<typeof import("../components/admin/SendMessageModal.vue")['default']>
     'LazyAdminSuspendCommentModal': LazyComponent<typeof import("../components/admin/SuspendCommentModal.vue")['default']>
     'LazyAdminVideoPreviewModal': LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
+    'LazyCommonSortIcon': LazyComponent<typeof import("../components/common/SortIcon.vue")['default']>
     'LazyNuxtWelcome': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
     'LazyNuxtLayout': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
     'LazyNuxtErrorBoundary': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']>
@@ -153,9 +157,11 @@ export const AdminConfirmationModal: typeof import("../components/admin/Confirma
 export const AdminCourseAddEditModal: typeof import("../components/admin/CourseAddEditModal.vue")['default']
 export const AdminInfoItem: typeof import("../components/admin/InfoItem.vue")['default']
 export const AdminQuizCreateEditModal: typeof import("../components/admin/QuizCreateEditModal.vue")['default']
+export const AdminSearchableLessonSelect: typeof import("../components/admin/SearchableLessonSelect.vue")['default']
 export const AdminSendMessageModal: typeof import("../components/admin/SendMessageModal.vue")['default']
 export const AdminSuspendCommentModal: typeof import("../components/admin/SuspendCommentModal.vue")['default']
 export const AdminVideoPreviewModal: typeof import("../components/admin/VideoPreviewModal.vue")['default']
+export const CommonSortIcon: typeof import("../components/common/SortIcon.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
 export const NuxtLayout: typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
 export const NuxtErrorBoundary: typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']
@@ -207,9 +213,11 @@ export const LazyAdminConfirmationModal: LazyComponent<typeof import("../compone
 export const LazyAdminCourseAddEditModal: LazyComponent<typeof import("../components/admin/CourseAddEditModal.vue")['default']>
 export const LazyAdminInfoItem: LazyComponent<typeof import("../components/admin/InfoItem.vue")['default']>
 export const LazyAdminQuizCreateEditModal: LazyComponent<typeof import("../components/admin/QuizCreateEditModal.vue")['default']>
+export const LazyAdminSearchableLessonSelect: LazyComponent<typeof import("../components/admin/SearchableLessonSelect.vue")['default']>
 export const LazyAdminSendMessageModal: LazyComponent<typeof import("../components/admin/SendMessageModal.vue")['default']>
 export const LazyAdminSuspendCommentModal: LazyComponent<typeof import("../components/admin/SuspendCommentModal.vue")['default']>
 export const LazyAdminVideoPreviewModal: LazyComponent<typeof import("../components/admin/VideoPreviewModal.vue")['default']>
+export const LazyCommonSortIcon: LazyComponent<typeof import("../components/common/SortIcon.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
 export const LazyNuxtLayout: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
 export const LazyNuxtErrorBoundary: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-error-boundary")['default']>

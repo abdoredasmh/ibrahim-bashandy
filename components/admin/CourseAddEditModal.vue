@@ -384,7 +384,7 @@ async function handleSubmitCourseDetails() {
             if (error) throw error;
         }
         emit('saved');
-        alert('تم حفظ تفاصيل الدورة بنجاح.');
+        
     } catch (err: any) {
         console.error('Error saving course details:', err.message);
         errorMessage.value = `فشل حفظ تفاصيل الدورة: ${err.message}`;

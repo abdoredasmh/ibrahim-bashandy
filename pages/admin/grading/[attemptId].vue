@@ -269,7 +269,7 @@ const { data: fetchedData, pending, error: loadError } = await useAsyncData<Fetc
   `admin-grading-attempt-details-${attemptId.value}`,
   async () => {
     const currentAttemptId = attemptId.value;
-    console.log(`Fetching details for attempt ${currentAttemptId}`);
+    
     loadErrorReason.value = null; // Reset load error reason
 
     // 1. Fetch the attempt
@@ -355,7 +355,7 @@ watch(fetchedData, (newData) => {
   Object.keys(scoreErrors).forEach(key => delete scoreErrors[key]);
 
   if (newData?.attempt && newData.allQuestions) {
-    console.log("Watcher: Data received, updating state and initializing scores.");
+    
     attemptData.value = newData.attempt;
     quizData.value = newData.quiz;
     studentData.value = newData.student;
@@ -365,7 +365,7 @@ watch(fetchedData, (newData) => {
     // Initialize scores based on the *newly fetched* data's written questions
     const currentWrittenQuestions = newData.allQuestions.filter(q => q.type === 'written') as WrittenQuestion[];
     if (currentWrittenQuestions.length > 0) {
-        console.log(`Watcher: Initializing scores for ${currentWrittenQuestions.length} written questions.`);
+        
         const existingScores = newData.attempt.answers_parsed?.manual_score_map ?? {};
         currentWrittenQuestions.forEach(q => {
             if (q.id !== undefined && q.id !== null) {
@@ -376,14 +376,14 @@ watch(fetchedData, (newData) => {
                  console.warn("Watcher: Question found without a valid ID during score initialization:", q);
             }
         });
-        console.log("Watcher: Manual scores initialized:", JSON.parse(JSON.stringify(manualScores)));
+        
     } else {
-        console.log("Watcher: No written questions found in newData to initialize scores for.");
+        
     }
   } else if (!loadError.value) {
-     console.log("Watcher: Fetched data is null or incomplete, state cleared.");
+     
   } else {
-      console.log("Watcher: Load error detected, state update skipped.");
+      
   }
 }, { immediate: true }); // Run immediately to initialize state on load
 
@@ -676,7 +676,7 @@ const submitManualGrades = async () => {
         }
       };
 
-      console.log(`Submitting final grades for attempt ${attemptData.value.id}:`, updateData);
+      
 
 
         // 1. Update the quiz attempt record
@@ -691,7 +691,7 @@ const submitManualGrades = async () => {
             throw updateError; // Throw to be caught by the catch block
         }
 
-        console.log("Manual grades submitted successfully!");
+        
 
         // ***** START: Notification Logic *****
         // Check again if attemptData and user_id are valid before sending notification
@@ -714,7 +714,7 @@ const submitManualGrades = async () => {
                 // Using alert as placeholder - replace with your notification system
                 alert("تم حفظ التصحيح بنجاح، لكن فشل إرسال الإشعار للطالب. الخطأ: " + notificationError.message);
             } else {
-                console.log("Grading notification created successfully for user:", attemptData.value.user_id);
+                
                 // Success message including notification
                 alert("تم حفظ التصحيح بنجاح وتم إرسال إشعار للطالب."); // Placeholder
             }

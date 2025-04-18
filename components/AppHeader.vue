@@ -391,11 +391,11 @@ const handleEscapeKey = (e: KeyboardEvent) => {
 // --- مراقبة حالة تسجيل الدخول لجلب/مسح الإشعارات (مُعدَّل) ---
 watch(profile, (newProfile, oldProfile) => { // <-- راقب profile بدلاً من isLoggedIn
   if (newProfile?.id && (!oldProfile || newProfile.id !== oldProfile.id)) {
-      console.log("[AppHeader] User profile available/changed, fetching notifications and subscribing.");
+      
       notificationStore.fetchNotifications(newProfile.id);
       notificationStore.subscribeToNotifications(newProfile.id);
   } else if (!newProfile && oldProfile) {
-      console.log("[AppHeader] User logged out, clearing notifications.");
+      
       notificationStore.clearNotifications(); // <-- استدعاء دالة المسح من المخزن
       closeDropdown(false); // أغلق قائمة المستخدم
       closeSidebar(false); // أغلق القائمة الجانبية

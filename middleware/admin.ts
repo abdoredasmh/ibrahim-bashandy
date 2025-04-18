@@ -4,12 +4,12 @@ import { storeToRefs } from 'pinia';
 import { watch } from 'vue';
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
-  console.log(`[Admin Middleware] Running for route: ${to.path} (from: ${from.path})`);
+  
   const user = useSupabaseUser();
 
   // 1. التحقق الفوري من تسجيل الدخول
   if (!user.value) {
-    console.log('[Admin Middleware] No user logged in, redirecting to login.');
+    
     return navigateTo('/login', { replace: true });
   }
 
@@ -19,7 +19,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // --- <<< التحسين الرئيسي: تحقق من الحالة الحالية أولاً >>> ---
   // إذا كان البروفايل موجوداً بالفعل وكان المستخدم admin، اسمح بالمرور فوراً
   if (profile.value && profile.value.role === 'admin') {
-    console.log('[Admin Middleware] Existing profile is admin. Access granted immediately.');
+    
     return; // <-- السماح بالمرور
   }
   // --- <<< نهاية التحسين >>> ---
@@ -28,12 +28,12 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // 2. التحقق من تحميل البروفايل والانتظار فقط إذا لزم الأمر
   // (إذا لم يكن البروفايل موجوداً أو لم يكن admin، وكان الجلب جارياً)
   if (!profile.value && isFetchingProfile.value) {
-    console.log('[Admin Middleware] Profile missing or fetch in progress, waiting...');
+    
     try {
         await new Promise<void>((resolve, reject) => { // ابقِ reject هنا لمعالجة الخطأ
             const unwatch = watch(isFetchingProfile, (newValue) => {
                 if (!newValue) {
-                    console.log('[Admin Middleware] Profile fetch finished during wait.');
+                    
                     unwatch();
                     resolve(); // أكمل عندما ينتهي الجلب
                 }
@@ -74,6 +74,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   }
 
   // 5. السماح بالمرور للمشرف
-  console.log('[Admin Middleware] Final check: Admin access granted.');
+  
   // لا حاجة لـ return
 });

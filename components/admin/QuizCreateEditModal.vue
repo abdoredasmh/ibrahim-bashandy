@@ -35,7 +35,7 @@
                          <option value="lesson">اختبار درس</option>
                          <option value="module">اختبار وحدة</option>
                          <option value="final">اختبار نهائي</option>
-                         
+                         <!-- <option value="practice">اختبار تدريبي</option> -->
                      </select>
                   </div>
 
@@ -57,6 +57,7 @@
                      <select v-else id="quiz-lesson-course" v-model="selectedCourseForLesson" required @change="fetchLessonsForCourse" class="mt-1 block w-full input-field">
                          <option :value="null" disabled>-- اختر دورة لعرض دروسها --</option>
                          <option v-for="course in courses" :key="course.id" :value="course.id">{{ course.title }}</option>
+                          <option v-if="!isLoadingCourses && courses.length === 0" disabled>-- لا توجد دورات --</option>
                      </select>
                   </div>
                    <div v-if="form.type === 'lesson'">
@@ -82,12 +83,14 @@
                      <input type="number" id="quiz-pass-mark" v-model.number="form.pass_mark_percentage" required min="0" max="100" class="mt-1 block w-full input-field" />
                   </div>
 
-                  <!-- عدد المحاولات -->
+                  <!-- عدد المحاولات (تم الحذف) -->
+                  <!--
                   <div>
                      <label for="quiz-max-attempts" class="block text-sm font-medium text-gray-700 dark:text-gray-300">أقصى عدد محاولات</label>
                      <input type="number" id="quiz-max-attempts" v-model.number="form.max_attempts" min="1" placeholder="غير محدود" class="mt-1 block w-full input-field" />
                       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">اتركه فارغًا لمحاولات غير محدودة.</p>
                   </div>
+                  -->
 
                    <!-- الوقت المحدد -->
                   <div>
@@ -145,210 +148,184 @@ import { ref, watch, computed, onMounted } from 'vue';
 import {
   Dialog, DialogPanel, DialogTitle, TransitionRoot, TransitionChild
 } from '@headlessui/vue';
-import type { Database, Tables } from '~/types/database.types';
+// ** تأكد من استيراد الأنواع الصحيحة للإضافة والتحديث **
+import type { Database, Tables, TablesInsert, TablesUpdate } from '~/types/database.types';
 import { useSupabaseClient, useNuxtApp } from '#imports';
 import LoadingSpinner from '~/components/LoadingSpinner.vue';
 import type { PostgrestError } from '@supabase/supabase-js';
+import { useToast } from 'vue-toastification';
 
 // Define Quiz type from generated types
 type Quiz = Tables<'quizzes'>;
-type Course = Pick<Tables<'study_courses'>, 'id' | 'title'>; // Only need id and title
-type Lesson = Pick<Tables<'lessons'>, 'id' | 'title'>; // Only need id and title
+type Course = Pick<Tables<'study_courses'>, 'id' | 'title'>;
+type Lesson = Pick<Tables<'lessons'>, 'id' | 'title'>;
 
 const props = defineProps({
-  modelValue: { // For v-model on parent
-    type: Boolean,
-    default: false,
-  },
-  quizData: { // Existing quiz data for editing, null for creation
-    type: Object as () => Quiz | null,
-    default: null,
-  }
+  modelValue: { type: Boolean, default: false },
+  quizData: { type: Object as () => Quiz | null, default: null }
 });
 
 const emit = defineEmits(['update:modelValue', 'saved', 'closed']);
 
 const supabase = useSupabaseClient<Database>();
-const { $toast } = useNuxtApp();
+const toast = useToast();
 
 const isOpen = ref(props.modelValue);
 const isSaving = ref(false);
 const formError = ref<string | null>(null);
 
 // Form state reactive object
-const form = ref<Partial<Quiz>>({}); // Use Partial for initial state
+const form = ref<Partial<Quiz>>({});
 
 // Separate state for dropdowns
 const courses = ref<Course[]>([]);
 const lessons = ref<Lesson[]>([]);
 const isLoadingCourses = ref(false);
 const isLoadingLessons = ref(false);
-const selectedCourseForLesson = ref<number | null>(null); // Track course selected for fetching lessons
+const selectedCourseForLesson = ref<number | null>(null);
 
 const isEditing = computed(() => !!props.quizData?.id);
 
 // --- Helper to format date for datetime-local input ---
 const formatDateForInput = (dateString: string | null | undefined): string => {
     if (!dateString) return '';
-    try {
-        const date = new Date(dateString);
-        // Adjust for local timezone offset before formatting
-        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-        return date.toISOString().slice(0, 16);
-    } catch {
-        return '';
-    }
+    try { const date = new Date(dateString); date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); return date.toISOString().slice(0, 16); } catch { return ''; }
 };
 
 // --- Watchers ---
 watch(() => props.modelValue, (newVal) => {
   isOpen.value = newVal;
-  if (newVal) {
-    // Reset form when modal opens or quizData changes
-    resetForm();
-    fetchCourses(); // Fetch courses when modal opens
-  }
+  if (newVal) { resetForm(); fetchCourses(); }
 });
 
-watch(() => props.quizData, (newQuiz) => {
-    resetForm(); // Reset form if quiz data changes (e.g., switching from create to edit)
-}, { deep: true }); // Use deep watch if quizData is complex
+watch(() => props.quizData, (newQuiz) => { resetForm(); }, { deep: true });
+
+// *** Watcher to update form.course_id when selectedCourseForLesson changes for lesson quizzes ***
+// This watcher is NO LONGER NEEDED because we handle it directly in saveQuiz
+// watch(selectedCourseForLesson, (newCourseId) => {
+//     if (form.value.type === 'lesson') {
+//         form.value.course_id = newCourseId;
+//         console.log(`Lesson Quiz: Updated form.course_id to ${newCourseId}`);
+//     }
+// });
 
 // --- Form Handling ---
 const resetForm = () => {
     formError.value = null;
     isSaving.value = false;
+    selectedCourseForLesson.value = null;
+    lessons.value = [];
     if (isEditing.value && props.quizData) {
-        // Editing: Initialize form with existing data
         form.value = {
             ...props.quizData,
-            // Format due_date for the input field
             due_date: formatDateForInput(props.quizData.due_date),
-            // Ensure max_attempts is null if undefined/null from DB
-            max_attempts: props.quizData.max_attempts ?? null,
-            // Ensure time_limit is null if undefined/null
+            // ** max_attempts removed **
             time_limit_minutes: props.quizData.time_limit_minutes ?? null,
-            // Ensure module_number is null if undefined/null
             module_number: props.quizData.module_number ?? null,
         };
-         // If editing a lesson quiz, pre-select the course and fetch its lessons
-         if (form.value.type === 'lesson' && form.value.lesson_id) {
-            // Need to find the course ID for this lesson
-             findCourseForLesson(form.value.lesson_id);
-         } else {
-             selectedCourseForLesson.value = null;
-             lessons.value = [];
+         if (form.value.type === 'lesson' && form.value.course_id) { // Use existing course_id
+             selectedCourseForLesson.value = form.value.course_id;
+             fetchLessonsForCourse();
+             // Preselect lesson if lesson_id also exists
+             if (form.value.lesson_id){
+                 // Ensure the lesson_id exists in the fetched lessons
+                 // (This part of resetForm runs after fetchCourses but before fetchLessonsForCourse completes,
+                 // so pre-selection needs to happen *after* fetchLessonsForCourse finishes if needed)
+                 // We handle pre-selection inside fetchLessonsForCourse now.
+             }
          }
-
     } else {
         // Creating: Initialize with defaults
         form.value = {
-            title: '',
-            description: null,
-            type: null,
-            course_id: null,
-            lesson_id: null,
-            module_number: null,
-            pass_mark_percentage: 50,
-            max_attempts: null,
-            time_limit_minutes: null,
-            due_date: null,
-            is_active: true,
+            title: '', description: null, type: null, course_id: null, lesson_id: null,
+            module_number: null, pass_mark_percentage: 50, max_attempts: null, // max_attempts still exists in DB type but not used in form
+            time_limit_minutes: null, due_date: null, is_active: true,
         };
-        selectedCourseForLesson.value = null;
-        lessons.value = [];
     }
 };
 
-// Find the course associated with a lesson ID (needed when editing a lesson quiz)
-const findCourseForLesson = async (lessonId: number) => {
-    isLoadingLessons.value = true; // Indicate loading
-    try {
-        const { data, error } = await supabase
-            .from('lessons')
-            .select('course_id')
-            .eq('id', lessonId)
-            .single();
-
-        if (error || !data?.course_id) {
-            console.error("Could not find course for lesson:", lessonId, error);
-            selectedCourseForLesson.value = null;
-            lessons.value = []; // Clear lessons if course not found
-        } else {
-            selectedCourseForLesson.value = data.course_id;
-            await fetchLessonsForCourse(); // Fetch lessons for the found course
-        }
-    } catch (err) {
-         console.error("Error in findCourseForLesson:", err);
-         selectedCourseForLesson.value = null;
-         lessons.value = [];
-    } finally {
-        // isLoadingLessons will be set to false inside fetchLessonsForCourse
-    }
-};
-
+// Fetch courses for dropdown
+// داخل <script setup lang="ts"> في AdminQuizCreateEditModal.vue
 
 // Fetch courses for dropdown
 const fetchCourses = async () => {
-    if (courses.value.length > 0) return; // Don't refetch if already loaded
-    isLoadingCourses.value = true;
+    // قم بإزالة أو تعليق الشرط التالي مؤقتًا إذا أردت التأكد من إعادة الجلب دائمًا
+    // if (courses.value.length > 0) {
+    //     console.log("Courses already loaded, skipping fetch.");
+    //     return;
+    // }
+
+    console.log("--- fetchCourses called ---"); // للتحقق من استدعاء الدالة
+    isLoadingCourses.value = true; // تفعيل مؤشر تحميل الدورات
+    formError.value = null; // مسح أي رسائل خطأ سابقة في الفورم
+
     try {
+        // استعلام لجلب معرف وعنوان الدورات فقط، مرتبة حسب العنوان
         const { data, error } = await supabase
             .from('study_courses')
             .select('id, title')
-            .order('title');
-        if (error) throw error;
+            .order('title'); // ترتيب أبجدي حسب العنوان
+
+        console.log("--- fetchCourses Supabase response ---"); // للتحقق من استجابة Supabase
+        console.log("Error:", error); // اطبع الخطأ (إذا وجد)
+        console.log("Data:", data); // اطبع البيانات المستلمة
+
+        // التحقق من وجود خطأ في الاستعلام
+        if (error) {
+            // إلقاء الخطأ ليتم التقاطه بواسطة كتلة catch
+            throw error;
+        }
+
+        // تحديث قائمة الدورات بالبيانات المستلمة (أو مصفوفة فارغة إذا كانت البيانات null)
         courses.value = data || [];
+        console.log(`--- fetchCourses successful, ${courses.value.length} courses loaded ---`); // للتحقق من عدد الدورات المحملة
+
     } catch (err: any) {
+        // التعامل مع أي خطأ يحدث أثناء الجلب
         console.error("Error fetching courses:", err);
-        formError.value = "فشل تحميل قائمة الدورات.";
+        formError.value = "فشل تحميل قائمة الدورات."; // عرض رسالة خطأ مناسبة للمستخدم في الفورم
+        courses.value = []; // تفريغ قائمة الدورات عند حدوث خطأ
+        toast.error(formError.value); // عرض تنبيه toast بالخطأ أيضًا
+
     } finally {
+        // إيقاف مؤشر التحميل دائمًا، سواء نجح الجلب أو فشل
         isLoadingCourses.value = false;
+        console.log("--- fetchCourses finished ---"); // للتحقق من انتهاء الدالة
     }
 };
 
 // Fetch lessons when a course is selected for a lesson quiz
 const fetchLessonsForCourse = async () => {
-    lessons.value = []; // Clear previous lessons
-    form.value.lesson_id = null; // Reset selected lesson
+    lessons.value = [];
+    form.value.lesson_id = null;
     if (!selectedCourseForLesson.value || form.value.type !== 'lesson') return;
-
     isLoadingLessons.value = true;
     try {
         const { data, error } = await supabase
-            .from('lessons')
-            .select('id, title')
-            .eq('course_id', selectedCourseForLesson.value)
-            .order('lesson_order', { nulls: 'last' }) // Order by lesson_order if available
-            .order('title');
+            .from('lessons').select('id, title').eq('course_id', selectedCourseForLesson.value)
+            .order('lesson_order', { nulls: 'last' }).order('title');
         if (error) throw error;
         lessons.value = data || [];
-         // Pre-select the lesson if editing
-         if (isEditing.value && props.quizData?.lesson_id) {
+         // ** Pre-select the lesson if editing AND the lesson_id matches the current props data **
+         if (isEditing.value && props.quizData?.lesson_id && props.quizData?.course_id === selectedCourseForLesson.value) {
              form.value.lesson_id = props.quizData.lesson_id;
          }
-
-    } catch (err: any) {
-        console.error("Error fetching lessons:", err);
-        formError.value = "فشل تحميل قائمة الدروس لهذه الدورة.";
-    } finally {
-        isLoadingLessons.value = false;
-    }
+    } catch (err: any) { console.error("Error fetching lessons:", err); formError.value = "فشل تحميل قائمة الدروس لهذه الدورة."; }
+    finally { isLoadingLessons.value = false; }
 };
+
 
 // Reset linked fields when quiz type changes
 const handleTypeChange = () => {
     form.value.course_id = null;
     form.value.lesson_id = null;
     form.value.module_number = null;
-    selectedCourseForLesson.value = null; // Reset lesson course selection
-    lessons.value = []; // Clear lessons list
+    selectedCourseForLesson.value = null;
+    lessons.value = [];
 };
 
 // Reset lesson when course changes (for module/final types)
-const handleCourseChange = () => {
-     form.value.lesson_id = null; // Ensure lesson is cleared if course is directly selected
-};
+const handleCourseChange = () => { form.value.lesson_id = null; };
 
 // --- Save Quiz Logic ---
 const saveQuiz = async () => {
@@ -360,28 +337,33 @@ const saveQuiz = async () => {
   if (!form.value.type) { formError.value = "نوع الاختبار مطلوب."; isSaving.value = false; return; }
   if (form.value.type === 'lesson' && !form.value.lesson_id) { formError.value = "يجب اختيار درس لاختبار الدرس."; isSaving.value = false; return; }
   if ((form.value.type === 'module' || form.value.type === 'final') && !form.value.course_id) { formError.value = "يجب اختيار دورة لاختبار الوحدة أو الاختبار النهائي."; isSaving.value = false; return; }
-   if (form.value.type === 'module' && (!form.value.module_number || form.value.module_number < 1)) { formError.value = "رقم الوحدة مطلوب وصحيح لاختبار الوحدة."; isSaving.value = false; return; }
-   if (form.value.pass_mark_percentage === null || form.value.pass_mark_percentage === undefined || form.value.pass_mark_percentage < 0 || form.value.pass_mark_percentage > 100) { formError.value = "درجة النجاح يجب أن تكون بين 0 و 100."; isSaving.value = false; return; }
-   if (form.value.max_attempts !== null && form.value.max_attempts < 1) { formError.value = "عدد المحاولات يجب أن يكون 1 أو أكثر (أو يترك فارغًا)."; isSaving.value = false; return; }
-   if (form.value.time_limit_minutes !== null && form.value.time_limit_minutes < 1) { formError.value = "الوقت المحدد يجب أن يكون دقيقة واحدة أو أكثر."; isSaving.value = false; return; }
+  if (form.value.type === 'module' && (!form.value.module_number || form.value.module_number < 1)) { formError.value = "رقم الوحدة مطلوب وصحيح لاختبار الوحدة."; isSaving.value = false; return; }
+  if (form.value.pass_mark_percentage === null || form.value.pass_mark_percentage === undefined || form.value.pass_mark_percentage < 0 || form.value.pass_mark_percentage > 100) { formError.value = "درجة النجاح يجب أن تكون بين 0 و 100."; isSaving.value = false; return; }
+  // ** max_attempts validation removed **
+  if (form.value.time_limit_minutes !== null && form.value.time_limit_minutes < 1) { formError.value = "الوقت المحدد يجب أن يكون دقيقة واحدة أو أكثر."; isSaving.value = false; return; }
 
 
-  // Prepare data for Supabase (handle nulls and types)
-  const quizPayload: Omit<Quiz, 'id' | 'created_at' | 'updated_at'> = {
+  // Prepare data for Supabase
+  // ** Use correct type based on isEditing for insert/update **
+  const basePayload = {
       title: form.value.title,
       description: form.value.description || null,
-      type: form.value.type,
-      course_id: form.value.type === 'module' || form.value.type === 'final' ? form.value.course_id : null,
+      type: form.value.type!, // Assert non-null after validation
+      // *** Assign course_id correctly based on type ***
+      course_id: (form.value.type === 'module' || form.value.type === 'final')
+                 ? form.value.course_id
+                 : (form.value.type === 'lesson' ? selectedCourseForLesson.value : null),
       lesson_id: form.value.type === 'lesson' ? form.value.lesson_id : null,
       module_number: form.value.type === 'module' ? form.value.module_number : null,
-      pass_mark_percentage: form.value.pass_mark_percentage ?? 50, // Default if somehow null
-      max_attempts: form.value.max_attempts || null, // Ensure empty string becomes null
+      pass_mark_percentage: form.value.pass_mark_percentage ?? 50,
+      max_attempts: null, // ** Set max_attempts to null explicitly **
       time_limit_minutes: form.value.time_limit_minutes || null,
-      // Convert datetime-local string back to ISO string or null
       due_date: form.value.due_date ? new Date(form.value.due_date).toISOString() : null,
       is_active: form.value.is_active ?? true,
   };
 
+
+  console.log("Payload being sent:", basePayload);
 
   try {
     let savedData: Quiz | null = null;
@@ -389,9 +371,15 @@ const saveQuiz = async () => {
 
     if (isEditing.value && form.value.id) {
       // Update existing quiz
+      console.log(`Updating quiz with ID: ${form.value.id}`);
+      // Define payload type for update
+      const updatePayload: TablesUpdate<'quizzes'> = {
+          ...basePayload,
+          updated_at: new Date().toISOString()
+      };
       const { data, error: updateError } = await supabase
         .from('quizzes')
-        .update({ ...quizPayload, updated_at: new Date().toISOString() }) // Add updated_at
+        .update(updatePayload)
         .eq('id', form.value.id)
         .select()
         .single();
@@ -399,24 +387,31 @@ const saveQuiz = async () => {
       error = updateError;
     } else {
       // Insert new quiz
+      console.log("Inserting new quiz");
+      // Define payload type for insert
+      const insertPayload: TablesInsert<'quizzes'> = basePayload;
       const { data, error: insertError } = await supabase
         .from('quizzes')
-        .insert(quizPayload)
+        .insert(insertPayload)
         .select()
         .single();
       savedData = data;
       error = insertError;
     }
 
+    console.log("Supabase error:", error);
+    console.log("Supabase data:", savedData);
+
     if (error) throw error;
     if (!savedData) throw new Error("لم يتم إرجاع بيانات الاختبار المحفوظة.");
 
-
-    emit('saved', savedData); // Emit the saved data
+    
+    emit('saved', savedData);
 
   } catch (err: any) {
     console.error("Error saving quiz:", err);
     formError.value = `فشل حفظ الاختبار: (${(err as PostgrestError).message || 'خطأ غير معروف'})`;
+    toast.error(formError.value);
   } finally {
     isSaving.value = false;
   }
@@ -424,19 +419,11 @@ const saveQuiz = async () => {
 
 // --- Modal Control ---
 function closeModal() {
-  if (isSaving.value) return; // Prevent closing while saving
+  if (isSaving.value) return;
   isOpen.value = false;
   emit('update:modelValue', false);
   emit('closed');
 }
-
-// --- Initial Fetch ---
-// Fetch courses initially if the modal might be opened immediately
-// onMounted(() => {
-//     if (props.modelValue) {
-//         fetchCourses();
-//     }
-// });
 
 </script>
 
@@ -445,4 +432,5 @@ function closeModal() {
 .input-field {
     @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-70;
 }
+/* Add other styles if needed */
 </style>

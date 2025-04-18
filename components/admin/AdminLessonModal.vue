@@ -56,11 +56,11 @@
                           class="admin-select"
                           aria-describedby="category-error" 
                       >
-                          <option :value="null" disabled>-- اختر فئة * --</option> {/* تم تغيير النص الافتراضي */}
+                          <option :value="null" disabled>-- اختر فئة * --</option> 
                           <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                           <option v-if="!loadingCategories && categories.length === 0" disabled>-- لا توجد فئات متاحة --</option>
                       </select>
-                       <p v-if="validationErrors.category_id" class="form-error" id="category-error">{{ validationErrors.category_id }}</p> {/* تمت إضافة عنصر الخطأ */}
+                       <p v-if="validationErrors.category_id" class="form-error" id="category-error">{{ validationErrors.category_id }}</p> 
                   </div>
 
                   <!-- Course Select Field -->

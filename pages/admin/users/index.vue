@@ -11,11 +11,10 @@
           id="user-search"
           type="text"
           v-model="searchTerm"
-          @input="handleSearchInput"
-          placeholder="ابحث بالاسم أو البريد الإلكتروني..."
+          placeholder="ابحث بالاسم..." 
           :disabled="pending || pendingMore"
           class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 pl-8 pr-8"
-        />
+          />
          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 text-gray-400"><path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" /></svg></div>
         <button v-if="searchTerm" @click="clearSearch" :disabled="pending || pendingMore" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 z-10"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm2.78-4.22a.75.75 0 0 1-1.06 1.06L8 9.06l-1.72 1.72a.75.75 0 1 1-1.06-1.06L6.94 8 5.22 6.28a.75.75 0 0 1 1.06-1.06L8 6.94l1.72-1.72a.75.75 0 1 1 1.06 1.06L9.06 8l1.72 1.78Z" clip-rule="evenodd" /></svg></button>
       </div>
@@ -67,14 +66,14 @@
         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           <!-- Initial Loading State -->
           <tr v-if="pending && users.length === 0">
-             <td colspan="5" class="table-cell text-center py-10">
+             <td colspan="4" class="table-cell text-center py-10"> 
                 <LoadingSpinner />
                 <p class="text-sm text-gray-500 mt-1">جارٍ تحميل المستخدمين...</p>
             </td>
           </tr>
           <!-- Empty State (after loading, no results) -->
           <tr v-else-if="!pending && users.length === 0 && !fetchError">
-             <td colspan="5" class="table-cell text-center py-10 text-gray-500">لا يوجد مستخدمون يطابقون بحثك أو الفلاتر المحددة.</td>
+             <td colspan="4" class="table-cell text-center py-10 text-gray-500">لا يوجد مستخدمون يطابقون بحثك أو الفلاتر المحددة.</td> 
           </tr>
           <!-- Data Rows -->
           <tr v-for="profile in users" :key="profile.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
@@ -84,9 +83,8 @@
                 <div class="flex-shrink-0 h-10 w-10"><UserAvatar :src="profile.avatar_url || undefined" :alt="profile.full_name || 'مستخدم'" size="md" /></div>
                 <div class="mr-4">
                   <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ profile.full_name || 'لم يحدد اسم' }}</div>
-                  <div class="text-sm text-gray-500 dark:text-gray-400">{{ profile.email || 'لا يوجد بريد' }}</div>
-
-                    <div class="sm:hidden mt-1 flex items-center gap-2 text-xs">
+                 
+                  <div class="sm:hidden mt-1 flex items-center gap-2 text-xs">
                          <span :class="['status-badge', getRoleClass(profile.role)]">{{ profile.role === 'admin' ? 'مشرف' : 'مستخدم' }}</span>
                           <span v-if="profile.is_banned" class="status-badge bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">محظور</span>
                           <span v-else-if="isCommentSuspended(profile.comment_suspended_until)" class="status-badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">موقوف</span>
@@ -119,9 +117,9 @@
                 </NuxtLink>
             </td>
           </tr>
-          <!-- Row for loading more indicator within the table -->
+          <!-- Row for loading more indicator -->
            <tr v-if="pendingMore">
-               <td colspan="5" class="text-center py-4">
+               <td colspan="4" class="text-center py-4"> 
                    <LoadingSpinner class="inline-block w-5 h-5" />
                    <span class="text-sm text-gray-500 ml-2">تحميل المزيد...</span>
                </td>
@@ -130,12 +128,13 @@
       </table>
     </div>
 
-    <!-- Infinite Scroll Trigger (Element remains but observer is commented out) -->
-    <div ref="loadMoreTrigger" class="h-1"></div>
-     <!-- Message indicating end of list (optional) -->
-     <div v-if="!pending && !pendingMore && users.length > 0 && !hasMore" class="text-center text-sm text-gray-500 py-4">
-         لا يوجد المزيد من المستخدمين لعرضهم.
-     </div>
+    
+    <div ref="loadMoreTrigger" class="h-20 flex items-center justify-center">
+      
+       <div v-if="!pending && !pendingMore && users.length > 0 && !hasMore" class="text-center text-sm text-gray-500">
+           لا يوجد المزيد من المستخدمين لعرضهم.
+       </div>
+    </div>
 
   </div>
 </template>
@@ -147,17 +146,18 @@ import LoadingSpinner from '~/components/LoadingSpinner.vue';
 import UserAvatar from '~/components/UserAvatar.vue';
 import { useSupabaseClient, definePageMeta, useNuxtApp } from '#imports';
 import type { PostgrestError } from '@supabase/supabase-js';
-// Comment out IntersectionObserver import if not used
-// import { useIntersectionObserver } from '@vueuse/core';
+import { useIntersectionObserver, useDebounceFn } from '@vueuse/core';
 
 // --- Constants ---
 const ADMIN_PAGE_SIZE = 50;
 const SEARCH_DEBOUNCE_MS = 500;
 
 // --- Define Types ---
+// Adjusted type to exclude email
 type AdminUserProfile = Pick<
     Tables<'profiles'>,
-    'id' | 'full_name' | 'email' | 'avatar_url' | 'role' | 'is_banned' | 'comment_suspended_until' | 'created_at'
+    'id' | 'full_name' | 'avatar_url' | 'role' | 'is_banned' | 'comment_suspended_until' | 'created_at'
+    // email is removed
 >;
 
 // --- Page Meta ---
@@ -168,80 +168,85 @@ const supabase = useSupabaseClient<Database>();
 const { $toast } = useNuxtApp();
 
 // --- State ---
-const pending = ref(true);        // Initial load state
-const pendingMore = ref(false);   // Loading more state
+const pending = ref(true);
+const pendingMore = ref(false);
 const fetchError = ref<PostgrestError | null>(null);
 const users = ref<AdminUserProfile[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(ADMIN_PAGE_SIZE);
 const hasMore = ref(true);
-const searchTerm = ref('');
 const filterRole = ref<'all' | 'user' | 'admin'>('all');
 const filterStatus = ref<'all' | 'active' | 'banned' | 'suspended'>('all');
-let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+const searchTerm = ref('');
+const isInitialLoad = ref(true);
 
 // --- Infinite Scroll Trigger Ref ---
 const loadMoreTrigger = ref<HTMLElement | null>(null);
-// --- Observer instance (kept null for now) ---
 let observer: ReturnType<typeof useIntersectionObserver> | null = null;
 
 
 // --- Functions ---
 
-const handleSearchInput = () => {
-  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-  searchDebounceTimer = setTimeout(() => {
-    // Don't refresh if a fetch is already in progress
+// Debounced refresh function triggered by searchTerm watcher
+const debouncedRefreshUsers = useDebounceFn(() => {
+    
     if (!pending.value && !pendingMore.value) {
-        refreshUsers();
+        refreshUsers(); // Call the main refresh function
+    } else {
+        
     }
-  }, SEARCH_DEBOUNCE_MS);
-};
+}, SEARCH_DEBOUNCE_MS);
 
 const clearSearch = () => {
     if (searchTerm.value === '') return;
     searchTerm.value = '';
-    // Watcher will trigger refresh if not loading
+    // Watcher will handle the debounced refresh
 };
 
 /** Fetch users, supporting pagination and filtering */
 const fetchUsers = async (page = 1, appending = false) => {
-  // Prevent concurrent fetches
-  if ((appending && pendingMore.value) || (!appending && pending.value)) {
-    console.log("Fetch prevented: Already fetching.");
+  if ((appending && pendingMore.value) || (!appending && pending.value && page !== 1)) {
+    
     return;
   }
 
-  console.log(`fetchUsers called - page: ${page}, appending: ${appending}`); // Log call
+  
 
   if (appending) {
       pendingMore.value = true;
   } else {
       pending.value = true;
-      // Only clear users if it's a *new* initial fetch (page 1 and not appending)
-      if (page === 1 && !appending) {
-          users.value = [];
-      }
-      currentPage.value = 1; // Reset page number for new searches/filters
-      hasMore.value = true; // Assume more initially
+      if (page === 1) { users.value = []; }
+      currentPage.value = 1;
+      hasMore.value = true;
   }
   fetchError.value = null;
 
   const rangeFrom = (page - 1) * pageSize.value;
   const rangeTo = rangeFrom + pageSize.value - 1;
-  console.log(`Fetching range: ${rangeFrom} to ${rangeTo}`); // Log range
+  
 
   try {
+    // --- Build Base Query (Select fields EXCLUDING email) ---
     let baseQuery = supabase
       .from('profiles')
-      .select(`id, full_name, email, avatar_url, role, is_banned, comment_suspended_until, created_at`)
+      .select(`
+        id,
+        full_name,
+        avatar_url,
+        role,
+        is_banned,
+        comment_suspended_until,
+        created_at
+      `) // Email removed from select
       .order('created_at', { ascending: false });
 
+    // Apply Filters
     if (filterRole.value !== 'all') { baseQuery = baseQuery.eq('role', filterRole.value); }
     const trimmedSearch = searchTerm.value.trim();
     if (trimmedSearch) {
-        // Search in full_name and email (if exists and indexed)
-        baseQuery = baseQuery.or(`full_name.ilike.%${trimmedSearch}%,email.ilike.%${trimmedSearch}%`);
+        // Search only in full_name
+        baseQuery = baseQuery.ilike('full_name', `%${trimmedSearch}%`);
     }
     if (filterStatus.value !== 'all') {
         if (filterStatus.value === 'banned') { baseQuery = baseQuery.eq('is_banned', true); }
@@ -256,80 +261,80 @@ const fetchUsers = async (page = 1, appending = false) => {
       .range(rangeFrom, rangeTo);
     console.timeEnd(`fetchUsers query page ${page}`);
 
-    console.log('Fetched Data:', fetchedUsersData); // Log actual data
-    console.log('Fetch Error:', fetchErr);       // Log error object
+    
+    
 
     if (fetchErr) throw fetchErr;
 
-    const usersToAdd = fetchedUsersData || [];
+    const usersToAdd = (fetchedUsersData || []) as AdminUserProfile[];
 
     if (appending) {
       users.value.push(...usersToAdd);
-       console.log(`Appended ${usersToAdd.length} users. Total: ${users.value.length}`);
+       
     } else {
       users.value = usersToAdd;
-       console.log(`Set ${usersToAdd.length} users.`);
+       
     }
 
     hasMore.value = usersToAdd.length === pageSize.value;
-    console.log(`Has More: ${hasMore.value}`);
+    
     if (hasMore.value) {
-        // Set current page to the *next* page number we expect to fetch
         currentPage.value = page + 1;
     }
-
 
   } catch (err: any) {
     console.error("Error fetching users:", err);
     fetchError.value = err as PostgrestError;
     if (!appending) { users.value = []; }
     hasMore.value = false;
+    $toast.error(`فشل تحميل المستخدمين: ${err.message || 'خطأ غير معروف'}`);
   } finally {
     pending.value = false;
     pendingMore.value = false;
-    console.log(`Fetch finished. Pending: ${pending.value}, PendingMore: ${pendingMore.value}`);
+    if (page === 1 && !appending) {
+        isInitialLoad.value = false;
+    }
+    
   }
 };
 
 /** Trigger a full refresh (reset to page 1) */
 const refreshUsers = () => {
-    console.log("refreshUsers called.");
-    // Don't refresh if already loading
+    
     if (!pending.value && !pendingMore.value) {
+        isInitialLoad.value = true; // Treat refresh as initial load for watcher logic
         fetchUsers(1, false);
     } else {
-        console.log("Refresh prevented: Fetch in progress.");
+        
     }
 };
 
 /** Load next page for infinite scroll */
 const loadMore = () => {
-    console.log(`loadMore called. Conditions: pending=${pending.value}, pendingMore=${pendingMore.value}, hasMore=${hasMore.value}`);
+    
     if (!pending.value && !pendingMore.value && hasMore.value) {
-        console.log(`Executing fetchUsers for page ${currentPage.value}`);
+        
         fetchUsers(currentPage.value, true);
     } else {
-         console.log("loadMore skipped due to conditions.");
+         
     }
 };
 
-// --- Intersection Observer Setup (Currently Commented Out) ---
+// --- Intersection Observer Setup ---
 const setupObserver = () => {
-    // Ensure previous observer is stopped if re-initializing
     if (observer) observer.stop();
-
     if (loadMoreTrigger.value) {
         observer = useIntersectionObserver(
             loadMoreTrigger,
             ([{ isIntersecting }]) => {
-                if (isIntersecting) {
-                    console.log("Load more trigger intersecting...");
+                if (isIntersecting && !pending.value && !pendingMore.value) {
+                    
                     loadMore();
                 }
             },
-            { threshold: 0.1 } // Adjust threshold if needed
+            { threshold: 0.1 }
         );
-         console.log("Intersection Observer initialized.");
+         
     } else {
         console.warn("Load more trigger element not found for Intersection Observer.");
     }
@@ -353,27 +358,39 @@ const getRoleClass = (role: string | null | undefined): string => {
 }
 
 // --- Watchers ---
-// Watch filters to trigger a refresh (reset to page 1)
-watch([filterRole, filterStatus], () => {
-    console.log("Filters changed, triggering refresh.");
+// Watch filters to trigger refresh immediately (after initial load)
+watch([filterRole, filterStatus], (newValues, oldValues) => {
+    if (isInitialLoad.value) { return; }
+    const hasActuallyChanged = oldValues === undefined || newValues[0] !== oldValues[0] || newValues[1] !== oldValues[1];
+    if (!hasActuallyChanged) { return; }
+    if (pending.value || pendingMore.value) { return; }
+    
     refreshUsers();
 }, { deep: true });
-// Watch searchTerm is handled by handleSearchInput debounce
+
+// Watch search term to trigger the DEBOUNCED refresh
+watch(searchTerm, (newValue, oldValue) => {
+    if (isInitialLoad.value) { return; }
+    // Trigger debounce even if newValue is empty (clearing search)
+    if (newValue !== oldValue) {
+         
+         debouncedRefreshUsers();
+    }
+});
 
 // --- Lifecycle Hooks ---
 onMounted(() => {
-  console.log("Component mounted. Fetching initial users...");
-  fetchUsers(1); // Fetch initial data
-  // --- Intersection Observer is commented out for testing ---
-  // setTimeout(setupObserver, 500); // Delay observer setup slightly
+  
+  fetchUsers(1).then(() => {
+      if (process.client) { setupObserver(); }
+  });
 });
 
 onBeforeUnmount(() => {
-  console.log("Component unmounting. Cleaning up...");
-  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-  // Disconnect the observer if it was initialized
+  
+  // No need to clear searchDebounceTimer
   if (observer) {
-    console.log("Stopping Intersection Observer.");
+    
     observer.stop();
   }
 });
@@ -421,7 +438,6 @@ onBeforeUnmount(() => {
   --header-height: 4rem; /* Example value */
 }
 .sticky {
-    /* Ensure position and top are correctly applied */
     position: sticky;
     top: var(--header-height);
 }

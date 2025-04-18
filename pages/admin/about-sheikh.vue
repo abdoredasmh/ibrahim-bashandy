@@ -276,7 +276,7 @@ async function handleImageUpload() {
     const fileName = `sheikh_avatar.${fileExt}`;
     const filePath = `${fileName}`; // المسار داخل الـ Bucket
 
-    console.log(`Uploading ${filePath} to bucket ${BUCKET_NAME}...`);
+    
 
     // رفع الملف مع خيار upsert للكتابة فوق الملف الموجود بنفس الاسم
     const { error: uploadError } = await client.storage
@@ -291,7 +291,7 @@ async function handleImageUpload() {
       throw uploadError;
     }
 
-    console.log('Upload successful. Getting public URL...');
+    
 
     // الحصول على الرابط العام للملف بعد رفعه
     const { data: urlData } = client.storage
@@ -304,7 +304,7 @@ async function handleImageUpload() {
     }
 
     const publicUrl = urlData.publicUrl;
-    console.log('Public URL:', publicUrl);
+    
 
     // تحديث حقل الصورة في الفورم بالرابط الجديد
     formData.value.profile_image_url = publicUrl;
@@ -351,7 +351,7 @@ async function handleUpdate() {
       updated_at: new Date().toISOString(),
     };
 
-    console.log('Updating about_sheikh with data:', dataToUpdate);
+    
 
     const { error } = await client
       .from('about_sheikh')

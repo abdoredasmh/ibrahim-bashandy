@@ -239,7 +239,7 @@ async function fetchAllStats(force = false) {
 
   // Use cache if data is fresh and not forcing refresh
   if (!force && lastFetched.value && (now - lastFetched.value < CACHE_DURATION_MS)) {
-    console.log("Using cached stats.");
+    
     // Ensure loading state is false if using cache and not already false
     if (isLoading.value) isLoading.value = false;
     return;

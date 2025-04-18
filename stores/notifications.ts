@@ -25,7 +25,7 @@ export const useNotificationStore = defineStore('notifications', {
     // --- دالة جلب الإشعارات ---
     async fetchNotifications(userId: string, limit = 15) { // جلب آخر 15 افتراضيًا
       if (this.isLoading) return; // منع الجلب المتعدد
-      console.log("[Notifications] Fetching notifications...");
+      
       this.isLoading = true;
       this.error = null;
       const client = useSupabaseClient<Database>();
@@ -49,7 +49,7 @@ export const useNotificationStore = defineStore('notifications', {
         // ملاحظة: الـ count من Supabase قد لا يكون دقيقًا للـ unread count إذا لم نفلتر بـ is_read=false في الاستعلام
 
         this.hasFetchedOnce = true;
-        console.log(`[Notifications] Fetched ${data?.length ?? 0} notifications. Unread: ${this.unreadCount}`);
+        
 
       } catch (err: any) {
         console.error("Error fetching notifications:", err);
@@ -90,7 +90,7 @@ export const useNotificationStore = defineStore('notifications', {
           }
           // TODO: Show error notification
         } else {
-             console.log(`[Notifications] Marked ${notificationId} as read.`);
+             
         }
       } catch (err) {
         console.error("Unexpected error marking notification as read:", err);
@@ -127,7 +127,7 @@ export const useNotificationStore = defineStore('notifications', {
            this.unreadCount = oldUnreadCount;
            // TODO: Show error notification
         } else {
-             console.log("[Notifications] Marked all as read.");
+             
         }
       } catch (err) {
         console.error("Unexpected error marking all notifications as read:", err);
@@ -141,11 +141,11 @@ export const useNotificationStore = defineStore('notifications', {
     subscribeToNotifications(userId: string) {
         // التأكد من عدم وجود اشتراك قائم
         if (this.subscriptionChannel) {
-             console.log("[Notifications] Already subscribed.");
+             
             return;
         }
 
-        console.log("[Notifications] Subscribing to realtime channel...");
+        
         const client = useSupabaseClient<Database>();
         this.subscriptionChannel = client
             .channel(`public:notifications:user_id=eq.${userId}`) // قناة خاصة بإشعارات هذا المستخدم
@@ -158,7 +158,7 @@ export const useNotificationStore = defineStore('notifications', {
                     filter: `user_id=eq.${userId}` // فلتر إضافي للتأكيد
                 },
                 (payload) => {
-                    console.log('Realtime Notification Received:', payload);
+                    
                     const newNotification = payload.new as NotificationWithState;
                     // إضافة الإشعار الجديد في بداية القائمة
                     this.notifications.unshift(newNotification);
@@ -172,7 +172,7 @@ export const useNotificationStore = defineStore('notifications', {
             )
             .subscribe((status, err) => {
                  if (status === 'SUBSCRIBED') {
-                    console.log('[Notifications] Realtime channel subscribed successfully!');
+                    
                  }
                  if (status === 'CHANNEL_ERROR' || err) {
                     console.error('[Notifications] Realtime subscription error:', err || 'Channel Error');
@@ -186,7 +186,7 @@ export const useNotificationStore = defineStore('notifications', {
     // --- (اختياري) إلغاء اشتراك Realtime ---
     unsubscribeFromNotifications() {
         if (this.subscriptionChannel) {
-            console.log("[Notifications] Unsubscribing from realtime channel...");
+            
             this.subscriptionChannel.unsubscribe();
             this.subscriptionChannel = null;
         }
@@ -200,7 +200,7 @@ export const useNotificationStore = defineStore('notifications', {
         this.isLoading = false;
         this.error = null;
         this.hasFetchedOnce = false;
-         console.log("[Notifications] State cleared.");
+         
      }
 
   }
