@@ -9,7 +9,14 @@
   >
     <div
       v-if="isOpen"
-      class="absolute rtl:left-0 ltr:right-0 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border dark:border-gray-700"
+      class="
+        fixed top-16 left-1/2 -translate-x-1/2 /* <-- Changed: Fixed position centered */
+        mt-0 /* <-- Removed mt-2 as top is now fixed */
+        w-80 max-w-[calc(100vw-2rem)] /* <-- Added max-width to prevent overflow on small screens */
+        origin-top /* <-- Changed: Animation origin to top-center */
+        rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border dark:border-gray-700
+        z-50 /* <-- Added: Ensure it's above other content */
+      "
       role="menu"
       aria-orientation="vertical"
       aria-labelledby="notifications-button"
@@ -116,7 +123,7 @@ const markAllRead = () => {
     if (profile.value?.id) {
         notificationStore.markAllAsRead(profile.value.id);
     } else {
-        console.warn("Cannot mark all as read: User ID not available.");
+        
     }
 };
 
@@ -131,6 +138,8 @@ const handleNotificationClick = (notification: typeof notifications.value[0]) =>
     }
     // 2. الانتقال إلى الرابط (إذا وجد)
     if (notification.link) {
+        // Ensure link is treated as internal if it starts with '/'
+        // Or handle external links appropriately if needed
         navigateTo(notification.link);
     }
     // 3. إغلاق القائمة المنسدلة
@@ -141,9 +150,16 @@ const handleNotificationClick = (notification: typeof notifications.value[0]) =>
 const formatRelativeTime = (dateString: string | null): string => {
   if (!dateString) return '';
   try {
-    return formatDistanceToNowStrict(new Date(dateString), { addSuffix: true, locale: arSA });
-  } catch {
-    return 'منذ زمن';
+    // Ensure the date is parsed correctly, handling potential timezone issues if necessary
+    const date = new Date(dateString);
+    // Check if the date is valid after parsing
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date');
+    }
+    return formatDistanceToNowStrict(date, { addSuffix: true, locale: arSA });
+  } catch (e) {
+    
+    return 'منذ زمن'; // Fallback string
   }
 };
 </script>

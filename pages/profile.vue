@@ -273,7 +273,7 @@ const { data: adminMessages, pending: pendingMessages, error: errorMessages, ref
   'adminMessages',
   async () => {
     if (!user.value) return [];
-    console.log('Fetching admin messages for user:', user.value.id);
+    
     try {
         const { data, error } = await client
           .from('user_private_messages')
@@ -281,10 +281,10 @@ const { data: adminMessages, pending: pendingMessages, error: errorMessages, ref
           .eq('user_id', user.value.id)
           .is('related_question_id', null) // الفلتر: جلب الرسائل التي ليست ردودًا على أسئلة
           .order('created_at', { ascending: false });
-        if (error) { console.error("Error fetching admin messages:", error); throw error; }
-        console.log('Admin messages data:', data);
+        if (error) {  throw error; }
+        
         return data || [];
-    } catch (err) { console.error('Catch block error fetching admin messages:', err); throw err; }
+    } catch (err) {  throw err; }
   },
   { lazy: true, server: false, watch: [user] }
 );
@@ -304,7 +304,7 @@ async function updateProfile() {
     if (!updates.full_name && !updates.bio) { profileSuccessMessage.value = "لا توجد تغييرات لحفظها."; isUpdatingProfile.value = false; return; }
     const { error } = await client.from('profiles').upsert(updates); if (error) throw error;
     await userStore.fetchProfile(); profileSuccessMessage.value = 'تم تحديث الملف الشخصي بنجاح!'; setTimeout(() => profileSuccessMessage.value = null, 3000);
-  } catch (err: any) { console.error('Error updating profile:', err); profileError.value = err.message || 'فشل تحديث الملف الشخصي.';
+  } catch (err: any) {  profileError.value = err.message || 'فشل تحديث الملف الشخصي.';
   } finally { isUpdatingProfile.value = false; }
 }
 
@@ -324,7 +324,7 @@ async function handleAvatarUpload(event: Event) {
     const { error: updateError } = await client.from('profiles').update({ avatar_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', user.value.id); if (updateError) throw updateError;
     await userStore.fetchProfile();
   } catch (err: any) {
-    console.error('Error uploading avatar:', err); avatarError.value = err.message || 'فشل رفع الصورة.';
+     avatarError.value = err.message || 'فشل رفع الصورة.';
     if (err.message?.includes("Bucket not found")) avatarError.value = 'خطأ إعداد: مخزن الصور غير موجود.';
     else if (err.message?.includes("mime type not supported")) avatarError.value = 'نوع الملف غير مسموح به في المخزن.';
     else if (err.message?.includes("exceeds the maximum allowed size")) avatarError.value = 'حجم الملف يتجاوز الحد المسموح به في المخزن.';
@@ -335,7 +335,7 @@ async function handleAvatarUpload(event: Event) {
                  const { error: updateRetryError } = await client.from('profiles').update({ avatar_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', user.value.id);
                  if (updateRetryError) throw updateRetryError; await userStore.fetchProfile();
              } else { throw new Error("الملف موجود ولكن لا يمكن الحصول على الرابط العام."); }
-        } catch(retryErr: any) { console.error("Error trying to update profile after failed upload:", retryErr); avatarError.value = retryErr.message || 'فشل تحديث رابط الصورة الموجودة.'; }
+        } catch(retryErr: any) {  avatarError.value = retryErr.message || 'فشل تحديث رابط الصورة الموجودة.'; }
      }
   } finally { isUploadingAvatar.value = false; if (input) input.value = ''; }
 }
@@ -352,7 +352,7 @@ async function changePassword() {
         throw new Error("فشل تغيير كلمة المرور. تأكد من صحة كلمة المرور الحالية وأن الجديدة مختلفة وتفي بالشروط.");
     }
     passwordSuccessMessage.value = "تم تغيير كلمة المرور بنجاح!"; currentPassword.value = ''; newPassword.value = ''; setTimeout(() => passwordSuccessMessage.value = null, 3000);
-  } catch (err: any) { console.error('Error changing password:', err); passwordError.value = err.message || 'فشل تغيير كلمة المرور.';
+  } catch (err: any) {  passwordError.value = err.message || 'فشل تغيير كلمة المرور.';
   } finally { isChangingPassword.value = false; }
 }
 
@@ -362,7 +362,7 @@ async function changeEmail() {
    try {
      const { error } = await client.auth.updateUser({ email: newEmail.value }); if (error) throw error;
      emailSuccessMessage.value = "تم إرسال رابط التأكيد إلى بريدك الإلكتروني الجديد."; newEmail.value = '';
-   } catch (err: any) { console.error('Error changing email:', err); emailError.value = err.message || 'فشل تغيير البريد الإلكتروني.'; if (err.message.includes("already registered")) emailError.value = "هذا البريد الإلكتروني مسجل بالفعل.";
+   } catch (err: any) {  emailError.value = err.message || 'فشل تغيير البريد الإلكتروني.'; if (err.message.includes("already registered")) emailError.value = "هذا البريد الإلكتروني مسجل بالفعل.";
    } finally { isChangingEmail.value = false; }
 }
 
@@ -372,7 +372,7 @@ async function markMessageAsRead(messageId: number) {
         const { error } = await client.from('user_private_messages').update({ is_read: true }).match({ id: messageId, user_id: user.value.id }); if (error) throw error;
         const msgIndex = adminMessages.value?.findIndex(m => m.id === messageId);
         if (msgIndex !== undefined && msgIndex !== -1 && adminMessages.value) { adminMessages.value[msgIndex].is_read = true; }
-    } catch (err: any) { console.error('Error marking message as read:', err); } finally { isMarkingRead.value = false; }
+    } catch (err: any) {  } finally { isMarkingRead.value = false; }
 }
 
 // --- وظائف الرد ---
@@ -389,7 +389,7 @@ async function submitReply(messageId: number, messageIndex: number) {
              if (msgIndexInAdmin !== -1) { adminMessages.value[msgIndexInAdmin] = { ...adminMessages.value[msgIndexInAdmin], ...updatedMessage }; } else { await refreshMessages(); }
         } else { await refreshMessages(); }
         cancelReply();
-    } catch (err: any) { console.error('Error submitting reply:', err); replyError.value = messageId; genericReplyError.value = err.message || 'فشل إرسال الرد.';
+    } catch (err: any) {  replyError.value = messageId; genericReplyError.value = err.message || 'فشل إرسال الرد.';
     } finally { isSubmittingReply.value = false; }
 }
 

@@ -260,7 +260,7 @@ const saveQuestion = async () => {
         if (!finalQuestionData) throw new Error("Failed to fetch final saved question data.");
 
         emit('saved', finalQuestionData as QuestionWithOptions); closeModal();
-    } catch (err: any) { console.error("Error saving question:", err); formError.value = `فشل حفظ السؤال: (${(err as PostgrestError).message || 'خطأ غير معروف'})`;
+    } catch (err: any) {  formError.value = `فشل حفظ السؤال: (${(err as PostgrestError).message || 'خطأ غير معروف'})`;
     } finally { isSaving.value = false; }
 };
 

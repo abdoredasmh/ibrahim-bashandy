@@ -256,7 +256,7 @@ async function submitQuestion() {
 
     if (error) {
          if (error.code === '23514' && error.message.includes('_check')) {
-            console.warn("Check constraint violation:", error.message);
+            
             questionError.value = `فشل الإرسال. تأكد أن السؤال لا يقل عن ${MIN_QUESTION_LENGTH} حروف.`;
          } else {
             throw error;
@@ -269,7 +269,7 @@ async function submitQuestion() {
     }
 
   } catch (err: any) {
-    console.error('Error submitting question:', err);
+    
      if (!questionError.value) {
         submitError.value = 'حدث خطأ أثناء إرسال السؤال. يرجى المحاولة مرة أخرى.';
      }
@@ -295,7 +295,7 @@ async function fetchPublicData(page = 1, categoryId: number | null = selectedCat
          .select('id, name')
          .order('id');
        if (catError) {
-         console.error("Error fetching categories:", catError);
+         
          // يمكن عرض خطأ بسيط أو تجاهله إذا لم تكن التصنيفات حرجة
        } else {
          categories.value = catData || [];
@@ -336,7 +336,7 @@ async function fetchPublicData(page = 1, categoryId: number | null = selectedCat
 
 
   } catch (err: any) {
-    console.error("Error fetching public questions:", err);
+    
     fetchErrorPublic.value = err.message || 'فشل تحميل البيانات.';
     publicQuestions.value = [];
     totalQuestions.value = 0; // إعادة تعيين العدد عند الخطأ

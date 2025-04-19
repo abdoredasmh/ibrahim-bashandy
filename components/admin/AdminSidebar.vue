@@ -141,7 +141,7 @@ const navigation = ref([
 const handleLogout = async () => {
   const { error } = await supabase.auth.signOut(); // محاولة تسجيل الخروج
   if (error) {
-    console.error('Error signing out:', error); // طباعة الخطأ في الكونسول إذا حدث
+     // طباعة الخطأ في الكونسول إذا حدث
   } else {
     router.push('/login'); // إعادة التوجيه إلى صفحة تسجيل الدخول بعد النجاح
   }

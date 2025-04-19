@@ -157,7 +157,7 @@ async function fetchLessonTitle(id: number | null) { // Expect only number or nu
     if (error) throw error;
     selectedTitle.value = data ? data.title : `درس غير معروف #${id}`;
   } catch (err: any) {
-    console.error(`Error fetching title for lesson ${id}:`, err);
+    
     selectedTitle.value = `خطأ #${id}`;
   } finally {
     isLoading.value = false;
@@ -193,7 +193,7 @@ const debouncedSearch = useDebounceFn(async () => {
     if (error) throw error;
     results.value = data || [];
     showResults.value = true;
-  } catch (err: any) { console.error('Error searching lessons:', err); results.value = []; }
+  } catch (err: any) {  results.value = []; }
   finally { isLoading.value = false; if (results.value.length > 0) showResults.value = true; }
 }, 300);
 
@@ -209,7 +209,7 @@ function handleInput(event: Event) {
       internalValue.value = null;
       selectedTitle.value = null;
       emit('update:modelValue', null); // <-- Emit null immediately
-      console.log("[SearchableLessonSelect] Emitting null because user typed.");
+      
   }
 
   if (newQuery.length > 0) {
@@ -218,7 +218,7 @@ function handleInput(event: Event) {
       // If cleared, ensure null state and close
       if (internalValue.value !== null) { // Double check
          internalValue.value = null; selectedTitle.value = null; emit('update:modelValue', null);
-         console.log("[SearchableLessonSelect] Emitting null on clear (double check).");
+         
       }
       closeResults(); isLoading.value = false; results.value = []; highlightedIndex.value = -1;
   }
@@ -230,7 +230,7 @@ function clearSelection() {
         internalValue.value = null;
         selectedTitle.value = null;
         emit('update:modelValue', null); // <-- Emit null
-        console.log("[SearchableLessonSelect] Emitting null via clearSelection.");
+        
     }
     closeResults();
 }
@@ -241,7 +241,7 @@ function selectLesson(lesson: Lesson) {
   selectedTitle.value = lesson.title;
   closeResults();
   emit('update:modelValue', lesson.id); // <-- Emit the selected ID (number)
-  console.log("[SearchableLessonSelect] Emitting selected lesson ID:", lesson.id);
+  
 }
 
 // --- Other Handlers (Focus, Blur, Keyboard) ---

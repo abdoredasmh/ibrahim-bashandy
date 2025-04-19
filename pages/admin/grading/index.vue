@@ -252,7 +252,7 @@ const fetchCourses = async () => {
     if (fetchError) throw fetchError;
     coursesList.value = data ?? [];
   } catch (err: any) {
-    console.error("Error fetching courses list:", err.message);
+    
     // Optionally: show a notification to the user
   } finally {
     loadingCourses.value = false;
@@ -278,7 +278,7 @@ const fetchQuizzesForCourse = async (courseId: number | null) => {
         if (fetchError) throw fetchError;
         quizzesListBasedOnCourse.value = data ?? [];
     } catch (err: any) {
-        console.error(`Error fetching quizzes for course ${courseId}:`, err.message);
+        
     } finally {
         loadingQuizzes.value = false;
     }
@@ -305,7 +305,7 @@ const fetchStudentsDebounced = async (searchTerm: string) => {
       if (fetchError) throw fetchError;
       filteredStudentsList.value = data ?? [];
   } catch(err: any) {
-      console.error("Error searching students:", err.message);
+      
       filteredStudentsList.value = []; // Clear results on error
   } finally {
       loadingStudents.value = false;
@@ -328,13 +328,13 @@ const fetchSelectedStudentName = async (studentId: string) => {
             // Optionally set search term to match, if desired UX
             // studentSearchTerm.value = data.full_name;
         } else {
-             console.warn(`Profile not found for initial studentId: ${studentId}`);
+             
              // Keep selectedStudentId but name remains null (fallback display will be used)
              selectedStudentId.value = null; // Or clear the ID if profile must exist
              updateUrlQuery(); // Update URL if we clear the ID
         }
     } catch (err: any) {
-        console.error("Error fetching selected student name:", err.message);
+        
     }
 };
 
@@ -409,7 +409,7 @@ const loadAttempts = async (reset: boolean = false) => {
         currentPage.value += 1;
 
     } catch (err: any) {
-        console.error("Error loading attempts:", err);
+        
         error.value = err;
         hasMoreAttempts.value = false; // Stop trying on error
     } finally {
@@ -440,7 +440,7 @@ const setupIntersectionObserver = () => {
   if (scrollTrigger.value) {
     observer.observe(scrollTrigger.value);
   } else {
-      // console.warn("Scroll trigger element not found for IntersectionObserver.");
+      // 
   }
 };
 
@@ -453,7 +453,7 @@ onMounted(async () => {
         await fetchQuizzesForCourse(selectedCourseId.value);
         // Ensure selectedQuizId from URL is valid for the fetched quizzes
         if (selectedQuizId.value && !quizzesListBasedOnCourse.value.some(q => q.id === selectedQuizId.value)) {
-            console.warn("Initial quizId from URL is not valid for the selected course. Resetting quiz filter.");
+            
             selectedQuizId.value = null;
             updateUrlQuery(); // Remove invalid quizId from URL
         }
@@ -487,7 +487,7 @@ const formatDate = (dateString: string | null): string => {
       timeStyle: 'short',
     });
   } catch (e) {
-    console.error("Error formatting date:", e);
+    
     return dateString; // Fallback to original string
   }
 };
@@ -593,7 +593,7 @@ const updateUrlQuery = () => {
     }).catch(err => {
         // Handle navigation errors if necessary (e.g., NavigationDuplicated)
         if (err.name !== 'NavigationDuplicated') {
-            console.error('Router navigation error:', err);
+            
         }
     });
 }

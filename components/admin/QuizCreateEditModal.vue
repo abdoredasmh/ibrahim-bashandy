@@ -205,7 +205,7 @@ watch(() => props.quizData, (newQuiz) => { resetForm(); }, { deep: true });
 // watch(selectedCourseForLesson, (newCourseId) => {
 //     if (form.value.type === 'lesson') {
 //         form.value.course_id = newCourseId;
-//         console.log(`Lesson Quiz: Updated form.course_id to ${newCourseId}`);
+//         
 //     }
 // });
 
@@ -251,11 +251,11 @@ const resetForm = () => {
 const fetchCourses = async () => {
     // قم بإزالة أو تعليق الشرط التالي مؤقتًا إذا أردت التأكد من إعادة الجلب دائمًا
     // if (courses.value.length > 0) {
-    //     console.log("Courses already loaded, skipping fetch.");
+    //     
     //     return;
     // }
 
-    console.log("--- fetchCourses called ---"); // للتحقق من استدعاء الدالة
+     // للتحقق من استدعاء الدالة
     isLoadingCourses.value = true; // تفعيل مؤشر تحميل الدورات
     formError.value = null; // مسح أي رسائل خطأ سابقة في الفورم
 
@@ -266,9 +266,9 @@ const fetchCourses = async () => {
             .select('id, title')
             .order('title'); // ترتيب أبجدي حسب العنوان
 
-        console.log("--- fetchCourses Supabase response ---"); // للتحقق من استجابة Supabase
-        console.log("Error:", error); // اطبع الخطأ (إذا وجد)
-        console.log("Data:", data); // اطبع البيانات المستلمة
+         // للتحقق من استجابة Supabase
+         // اطبع الخطأ (إذا وجد)
+         // اطبع البيانات المستلمة
 
         // التحقق من وجود خطأ في الاستعلام
         if (error) {
@@ -278,11 +278,11 @@ const fetchCourses = async () => {
 
         // تحديث قائمة الدورات بالبيانات المستلمة (أو مصفوفة فارغة إذا كانت البيانات null)
         courses.value = data || [];
-        console.log(`--- fetchCourses successful, ${courses.value.length} courses loaded ---`); // للتحقق من عدد الدورات المحملة
+         // للتحقق من عدد الدورات المحملة
 
     } catch (err: any) {
         // التعامل مع أي خطأ يحدث أثناء الجلب
-        console.error("Error fetching courses:", err);
+        
         formError.value = "فشل تحميل قائمة الدورات."; // عرض رسالة خطأ مناسبة للمستخدم في الفورم
         courses.value = []; // تفريغ قائمة الدورات عند حدوث خطأ
         toast.error(formError.value); // عرض تنبيه toast بالخطأ أيضًا
@@ -290,7 +290,7 @@ const fetchCourses = async () => {
     } finally {
         // إيقاف مؤشر التحميل دائمًا، سواء نجح الجلب أو فشل
         isLoadingCourses.value = false;
-        console.log("--- fetchCourses finished ---"); // للتحقق من انتهاء الدالة
+         // للتحقق من انتهاء الدالة
     }
 };
 
@@ -310,7 +310,7 @@ const fetchLessonsForCourse = async () => {
          if (isEditing.value && props.quizData?.lesson_id && props.quizData?.course_id === selectedCourseForLesson.value) {
              form.value.lesson_id = props.quizData.lesson_id;
          }
-    } catch (err: any) { console.error("Error fetching lessons:", err); formError.value = "فشل تحميل قائمة الدروس لهذه الدورة."; }
+    } catch (err: any) {  formError.value = "فشل تحميل قائمة الدروس لهذه الدورة."; }
     finally { isLoadingLessons.value = false; }
 };
 
@@ -363,7 +363,7 @@ const saveQuiz = async () => {
   };
 
 
-  console.log("Payload being sent:", basePayload);
+  
 
   try {
     let savedData: Quiz | null = null;
@@ -371,7 +371,7 @@ const saveQuiz = async () => {
 
     if (isEditing.value && form.value.id) {
       // Update existing quiz
-      console.log(`Updating quiz with ID: ${form.value.id}`);
+      
       // Define payload type for update
       const updatePayload: TablesUpdate<'quizzes'> = {
           ...basePayload,
@@ -387,7 +387,7 @@ const saveQuiz = async () => {
       error = updateError;
     } else {
       // Insert new quiz
-      console.log("Inserting new quiz");
+      
       // Define payload type for insert
       const insertPayload: TablesInsert<'quizzes'> = basePayload;
       const { data, error: insertError } = await supabase
@@ -399,8 +399,8 @@ const saveQuiz = async () => {
       error = insertError;
     }
 
-    console.log("Supabase error:", error);
-    console.log("Supabase data:", savedData);
+    
+    
 
     if (error) throw error;
     if (!savedData) throw new Error("لم يتم إرجاع بيانات الاختبار المحفوظة.");
@@ -409,7 +409,7 @@ const saveQuiz = async () => {
     emit('saved', savedData);
 
   } catch (err: any) {
-    console.error("Error saving quiz:", err);
+    
     formError.value = `فشل حفظ الاختبار: (${(err as PostgrestError).message || 'خطأ غير معروف'})`;
     toast.error(formError.value);
   } finally {

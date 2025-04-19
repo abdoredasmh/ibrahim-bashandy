@@ -196,7 +196,7 @@ const addButtontitle = computed(() => {
 // --- Helper Functions ---
 function formatDate(dateString: string | null): string | null {
   if (!dateString) return null;
-  try { const date = new Date(dateString); return date.toLocaleTimeString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }); } catch (e) { console.error("Error formatting date:", e); return 'تاريخ غير صالح'; }
+  try { const date = new Date(dateString); return date.toLocaleTimeString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }); } catch (e) {  return 'تاريخ غير صالح'; }
 }
 function formatISOForInput(isoString: string | null): string {
    if (!isoString) return '';
@@ -223,12 +223,12 @@ async function fetchAnnouncements() {
     announcements.value = (data || []) as Announcement[];
     // Check count after fetching
     if (announcements.value.length > MAX_ANNOUNCEMENTS) {
-      console.warn(`تجاوز عدد الإعلانات (${announcements.value.length}) الحد الأقصى (${MAX_ANNOUNCEMENTS}). لن تتمكن من إضافة المزيد حتى يتم الحذف.`);
+      
       // Optionally show a persistent warning message to the user
       // showToast('warning', `تجاوز عدد الإعلانات الحد الأقصى (${MAX_ANNOUNCEMENTS}).`);
     }
   } catch (error: any) {
-    console.error('Error fetching announcements:', error);
+    
     listError.value = error.message || 'فشل تحميل قائمة الإعلانات.';
     showToast('error', `خطأ في تحميل الإعلانات: ${listError.value}`);
     announcements.value = [];
@@ -237,7 +237,7 @@ async function fetchAnnouncements() {
 
 // --- Lifecycle Hook ---
 onMounted(() => {
-  console.log('Checking $toast on mount:', $toast);
+  
   fetchAnnouncements(); // Fetch data on mount, which also checks the limit
 });
 
@@ -271,7 +271,7 @@ function closeModal() {
 
 // --- Send Notification Function ---
 async function notifyAllUsersAboutAnnouncement(announcementId: number, title: string, type: AnnouncementType) {
-    console.log(`Attempting to notify users about announcement ID: ${announcementId}`);
+    
     const notificationLink = '/';
     const messagePrefix = editingAnnouncement.value ? 'تحديث إعلان' : 'إعلان جديد';
     let notificationMessage = `${messagePrefix}: ${title}`;
@@ -282,14 +282,14 @@ async function notifyAllUsersAboutAnnouncement(announcementId: number, title: st
         if (userError) throw new Error(`فشل جلب المستخدمين: ${userError.message}`);
         if (!users || users.length === 0) { showToast('warning', 'لم يتم العثور على مستخدمين لإرسال الإشعارات لهم.'); return; }
         const notificationObjects: NotificationInsert[] = users.map(user => ({ user_id: user.id, message: notificationMessage, link: notificationLink, is_read: false }));
-        console.log(`Sending ${notificationObjects.length} notifications...`);
+        
         const { error: notificationError } = await client.from('notifications').insert(notificationObjects);
         if (notificationError) {
             if (notificationError.message.includes('violates row-level security policy')) throw new Error('فشل إرسال الإشعارات بسبب قيود الأمان.');
             else throw new Error(`فشل حفظ الإشعارات: ${notificationError.message}`);
         }
         showToast('success', `تم إرسال الإشعار بنجاح إلى ${users.length} مستخدم.`);
-    } catch (error: any) { console.error('Error sending notifications:', error); showToast('error', `خطأ في الإشعارات الجماعية: ${error.message || 'خطأ غير معروف'}`); }
+    } catch (error: any) {  showToast('error', `خطأ في الإشعارات الجماعية: ${error.message || 'خطأ غير معروف'}`); }
 }
 
 // --- Form Handling (with validation) ---
@@ -344,7 +344,7 @@ const handleSubmit = async () => {
     showToast('success', successText);
 
   } catch (error: any) {
-    console.error('Error saving announcement:', error);
+    
     let specificErrorMsg = error.message || 'حدث خطأ غير متوقع أثناء الحفظ.';
     if (error.message?.includes('violates check constraint')) specificErrorMsg = 'خطأ في البيانات المدخلة.';
     else if (error.message?.includes('violates row-level security policy')) specificErrorMsg = 'فشل الحفظ بسبب قيود الأمان.';
@@ -381,7 +381,7 @@ async function handleDelete(id: number) {
     if (error) throw error;
     await fetchAnnouncements(); // Re-fetch to update the list and count
     showToast('success', 'تم حذف الإعلان بنجاح.');
-  } catch (error: any) { console.error('Error deleting announcement:', error); showToast('error', `فشل حذف الإعلان: ${error.message || 'خطأ غير معروف'}`);
+  } catch (error: any) {  showToast('error', `فشل حذف الإعلان: ${error.message || 'خطأ غير معروف'}`);
   } finally { isDeleting.value = null; }
 }
 
@@ -404,7 +404,7 @@ async function togglePublish(announcement: Announcement) {
         }
         // await fetchAnnouncements(); // Optionally keep re-fetch if simpler
         showToast('success', `تم ${actionText} الإعلان "${announcement.title}" بنجاح.`);
-    } catch (error: any) { console.error('Error toggling publish status:', error); showToast('error', `فشل ${actionText} الإعلان: ${error.message || 'خطأ غير معروف'}`);
+    } catch (error: any) {  showToast('error', `فشل ${actionText} الإعلان: ${error.message || 'خطأ غير معروف'}`);
     } finally { isTogglingPublish.value = null; }
 }
 

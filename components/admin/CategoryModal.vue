@@ -105,7 +105,7 @@ async function saveCategory() {
     if (error) throw error;
     emit('saved');
   } catch (err: any) {
-    console.error("Error saving category:", err);
+    
     errorMessage.value = `فشل حفظ الفئة: ${err.message || 'خطأ غير متوقع'}`;
   } finally {
     isSaving.value = false;

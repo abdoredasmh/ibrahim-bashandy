@@ -283,7 +283,7 @@ const fetchUsers = async (page = 1, appending = false) => {
     }
 
   } catch (err: any) {
-    console.error("Error fetching users:", err);
+    
     fetchError.value = err as PostgrestError;
     if (!appending) { users.value = []; }
     hasMore.value = false;
@@ -336,7 +336,7 @@ const setupObserver = () => {
         );
          
     } else {
-        console.warn("Load more trigger element not found for Intersection Observer.");
+        
     }
 };
 

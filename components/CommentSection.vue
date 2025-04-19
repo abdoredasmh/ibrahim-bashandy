@@ -201,7 +201,7 @@ const fetchTotalCount = async (column: string, value: number) => {
     if (error) throw error;
     return count ?? 0;
   } catch (err) {
-    console.error('Error fetching total comments count:', err);
+    
     fetchError.value = 'فشل في جلب عدد التعليقات.'; // Set error for initial load
     return null; // Return null on error
   }
@@ -244,7 +244,7 @@ const fetchCommentsBatch = async (column: string, value: number, page = 1) => {
       .order('created_at', { ascending: true }); // Replies oldest first
 
     if (repliesError) {
-      console.error("Error fetching replies:", repliesError);
+      
       fetchMoreError.value = 'حدث خطأ أثناء تحميل بعض الردود.';
     } else {
       repliesData = (data || []).filter(c => c.profiles !== null) as CommentWithProfile[];
@@ -289,7 +289,7 @@ const fetchInitialComments = async () => {
       hasMoreComments.value = newTopLevelComments.length === commentsPerPage.value;
     }
   } catch (err: any) {
-    console.error('Error fetching initial comments:', err);
+    
     fetchError.value = `فشل تحميل التعليقات: (${(err as PostgrestError).message || 'خطأ غير معروف'})`;
     allComments.value = []; totalCommentsCount.value = 0; hasMoreComments.value = false;
   } finally { isLoadingInitial.value = false; }
@@ -315,7 +315,7 @@ const loadMoreComments = async () => {
       hasMoreComments.value = newTopLevelComments.length === commentsPerPage.value;
     }
   } catch (err: any) {
-    console.error('Error loading more comments:', err);
+    
     fetchMoreError.value = `فشل تحميل المزيد: (${(err as PostgrestError).message || 'خطأ غير معروف'})`;
   } finally { isLoadingMore.value = false; }
 }
@@ -332,7 +332,7 @@ const addComment = async () => {
 
   if (!userProfile.value.id) {
       commentSubmitError.value = 'خطأ: لم يتم العثور على معرف الملف الشخصي.';
-      console.error('Profile ID is missing from user store');
+      
       return;
   }
 
@@ -360,7 +360,7 @@ const addComment = async () => {
     if (totalCommentsCount.value !== null) totalCommentsCount.value++;
 
   } catch (err: any) {
-    console.error('Error adding comment:', err);
+    
     commentSubmitError.value = `فشل إضافة التعليق: (${(err as PostgrestError).message || 'يرجى المحاولة مرة أخرى'})`;
   } finally { isSubmittingComment.value = false; }
 }

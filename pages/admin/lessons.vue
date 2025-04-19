@@ -255,11 +255,11 @@ const fetchFilterOptions = async () => {
       supabase.from('study_courses').select('id, title').order('title')
     ]);
     if (catResult.status === 'fulfilled' && !catResult.value.error) { categories.value = catResult.value.data || []; }
-    else { console.error("Error fetching categories:", catResult.status === 'rejected' ? catResult.reason : catResult.value.error); showToast("error", "فشل تحميل قائمة التصنيفات."); }
+    else {  showToast("error", "فشل تحميل قائمة التصنيفات."); }
     if (courseResult.status === 'fulfilled' && !courseResult.value.error) { courses.value = courseResult.value.data || []; }
-    else { console.error("Error fetching courses:", courseResult.status === 'rejected' ? courseResult.reason : courseResult.value.error); showToast("error", "فشل تحميل قائمة الدورات."); }
+    else {  showToast("error", "فشل تحميل قائمة الدورات."); }
     
-  } catch (err: any) { console.error("Unexpected error in fetchFilterOptions:", err); showToast("error", "خطأ غير متوقع في تحميل بيانات الفلاتر."); }
+  } catch (err: any) {  showToast("error", "خطأ غير متوقع في تحميل بيانات الفلاتر."); }
   finally { isLoadingFilters.value = false; } // Clear loading state
 };
 
@@ -281,7 +281,7 @@ const fetchLessons = async (page = currentPage.value) => {
     lessons.value = data as LessonWithRelations[] | null; totalLessons.value = count ?? 0; currentPage.value = page;
     // Redirect to last page if current page becomes invalid after delete/filter
     if (page > totalPages.value && totalPages.value > 0) {  }
-  } catch (err: any) { console.error('[fetchLessons] Error fetching lessons:', err); fetchError.value = err as PostgrestError; lessons.value = null; totalLessons.value = 0; showToast('error', `خطأ جلب الدروس: ${fetchError.value?.message || 'غير معروف'}`); }
+  } catch (err: any) {  fetchError.value = err as PostgrestError; lessons.value = null; totalLessons.value = 0; showToast('error', `خطأ جلب الدروس: ${fetchError.value?.message || 'غير معروف'}`); }
   finally { isListLoading.value = false; }
 };
 
@@ -338,7 +338,7 @@ const handleDelete = async (id: number) => {
     // Fetch potentially adjusted current page after delete
     await fetchLessons(currentPage.value);
   } catch (err: any) {
-    console.error(`[handleDelete] Error deleting lesson ID: ${id}:`, err);
+    
     showToast('error', `فشل حذف الدرس: ${err.message || 'خطأ غير معروف'}.`);
   } finally {
     isDeleting.value = null;

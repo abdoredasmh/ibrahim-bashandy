@@ -40,7 +40,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
             });
 
             const timeoutId = setTimeout(() => {
-                console.warn('[Admin Middleware] Waiting for profile timed out.');
+                
                 unwatch();
                  // --- <<< تعديل معالجة Timeout >>> ---
                  // بدلاً من reject، سنقوم بـ resolve للسماح بالوصول إلى التحققات التالية
@@ -52,7 +52,7 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
         });
     } catch (waitError: any) {
         // هذا الـ catch سيتم استدعاؤه فقط إذا حدث خطأ آخر غير Timeout
-        console.error('[Admin Middleware] Unexpected error while waiting for profile:', waitError.message);
+        
         return navigateTo('/', { replace: true }); // توجيه آمن في حالة الخطأ
     }
   }
@@ -60,16 +60,16 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
   // 3. إعادة التحقق النهائي بعد الانتظار المحتمل (أو إذا لم ندخل مرحلة الانتظار)
   // تحقق مرة أخرى لأن الحالة قد تكون تغيرت أثناء الانتظار
   if (!profile.value) {
-    console.error('[Admin Middleware] Final check: Profile data still unavailable.');
+    
      if (userStore.fetchProfileError) {
-        console.error('[Admin Middleware] Profile fetch error was:', userStore.fetchProfileError);
+        
      }
     return navigateTo('/', { replace: true });
   }
 
   // 4. التحقق النهائي من دور المستخدم
   if (profile.value.role !== 'admin') {
-    console.warn(`[Admin Middleware] Final check: User role is '${profile.value.role}', access denied.`);
+    
     return navigateTo('/', { replace: true });
   }
 

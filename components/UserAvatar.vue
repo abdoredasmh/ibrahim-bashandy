@@ -99,7 +99,7 @@ watch(() => props.avatarUrl, (newUrl) => {
 
 // Handle image loading errors
 const handleImageError = () => {
-  console.warn('فشل تحميل الصورة الرمزية:', props.avatarUrl);
+  
   showInitial.value = true; // Show fallback if image fails
 }
 </script>

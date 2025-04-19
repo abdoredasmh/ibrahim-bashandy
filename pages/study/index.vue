@@ -105,7 +105,7 @@ const { data, pending, error, refresh } = await useAsyncData(
     'studyCoursesAndEnrollmentsList', // Unique key for this fetch operation
     async () => {
         const userId = profile.value?.id; // Get current user ID safely
-        console.log(`[useAsyncData] Fetching study data. User ID: ${userId ?? 'Guest'}`);
+        
 
         // Fetch courses and enrollments in parallel using Promise.allSettled for robust error handling
         const results = await Promise.allSettled([
@@ -137,13 +137,13 @@ const { data, pending, error, refresh } = await useAsyncData(
                   const errorObj = courseResult.error; // كائن الخطأ
 
                   // --- تسجيل تفصيلي للخطأ ---
-                  console.error('Supabase error fetching courses (START) -----------');
-                  console.error('Message:', errorObj.message);
-                  console.error('Code:', errorObj.code);
-                  console.error('Details:', errorObj.details);
-                  console.error('Hint:', errorObj.hint);
-                  console.error('Full error object for inspection:', JSON.stringify(errorObj, null, 2));
-                  console.error('Supabase error fetching courses (END) -------------');
+                  
+                  
+                  
+                  
+                  
+                  
+                  
                   // --- نهاية التسجيل التفصيلي ---
 
                   // Check for the specific embedding error message robustly
@@ -155,11 +155,11 @@ const { data, pending, error, refresh } = await useAsyncData(
              }
              // إذا لم يكن هناك خطأ، أكمل بشكل طبيعي
              fetchedCoursesRaw = courseResult.data || [];
-             console.log(`[useAsyncData] Raw courses fetched: ${fetchedCoursesRaw.length}`);
+             
         } else {
             // Handle promise rejection for course fetch (status === 'rejected')
-            console.error('Failed promise fetching courses (Rejected):', results[0].reason);
-            console.error('Rejection reason details:', JSON.stringify(results[0].reason, null, 2));
+            
+            
             throw new Error(`فشل الاتصال لجلب الدورات: ${results[0].reason?.message || 'سبب غير معروف.'}`);
         }
 
@@ -168,13 +168,13 @@ const { data, pending, error, refresh } = await useAsyncData(
         let fetchedEnrollmentsData: CourseEnrollmentInfo[] = [];
         if (results[1].status === 'fulfilled') {
              if (results[1].value.error) {
-                 console.warn('Supabase error fetching enrollments (continuing):', results[1].value.error.message);
+                 
              } else {
                 fetchedEnrollmentsData = results[1].value.data || [];
-                console.log(`[useAsyncData] Enrollments fetched: ${fetchedEnrollmentsData.length}`);
+                
              }
         } else {
-            console.warn('Failed promise fetching user enrollments (continuing):', results[1].reason);
+            
         }
 
         // Transform raw course data into the structure needed by the template
@@ -207,10 +207,10 @@ const { data, pending, error, refresh } = await useAsyncData(
     if (newData) {
         courses.value = newData.courses || [];
         userEnrollments.value = newData.enrollments || [];
-        console.log("[Watch] Local state updated. Courses:", courses.value.length, "Enrollments:", userEnrollments.value.length);
+        
     } else if (!pending.value && !error.value) {
         // Reset state if data becomes null unexpectedly after loading
-        console.warn("[Watch] useAsyncData returned null/undefined data unexpectedly.");
+        
         courses.value = [];
         userEnrollments.value = [];
     }
@@ -235,7 +235,7 @@ async function handleEnroll(courseId: number) {
 
     // Set loading state for the specific course button
     enrollLoadingState[courseId] = true;
-    console.log(`[handleEnroll] Attempting enrollment for course ${courseId}...`);
+    
 
     try {
         const { error: enrollError } = await supabase
@@ -247,7 +247,7 @@ async function handleEnroll(courseId: number) {
         if (enrollError) {
              // Handle potential race condition or stale state where user is already enrolled in DB
              if (enrollError.code === '23505') { // unique_violation
-                 console.warn(`Enrollment conflict for course ${courseId}. Syncing state.`);
+                 
                  // TODO: Replace alert with a user-friendly notification (e.g., toast)
                  alert('أنت منتسب بالفعل لهذه الدورة (تم تحديث الحالة).');
                  if (!userEnrollments.value.includes(courseId)) {
@@ -258,14 +258,14 @@ async function handleEnroll(courseId: number) {
              }
         } else {
             // Success
-            console.log(`[handleEnroll] Enrollment successful for course ${courseId}.`);
+            
             userEnrollments.value.push(courseId); // Update local state immediately
             // TODO: Replace alert with a success notification (e.g., toast)
             alert('تم الانتساب للدورة بنجاح!');
             navigateTo(`/study/courses/${courseId}`); // Navigate to the course page
         }
     } catch (err: any) {
-        console.error(`[handleEnroll] Error enrolling in course ${courseId}:`, err);
+        
         // TODO: Replace alert with an error notification (e.g., toast)
         alert(`فشل الانتساب للدورة: ${err.message || 'حدث خطأ غير متوقع.'}`);
     } finally {

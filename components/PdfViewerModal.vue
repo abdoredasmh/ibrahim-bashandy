@@ -144,7 +144,7 @@ const BUCKET_NAME = 'book-files';
 
 // Function to translate storage errors to user-friendly messages
 function getUserFriendlyErrorMessage(error: StorageError | Error): string {
-  console.error('Storage Error:', error); // Log the original error for debugging
+   // Log the original error for debugging
 
   if ('statusCode' in error) { // Check if it's a StorageError
     switch (error.statusCode) {

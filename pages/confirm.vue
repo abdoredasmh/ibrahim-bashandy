@@ -98,7 +98,7 @@ onMounted(() => {
       isError.value = true
       showResendButton.value = true
       if (!emailForResend.value) {
-          console.warn("Email not found in URL for resend functionality.");
+          
           message.value += "\n(لم نتمكن من تحديد بريدك لإعادة الإرسال تلقائيًا.)";
       }
     }
@@ -123,7 +123,7 @@ const resendConfirmation = async () => {
 
   resendLoading.value = false;
   if (error) {
-    console.error("Resend Error:", error);
+    
     resendMessage.value = error.message || 'فشل إرسال الإيميل. حاول مرة أخرى لاحقًا.';
     resendError.value = true;
   } else {

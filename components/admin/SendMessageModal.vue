@@ -207,7 +207,7 @@ async function sendMessage() {
 
       // 5. Handle Potential Errors from Supabase
       if (error) {
-          console.error("Supabase insert error:", error);
+          
           throw new Error(error.message || "فشل إرسال الرسالة إلى قاعدة البيانات.");
       }
 
@@ -218,13 +218,13 @@ async function sendMessage() {
           closeModal(); // Close modal on successful send
       } else {
            // This case is unlikely if no error occurred, but handle defensively
-          console.error("Message inserted but no data returned from Supabase.");
+          
           throw new Error("حدث خطأ غير متوقع: لم يتم استلام تأكيد الإرسال.");
       }
 
   } catch (err: any) {
       // 7. Handle Any Errors (Network, Supabase, Verification)
-      console.error("Error sending private message:", err);
+      
       const displayError = typeof err.message === 'string' ? err.message : "حدث خطأ غير متوقع أثناء الإرسال.";
       errorMessage.value = displayError;
       // *** FAILURE: Emit 'sent' with false, null data, and the error message ***

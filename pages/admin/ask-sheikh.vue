@@ -359,7 +359,7 @@ const fetchQuestions = async (page = currentPage.value) => {
         .select('id, name')
         .order('name');
       if (catError) {
-        console.error("Error fetching categories:", catError);
+        
         setActionError('فشل تحميل تصنيفات الأسئلة.'); // Inform user
       } else {
         categories.value = catData || [];
@@ -411,7 +411,7 @@ const fetchQuestions = async (page = currentPage.value) => {
 
 
   } catch (err: any) {
-    console.error("Error fetching questions:", err);
+    
     fetchError.value = err as PostgrestError;
     questions.value = null; // Clear questions on error
     totalQuestions.value = 0;
@@ -491,7 +491,7 @@ const submitReply = async () => {
             const { error: messageError } = await supabase.from('user_private_messages').insert(messagePayload);
 
             if (messageError) {
-                console.error("Error sending private message:", messageError);
+                
                 setActionError(`تحذير: تم حفظ الرد، لكن فشل إرسال الرسالة الخاصة. الخطأ: ${messageError.message}`);
                 messageSentSuccessfully = false;
             }
@@ -512,7 +512,7 @@ const submitReply = async () => {
                 .insert(notificationPayload);
 
             if (notificationError) {
-                console.error("Error creating notification:", notificationError);
+                
                 // Log the error, maybe add a specific warning if needed, but don't stop the process
                 // Example: Add to existing actionError or create a separate warning state
                 setActionError( (actionError.value ? actionError.value + " " : "") + `فشل إنشاء تنبيه الرد.` );
@@ -542,7 +542,7 @@ const submitReply = async () => {
 
 
     } catch (err: any) {
-        console.error("Error submitting reply:", err);
+        
         replyError.value = err.message || "حدث خطأ غير متوقع أثناء إرسال الرد.";
     } finally {
         isSubmitting.value = false;

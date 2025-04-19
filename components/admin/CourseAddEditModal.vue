@@ -222,15 +222,15 @@ const moduleFormData = reactive<Partial<CourseModuleInsert>>({
 
 // --- Watchers ---
 watch(() => props.courseData, (newCourse) => {
-  console.log("Course data prop changed:", newCourse);
+  
   if (newCourse?.id) {
-    console.log("Populating form for editing course ID:", newCourse.id);
+    
     Object.assign(formData, { /* ... populate formData ... */
         title: newCourse.title, description: newCourse.description, category_id: newCourse.category_id, youtube_playlist_url: newCourse.youtube_playlist_url, image_url: newCourse.image_url, is_active: newCourse.is_active ?? false,
     });
     fetchModules(); // Fetch modules when editing
   } else {
-    console.log("Resetting form for adding new course");
+    
     Object.assign(formData, { /* ... reset formData ... */
         title: '', description: null, category_id: null, youtube_playlist_url: null, image_url: null, is_active: false,
     });
@@ -243,20 +243,20 @@ watch(() => props.courseData, (newCourse) => {
 // --- Module Management Functions ---
 async function fetchModules() {
     if (!isEditing.value || !props.courseData?.id) {
-        console.log("Skipping module fetch: Not editing or no course ID.");
+        
         courseModules.value = []; return;
     }
     const currentCourseId = props.courseData.id;
-    console.log(`Fetching modules for course ID: ${currentCourseId}`);
+    
     modulesLoading.value = true;
     modulesError.value = null;
     try {
         const { data, error } = await supabase.from('course_modules').select('*').eq('course_id', currentCourseId).order('module_number', { ascending: true });
         if (error) throw error;
         courseModules.value = data || [];
-        console.log("Modules fetched:", courseModules.value.length);
+        
     } catch (err: any) {
-        console.error("Error fetching modules:", err);
+        
         modulesError.value = err.message || 'Unknown error';
         courseModules.value = [];
     } finally {
@@ -281,7 +281,7 @@ function startEditingModule(module: CourseModule) {
     moduleFormData.description = module.description;
     // Ensure the form is visible if it was hidden
     // No need for showAddModuleForm = true here, v-if handles editingModule
-    console.log("Started editing module:", editingModule.value);
+    
 }
 
 function cancelModuleForm() {
@@ -307,7 +307,7 @@ async function saveModule() {
         const moduleNumberToCheck = dataToSave.module_number!;
 
         if (editingModule.value?.id) {
-            console.log(`Updating module ID: ${editingModule.value.id}`);
+            
             // Check for conflict only if module number changed
             if (editingModule.value.module_number !== moduleNumberToCheck) {
                  const { data: existing, error: checkError } = await supabase.from('course_modules').select('id').eq('course_id', currentCourseId).eq('module_number', moduleNumberToCheck).not('id', 'eq', editingModule.value.id).maybeSingle();
@@ -317,7 +317,7 @@ async function saveModule() {
             const { error: updateError } = await supabase.from('course_modules').update(dataToSave as CourseModuleUpdate).eq('id', editingModule.value.id);
             error = updateError;
         } else {
-            console.log(`Inserting new module for course ID: ${currentCourseId}`);
+            
              const { data: existing, error: checkError } = await supabase.from('course_modules').select('id').eq('course_id', currentCourseId).eq('module_number', moduleNumberToCheck).maybeSingle();
              if (checkError) throw checkError;
              if (existing) throw new Error(`رقم الوحدة ${moduleNumberToCheck} موجود بالفعل.`);
@@ -325,11 +325,11 @@ async function saveModule() {
             error = insertError;
         }
         if (error) throw error;
-        console.log("Module saved successfully.");
+        
         resetModuleForm();
         await fetchModules();
     } catch (err: any) {
-        console.error("Error saving module:", err);
+        
         moduleFormError.value = `فشل حفظ الوحدة: ${err.message}`;
     } finally {
         moduleActionLoading.value = false;
@@ -345,22 +345,22 @@ async function confirmDeleteModule(module: CourseModule) {
     const currentCourseId = props.courseData.id;
     const moduleNumberToDelete = module.module_number;
     const moduleIdToDelete = module.id;
-    console.log(`Attempting to delete module ID: ${moduleIdToDelete}, Number: ${moduleNumberToDelete}`);
+    
 
     try {
-         console.log(`Unlinking lessons with module_number ${moduleNumberToDelete}`);
+         
          const { error: updateLessonsError } = await supabase.from('lessons').update({ module_number: null }).eq('course_id', currentCourseId).eq('module_number', moduleNumberToDelete);
         if (updateLessonsError) throw new Error(`فشل إلغاء ربط الدروس: ${updateLessonsError.message}`);
-         console.log(`Lessons unlinked.`);
+         
 
-         console.log(`Deleting module record ID: ${moduleIdToDelete}`);
+         
         const { error: deleteModuleError } = await supabase.from('course_modules').delete().eq('id', moduleIdToDelete);
         if (deleteModuleError) throw deleteModuleError;
-        console.log(`Module deleted.`);
+        
 
         await fetchModules();
     } catch (err: any) {
-        console.error("Error deleting module:", err);
+        
          moduleFormError.value = `فشل حذف الوحدة: ${err.message}`;
     } finally {
         moduleActionLoading.value = false;
@@ -386,7 +386,7 @@ async function handleSubmitCourseDetails() {
         emit('saved');
         
     } catch (err: any) {
-        console.error('Error saving course details:', err.message);
+        
         errorMessage.value = `فشل حفظ تفاصيل الدورة: ${err.message}`;
     } finally {
         formLoading.value = false;

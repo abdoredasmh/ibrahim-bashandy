@@ -176,7 +176,7 @@ async function handleSubmit() {
     if (insertError) {
       // Attempt to remove uploaded file on DB failure
       try { await supabase.storage.from('book-files').remove([uploadedFilePath]); }
-      catch (removeError: any) { console.error("Failed to remove uploaded file:", removeError); }
+      catch (removeError: any) {  }
       throw new Error(`خطأ في حفظ بيانات الكتاب: ${insertError.message}`);
     }
 
@@ -186,7 +186,7 @@ async function handleSubmit() {
     emit('close');
 
   } catch (err: any) {
-    console.error('Error submitting book form:', err.message);
+    
     errorMessage.value = err.message || 'حدث خطأ غير متوقع.';
   } finally {
     formLoading.value = false;
@@ -202,7 +202,7 @@ function closeModal() {
 
 // Assuming a composable or global helper for user feedback
 const useUserFeedback = () => ({
-  showSuccess: (message: string) => { console.log("Success:", message); },
+  showSuccess: (message: string) => {  },
   // Add other feedback types if needed
 });
 const userFeedback = useUserFeedback();

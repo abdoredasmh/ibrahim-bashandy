@@ -124,7 +124,7 @@ const imageError = ref(false);
 
 function handleImageError() {
   // Consider logging this error for monitoring
-  // console.error(`Failed to load image: ${props.book.cover_image_url}`);
+  // 
   imageError.value = true;
 }
 

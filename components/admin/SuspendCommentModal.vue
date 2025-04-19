@@ -176,7 +176,7 @@ async function suspendComments() {
       closeModal();
 
   } catch (err: any) {
-      console.error("Error suspending comments:", err);
+      
       errorMessage.value = err.message || "فشل إيقاف تعليقات المستخدم.";
       // Optionally emit failure: emit('suspended', props.user.id, false, null, errorMessage.value);
   } finally {

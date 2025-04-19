@@ -220,7 +220,7 @@ const supabase = useSupabaseClient<Database>();
 const userStore = useUserStore();
 const { profile, isLoggedIn } = storeToRefs(userStore);
 
-console.log(`--- LESSON PAGE [${route.params.lessonId}] SETUP STARTED ---`);
+
 
 // --- Types ---
 type Lesson = Tables<'lessons'>;
@@ -278,7 +278,7 @@ const selectedPdfPath = ref<string | null>(null);
 const selectedBookTitle = ref<string | null>(null);
 
 if (courseIdParam.value === null || lessonIdParam.value === null) {
-     console.error("Lesson Page Setup: Halting due to invalid route parameters detected earlier.");
+     
 }
 
 // --- Data Fetching with useAsyncData ---
@@ -290,10 +290,10 @@ const { data, pending, error, refresh } = await useAsyncData(
     const currentUserId = profile.value?.id;
 
     if (currentCourseId === null || currentLessonId === null) {
-      console.error("Fetcher Error: Invalid course or lesson ID at fetch time.");
+      
       throw createError({ statusCode: 400, statusMessage: 'المعرفات المطلوبة غير صالحة لجلب البيانات.', fatal: true });
     }
-    console.log(`--- Fetching lesson data for Course ${currentCourseId}, Lesson ${currentLessonId}, User ${currentUserId || 'Guest'} ---`);
+    
 
     try {
       // 1. Fetch Primary Lesson Data
@@ -306,11 +306,11 @@ const { data, pending, error, refresh } = await useAsyncData(
         .maybeSingle();
 
       if (lessonCourseError) {
-        console.error("DB Error fetching lesson/course:", lessonCourseError);
+        
         throw createError({ statusCode: 500, statusMessage: `خطأ في جلب بيانات الدرس الرئيسية: ${lessonCourseError.message}`, fatal: true });
       }
       if (!lessonCourseData) {
-        console.warn(`Lesson ${currentLessonId} not found in active course ${currentCourseId}, or course inactive.`);
+        
         throw createError({ statusCode: 404, statusMessage: 'الدرس المطلوب غير موجود أو لا ينتمي لدورة نشطة.', fatal: true });
       }
 
@@ -339,12 +339,12 @@ const { data, pending, error, refresh } = await useAsyncData(
         const result = results[index];
         if (result.status === 'fulfilled') {
             if (result.value.error) {
-                 console.error(`Supabase Error fetching ${name}:`, result.value.error.message);
+                 
                  return defaultValue;
             }
             return result.value.data ?? defaultValue;
         } else {
-            console.error(`Failed fetching ${name} (Promise rejected):`, result.reason);
+            
             return defaultValue;
         }
       };
@@ -358,20 +358,20 @@ const { data, pending, error, refresh } = await useAsyncData(
 
       // 3. Update Last Accessed Lesson
       if (fetchedEnrollment?.id && fetchedLesson.id) {
-          console.log(`Attempting to update last accessed lesson for enrollment ${fetchedEnrollment.id} to lesson ${fetchedLesson.id}`);
+          
           supabase
             .from('course_enrollments')
             .update({ last_accessed_lesson_id: fetchedLesson.id, updated_at: new Date().toISOString() })
             .eq('id', fetchedEnrollment.id)
             .then(({ error: updateError }) => {
-                if (updateError) console.error('Failed to update last_accessed_lesson_id:', updateError.message);
-                else console.log(`Successfully updated last_accessed_lesson_id.`);
+                if (updateError) 
+                else 
             });
       } else if (isLoggedIn.value && fetchedLesson.id) {
-           console.log('User is logged in but not enrolled in this course, skipping last_accessed_lesson update.');
+           
       }
 
-      console.log('--- Lesson data fetch successful ---');
+      
       // 4. Return the combined data structure
       return {
           lesson: fetchedLesson,
@@ -385,7 +385,7 @@ const { data, pending, error, refresh } = await useAsyncData(
       };
 
     } catch (err: any) {
-        console.error('!!! CRITICAL ERROR in useAsyncData lesson fetch !!!:', err);
+        
         if (err.statusCode && err.fatal) {
             throw err;
         }
@@ -407,7 +407,7 @@ const { data, pending, error, refresh } = await useAsyncData(
 
 // --- Update Local State when Async Data Changes ---
  watch(data, (newData) => {
-    console.log("Lesson page useAsyncData watcher triggered. New data received:", !!newData);
+    
     if (newData) {
         lesson.value = newData.lesson;
         linkedBooks.value = newData.linkedBooks;
@@ -440,7 +440,7 @@ const youtubeVideoId = computed<string | null>(() => {
      const match = url.match(regex);
      return (match && match[1]) ? match[1] : null;
    } catch (e) {
-     console.error("Error parsing YouTube URL:", url, e);
+     
      return null;
    }
 });
@@ -450,7 +450,7 @@ async function markLessonComplete() {
      if (!isLoggedIn.value || !profile.value?.id || !lesson.value?.id || isLessonCompleted.value || completeLoading.value) return;
      completeLoading.value = true;
      completeError.value = null;
-     console.log(`Attempting to mark lesson ${lesson.value.id} as complete for user ${profile.value.id}`);
+     
      try {
          const { data: newCompletion, error: insertError } = await supabase
              .from('lesson_completions')
@@ -459,15 +459,15 @@ async function markLessonComplete() {
              .single();
          if (insertError) {
             if (insertError.code === '23505') {
-               console.warn('Lesson already marked complete in DB, syncing local state.');
+               
                if (!lessonCompletion.value) { lessonCompletion.value = { lesson_id: lesson.value.id }; }
             } else { throw insertError; }
          } else if (newCompletion) {
             lessonCompletion.value = newCompletion;
-            console.log("Lesson successfully marked complete!");
+            
          }
      } catch (err: any) {
-         console.error("Error marking lesson complete:", err);
+         
          completeError.value = `فشل تحديث الحالة: ${err.message || 'حدث خطأ غير متوقع.'}`;
      } finally {
          completeLoading.value = false;
@@ -477,7 +477,7 @@ async function handleEnroll(id: number | null) {
      if (id === null || !isLoggedIn.value || !profile.value?.id || isEnrolledInCourse.value || enrollLoading.value) return;
      enrollLoading.value = true;
      enrollError.value = null;
-     console.log(`Attempting to enroll user ${profile.value.id} in course ${id}`);
+     
      try {
        const { data: newEnrollment, error: enrollSupabaseError } = await supabase
          .from('course_enrollments')
@@ -486,16 +486,16 @@ async function handleEnroll(id: number | null) {
          .single();
        if (enrollSupabaseError) {
            if (enrollSupabaseError.code === '23505') {
-                console.warn("Enrollment conflict detected. Refreshing data.");
+                
                 await refresh();
            } else { throw enrollSupabaseError; }
        } else if (newEnrollment) {
            enrollment.value = newEnrollment;
-           console.log("Enrollment successful!");
+           
            alert('تم الانتساب بنجاح!');
        }
      } catch (err:any) {
-         console.error("Enrollment error on lesson page:", err);
+         
          enrollError.value = `فشل الانتساب: ${err.message || 'حدث خطأ غير متوقع.'}`;
          alert(enrollError.value);
      } finally {
@@ -509,16 +509,16 @@ function openPdfModal(path: string | null | undefined, title: string | null | un
      selectedPdfPath.value = path;
      selectedBookTitle.value = title || 'ملف مرتبط';
      showPdfModal.value = true;
-     console.log(`Opening PDF modal for path: ${path}`);
+     
    } else {
-     console.warn("Attempted to open PDF modal with no path for book:", title);
+     
    }
 }
 function closePdfModal() {
   showPdfModal.value = false;
   selectedPdfPath.value = null;
   selectedBookTitle.value = null;
-  console.log("PDF modal closed.");
+  
 }
 
 // --- Utility Functions ---

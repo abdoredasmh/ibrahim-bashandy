@@ -97,7 +97,7 @@ const LEADERBOARD_LIMIT = 20; // تحديد عدد المستخدمين المط
 const { data: leaderboard, pending, error, refresh } = await useAsyncData<LeaderboardUser[]>(
   'leaderboard-top-users', // مفتاح فريد
   async () => {
-    console.log(`Fetching top ${LEADERBOARD_LIMIT} users for leaderboard...`);
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, avatar_url, points') // اختيار الأعمدة المطلوبة فقط
@@ -106,10 +106,10 @@ const { data: leaderboard, pending, error, refresh } = await useAsyncData<Leader
       .limit(LEADERBOARD_LIMIT); // تحديد العدد المطلوب
 
     if (error) {
-      console.error("Error fetching leaderboard:", error);
+      
       throw error; // رمي الخطأ ليتم عرضه في الواجهة
     }
-    console.log(`Fetched ${data?.length ?? 0} users.`);
+    
     return data ?? []; // إرجاع البيانات أو مصفوفة فارغة
   },
   {

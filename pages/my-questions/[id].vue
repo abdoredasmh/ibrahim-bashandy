@@ -160,7 +160,7 @@ const fetchQuestionDetails = async () => {
 
     // Final check (optional, relies on RLS primarily)
     if (data.user_id !== user.value.id) {
-        console.warn("Attempt to access question not owned by user, RLS should prevent this.");
+        
         throw new Error('ليس لديك صلاحية الوصول لهذا السؤال.');
     }
 
@@ -174,7 +174,7 @@ const fetchQuestionDetails = async () => {
 
 
   } catch (err: any) {
-    console.error("Error fetching question details:", err);
+    
     error.value = err; // Set the error state
   } finally {
     pending.value = false;

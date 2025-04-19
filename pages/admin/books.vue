@@ -207,7 +207,7 @@ async function fetchBooks(params: FetchBooksParams = {}) {
         const newBooks = data || []; if (isFirstPage) { books.value = newBooks; } else { books.value.push(...newBooks); }
         currentPage.value = page; hasMoreItems.value = newBooks.length === limit;
         if (hasMoreItems.value) { await nextTick(); startObserver(); }
-    } catch (err: any) { console.error('Error fetching books:', err.message || err); $toast.error('فشل تحميل الكتب.', { duration: 4000 }); if (isFirstPage) books.value = []; hasMoreItems.value = false;
+    } catch (err: any) {  $toast.error('فشل تحميل الكتب.', { duration: 4000 }); if (isFirstPage) books.value = []; hasMoreItems.value = false;
     } finally { if (isFirstPage) { loadingList.value = false; if (isInitialLoadState.value) isInitialLoadState.value = false; } else { loadingMore.value = false; } if (hasMoreItems.value) { await nextTick(); startObserver(); } }
 }
 async function fetchLessons() {
@@ -215,7 +215,7 @@ async function fetchLessons() {
   try {
     const { data, error } = await supabase.from('lessons').select('id, title').order('title', { ascending: true }).limit(1000);
     if (error) throw error; lessons.value = data || []; lessons.value.forEach(l => lessonTitleCache.value.set(l.id, l.title));
-  } catch (err: any) { console.error('Error fetching lessons:', err.message); $toast.warning('لم تحميل الدروس كاملة.', { duration: 4000 }); lessons.value = [];
+  } catch (err: any) {  $toast.warning('لم تحميل الدروس كاملة.', { duration: 4000 }); lessons.value = [];
   } finally { loadingRelated.value = false; }
 }
 
@@ -256,9 +256,9 @@ async function confirmDelete() {
   try {
     const { error: dbError } = await supabase.from('books').delete().eq('id', bookId); if (dbError) throw new Error(`فشل حذف السجل: ${dbError.message}`);
     let storageWarning = false;
-    if (originalStoragePath) { const { error: storageError } = await supabase.storage.from(STORAGE_BUCKET_NAME).remove([originalStoragePath]); if (storageError) { storageWarning = true; console.error(`فشل حذف الملف ${originalStoragePath}:`, storageError); $toast.warning(`تم حذف السجل، لكن فشل حذف الملف (${getFileName(originalStoragePath)}).`, { duration: 5000 }); } }
+    if (originalStoragePath) { const { error: storageError } = await supabase.storage.from(STORAGE_BUCKET_NAME).remove([originalStoragePath]); if (storageError) { storageWarning = true;  $toast.warning(`تم حذف السجل، لكن فشل حذف الملف (${getFileName(originalStoragePath)}).`, { duration: 5000 }); } }
     if (!storageWarning) { $toast.success(`تم حذف '${bookTitle}' ${originalStoragePath ? 'وملفه ' : ''}بنجاح.`, { duration: 3000 }); } fetchFirstPage();
-  } catch (err: any) { console.error('Error during deletion:', err); $toast.error(`خطأ حذف '${bookTitle}': ${err.message || 'Unknown error.'}`, { duration: 5000 });
+  } catch (err: any) {  $toast.error(`خطأ حذف '${bookTitle}': ${err.message || 'Unknown error.'}`, { duration: 5000 });
   } finally { bookToDelete.value = null; deleteModalConfig.value = null; }
 }
 

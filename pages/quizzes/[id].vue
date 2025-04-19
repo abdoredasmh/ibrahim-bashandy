@@ -256,7 +256,7 @@ function clearTimerFromStorage(quizId: number, userId: string) {
     if (process.client) {
         const key = getTimerStorageKey(quizId, userId);
         localStorage.removeItem(key);
-        console.log(`[Timer Storage] Cleared data for key: ${key}`);
+        
     }
 }
 
@@ -270,7 +270,7 @@ function saveTimerToStorage(quizId: number, userId: string, durationMinutes: num
             userId: userId
         };
         localStorage.setItem(key, JSON.stringify(data));
-        console.log(`[Timer Storage] Saved data for key: ${key}`, data);
+        
     }
 }
 
@@ -290,7 +290,7 @@ function initializeTimerFromStorage(quizId: number, userId: string): boolean {
                 const elapsedTimeSeconds = Math.floor((Date.now() - storedData.startTime) / 1000);
                 const remaining = storedData.durationSeconds - elapsedTimeSeconds;
 
-                console.log(`[Timer Storage] Resuming timer. Stored:`, storedData, `Elapsed: ${elapsedTimeSeconds}s, Remaining: ${remaining}s`);
+                
 
                 if (remaining > 0) {
                     // Start timer with remaining time
@@ -298,7 +298,7 @@ function initializeTimerFromStorage(quizId: number, userId: string): boolean {
                     return true; // Timer resumed successfully
                 } else {
                     // Time already expired while user was away
-                    console.log("[Timer Storage] Time expired while page was closed. Auto-submitting.");
+                    
                     timeRemainingSeconds.value = 0; // Ensure UI shows 00:00
                     isTimerActive.value = true; // Briefly set active for UI consistency before submit
                     handleSubmitAttempt(true); // Trigger auto-submission immediately
@@ -306,15 +306,15 @@ function initializeTimerFromStorage(quizId: number, userId: string): boolean {
                     return true; // Indicate timer logic was handled (even if expired)
                 }
             } else {
-                 console.warn("[Timer Storage] Invalid data found, clearing.", storedDataRaw);
+                 
                  clearTimerFromStorage(quizId, userId); // Clear invalid data
             }
         } catch (e) {
-            console.error("[Timer Storage] Error parsing stored timer data, clearing.", e);
+            
             clearTimerFromStorage(quizId, userId); // Clear corrupted data
         }
     }
-     console.log("[Timer Storage] No valid existing timer data found.");
+     
     return false; // No timer resumed
 }
 
@@ -333,7 +333,7 @@ function stopTimerInterval() {
     if (timerInterval.value) { clearInterval(timerInterval.value as any); timerInterval.value = null; }
     isTimerActive.value = false;
     if (process.client) { window.removeEventListener('beforeunload', handleBeforeUnload); }
-    console.log("[Timer] Interval stopped, listener removed.");
+    
 }
 
 /** Main function to stop the timer, including clearing storage. */
@@ -345,7 +345,7 @@ function stopTimerAndClearStorage() {
     if (currentQuizId && currentUserId) {
          clearTimerFromStorage(currentQuizId, currentUserId);
     } else {
-        console.warn("[Timer] Could not clear storage on stop: Missing quiz/user ID.");
+        
     }
 }
 
@@ -357,7 +357,7 @@ function startTimerInternal(initialSeconds: number) {
 
     timeRemainingSeconds.value = initialSeconds;
     isTimerActive.value = true;
-    console.log(`[Timer] Internal start with ${initialSeconds} seconds.`);
+    
     timerInterval.value = setInterval(tickTimer, 1000);
     if (process.client) { window.addEventListener('beforeunload', handleBeforeUnload); }
 }
@@ -376,7 +376,7 @@ function startNewTimerSession(durationMinutes: number) {
         // Start the interval countdown
         startTimerInternal(durationMinutes * 60);
     } else {
-         console.error("[Timer] Cannot start new timer session: Missing quiz/user ID or not on client.");
+         
     }
 }
 
@@ -385,7 +385,7 @@ function tickTimer() {
     if (timeRemainingSeconds.value > 0) {
         timeRemainingSeconds.value--;
     } else {
-        console.log("[Timer] Time up! Auto-submitting.");
+        
         stopTimerInterval(); // Stop the interval first
         handleSubmitAttempt(true); // Auto-submit (this will eventually call clear storage)
     }
@@ -415,7 +415,7 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
         if (!currentUser?.id) { throw createError({ statusCode: 401, statusMessage: 'المستخدم غير مسجل الدخول.', fatal: true }); }
         if (currentQuizId === null) { throw createError({ statusCode: 400, statusMessage: 'معرف الاختبار غير صالح.', fatal: true }); }
 
-        console.log(`[AsyncData] Fetch/Check: Quiz ${currentQuizId}, User ${currentUser.id}`);
+        
 
         try {
             // --- Step 1: Check Existing Submitted Attempts ---
@@ -427,12 +427,12 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
 
             const existingAttemptId = existingAttempt?.id ?? null;
             if (existingAttemptId !== null) {
-                console.log(`[AsyncData] Existing submitted attempt found (ID: ${existingAttemptId}). Redirecting.`);
+                
                 return { quiz: null, questions: null, isEnrolled: false, existingAttemptId, relatedLink: null, isAuthorized: false, authFailReason: 'Attempt exists' };
             }
 
             // --- Step 2: Fetch Quiz Details ---
-             console.log(`[AsyncData] Fetching quiz details...`);
+             
             const { data: fetchedQuiz, error: quizFetchError } = await supabase
                 .from('quizzes').select(`*, course:study_courses(id, title), lesson:lessons(id, title, course_id)`)
                 .eq('id', currentQuizId).single();
@@ -452,7 +452,7 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
             }
 
             // --- Step 4: Authorization Checks ---
-             console.log(`[AsyncData] Performing authorization checks...`);
+             
             let isAuthorized = true;
             let authFailReason = '';
             let isEnrolled = true; // Assume true, verify if course-linked
@@ -462,7 +462,7 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
             }
 
             if (fetchedQuiz.course_id && isAuthorized) {
-                 console.log(`[AsyncData] Checking enrollment for Course ID: ${fetchedQuiz.course_id}`);
+                 
                 const { count, error: enrollError } = await supabase
                     .from('course_enrollments').select('*', { count: 'exact', head: true })
                     .eq('user_id', currentUser.id).eq('course_id', fetchedQuiz.course_id);
@@ -471,27 +471,27 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
                 else {
                     isEnrolled = (count ?? 0) > 0;
                     if (!isEnrolled) { authFailReason = 'يجب الانتساب للدورة المرتبطة أولاً.'; isAuthorized = false; }
-                     else { console.log(`[AsyncData] User is enrolled.`); }
+                     else {  }
                 }
             }
 
             if (!isAuthorized) { throw createError({ statusCode: 403, statusMessage: authFailReason, fatal: true }); }
 
             // --- Step 5: Fetch Questions ---
-             console.log(`[AsyncData] Fetching questions...`);
+             
             const { data: fetchedQuestionsData, error: questionsFetchError } = await supabase
                 .from('quiz_questions').select(`id, quiz_id, question_text, type, question_order, points`)
                 .eq('quiz_id', currentQuizId).order('question_order', { ascending: true, nullsFirst: false });
 
             if (questionsFetchError) { throw createError({ statusCode: 500, statusMessage: 'فشل تحميل أسئلة الاختبار.', details: questionsFetchError.message }); }
             if (!fetchedQuestionsData || fetchedQuestionsData.length === 0) {
-                 console.warn("[AsyncData] No questions found for this quiz!");
+                 
                 return { quiz: fetchedQuiz as QuizPojo, questions: [], isEnrolled, existingAttemptId: null, relatedLink, isAuthorized: true, authFailReason: '' };
             }
 
             // --- Step 6: Fetch Options ---
             const questionIds = fetchedQuestionsData.map(q => q.id);
-             console.log(`[AsyncData] Fetching options for ${questionIds.length} questions...`);
+             
             let fetchedOptionsData: OptionPojo[] = [];
             if (questionIds.length > 0) {
                 const { data: options, error: optionsFetchError } = await supabase
@@ -501,7 +501,7 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
                 if (optionsFetchError) { throw createError({ statusCode: 500, statusMessage: 'فشل تحميل خيارات الأسئلة.', details: optionsFetchError.message }); }
                 fetchedOptionsData = (options || []).map(opt => ({ ...opt }));
             }
-             console.log(`[AsyncData] Fetched ${fetchedOptionsData.length} options.`);
+             
 
             // --- Step 7: Map Options to Questions ---
             const optionsMap = new Map<number, OptionPojo[]>();
@@ -520,11 +520,11 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
 
              // --- Step 9: Prepare Final Data ---
             const sanitizedQuiz: QuizPojo = { ...fetchedQuiz };
-             console.log(`[AsyncData] Fetch successful.`);
+             
             return { quiz: sanitizedQuiz, questions: questionsWithMappedOptions, isEnrolled, existingAttemptId: null, relatedLink, isAuthorized: true, authFailReason: '' };
 
         } catch (err: any) {
-            console.error('[AsyncData] CAUGHT ERROR:', err);
+            
             const statusCode = err.statusCode || err.code || 500;
             const message = err.data?.message || err.statusMessage || err.message || 'خطأ غير متوقع.';
             const details = err.data?.details || err.details;
@@ -532,7 +532,7 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
             return { quiz: null, questions: null, isEnrolled: false, existingAttemptId: null, relatedLink: null, isAuthorized: false, authFailReason: message };
         } finally {
             isRedirecting.value = false;
-             console.log(`[AsyncData] Fetch/Check complete.`);
+             
         }
     },
     { watch: [quizIdParam, () => profile.value?.id] }
@@ -540,19 +540,19 @@ const { data, pending, error: asyncDataError, refresh } = await useAsyncData<Qui
 
 // --- Watcher for Data Updates, Redirection, State Initialization ---
 watch(data, async (newData) => {
-    console.log('[Watcher] Processing data update...');
+    
     stopTimerInterval(); // Stop any existing interval immediately
 
     // Priority 1: Handle Redirection
     if (newData?.existingAttemptId) {
         if (!isRedirecting.value) {
             isRedirecting.value = true;
-            console.log(`[Watcher] Redirecting to results page: ${newData.existingAttemptId}...`);
+            
             await nextTick();
             try {
                 await navigateTo(`/quizzes/results/${newData.existingAttemptId}`, { replace: true });
             } catch (navError) {
-                console.error("[Watcher] Navigation error:", navError);
+                
                 loadError.value = { message: 'فشل التوجيه لصفحة النتائج.', details: (navError as Error).message };
                 isRedirecting.value = false;
             }
@@ -562,7 +562,7 @@ watch(data, async (newData) => {
 
     // Priority 2: Handle Loading Errors
     if (loadError.value) {
-      console.warn("[Watcher] Load error detected.");
+      
       quizData.value = {};
       userAnswers.value = {};
       isRedirecting.value = false;
@@ -571,7 +571,7 @@ watch(data, async (newData) => {
 
     // Priority 3: Setup Quiz State
     if (newData?.quiz && newData.questions && newData.isAuthorized) {
-        console.log("[Watcher] Setting up quiz state. Questions:", newData.questions.length);
+        
         quizData.value = newData;
 
         // Reset answers
@@ -592,7 +592,7 @@ watch(data, async (newData) => {
             const resumed = initializeTimerFromStorage(currentQuizId, currentUserId);
             if (!resumed) {
                  // If not resumed (no valid data in storage), start a new timer session
-                 console.log("[Watcher] No timer resumed from storage, starting new session.");
+                 
                  startNewTimerSession(timeLimit);
              }
         } else {
@@ -603,7 +603,7 @@ watch(data, async (newData) => {
     }
     // Priority 4: Handle Invalid State
     else if (!pending.value && !isRedirecting.value && !loadError.value) {
-         console.warn("[Watcher] Data loaded but state is invalid/unauthorized.");
+         
          loadError.value = { message: 'فشل تحميل الاختبار أو أنك غير مصرح بالدخول.' };
          quizData.value = {};
          userAnswers.value = {};
@@ -696,7 +696,7 @@ async function handleSubmitAttempt(autoSubmitted: boolean = false) {
         grading_status: initialGradingStatus, score: null, manual_score: null, total_score: null, passed: null,
     };
 
-    console.log("Submitting attempt:", attemptPayload);
+    
 
     try {
         const { data: newAttempt, error: insertError } = await supabase
@@ -706,7 +706,7 @@ async function handleSubmitAttempt(autoSubmitted: boolean = false) {
         if (!newAttempt?.id) { throw new Error("لم يتم استلام معرف المحاولة الجديدة بعد الإرسال."); }
 
         // --- Submission Successful ---
-        console.log(`Submission successful! Attempt ID: ${newAttempt.id}. Redirecting...`);
+        
         // Clear timer storage ON SUCCESS before navigating away
         clearTimerFromStorage(currentQuiz.id, currentUserId);
 
@@ -714,7 +714,7 @@ async function handleSubmitAttempt(autoSubmitted: boolean = false) {
         // isSubmitting remains true because we are navigating away
 
     } catch (err: any) {
-        console.error("Error submitting quiz attempt:", err);
+        
         submitError.value = `فشل إرسال الإجابات: ${err.message || 'خطأ غير متوقع.'}`;
         isSubmitting.value = false; // Re-enable button on failure
         // Decide if timer should be restarted here if it failed? For now, keep it stopped.
@@ -728,7 +728,7 @@ onUnmounted(() => {
   // Stop the interval and remove listener, but DON'T clear storage
   // This allows resuming if user navigates away and comes back before time expires / submission
   stopTimerInterval();
-  console.log("Quiz take component unmounted.");
+  
 });
 
 // --- SEO Meta Tags ---

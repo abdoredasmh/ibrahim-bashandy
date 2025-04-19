@@ -279,17 +279,17 @@ const fetchData = async () => {
     userData.value = { profile: profileData, auth: authData };
 
     // Process Messages (Store ALL fetched messages)
-    if (messagesResult.error) console.error("Error fetching messages:", messagesResult.error);
+    if (messagesResult.error) 
     userMessages.value = messagesResult.data ?? [];
     isLoadingMessages.value = false;
 
     // Process Courses
-    if (coursesResult.error) console.error("Error fetching enrolled courses:", coursesResult.error);
+    if (coursesResult.error) 
     userEnrolledCourses.value = coursesResult.data ?? [];
     isLoadingCourses.value = false;
 
   } catch (err: any) {
-    console.error("Error fetching user detail:", err);
+    
     fetchError.value = (err as PostgrestError) ?? { message: err.message || 'خطأ غير معروف.' };
     userData.value = null;
     isLoadingMessages.value = false;
@@ -303,7 +303,7 @@ const fetchData = async () => {
 // --- Action Handlers ---
 const handleActionStart = (actionType: string) => {
     isLoadingAction.value = (actionType !== 'read');
-    console.log(`Action started: ${actionType}`);
+    
 };
 
 const handleActionComplete = (success: boolean, message: string, updatedProfile?: Partial<Profile>) => {
@@ -328,7 +328,7 @@ const markReplyAsReadByAdmin = async (messageId: number) => {
         }
         showToast('تم تمييز الرد كمقروء.', 'success');
     } catch (err: any) {
-        console.error("Error marking reply as read by admin:", err);
+        
         showToast('فشل تمييز الرد كمقروء.', 'error');
     } finally {
         if (isLoadingAction.value === `read-${messageId}`) {
@@ -344,7 +344,7 @@ const openSuspendModal = (userProfile: Profile | null) => { if (!userProfile) re
 async function sendNotificationToUser(targetUserId: string, title: string, link: string) {
     // Basic validation
     if (!targetUserId || !title || !link) {
-        console.error(">>> sendNotificationToUser: Missing required data.", { targetUserId, title, link });
+        
         showToast('فشل إرسال الإشعار: بيانات الإشعار غير مكتملة.', 'error');
         return;
     }
@@ -355,20 +355,20 @@ async function sendNotificationToUser(targetUserId: string, title: string, link:
         link: link,
         is_read: false,
     };
-    console.log(">>> sendNotificationToUser: Attempting to send notification data:", notificationData);
+    
 
     try {
         const { error } = await supabase.from('notifications').insert(notificationData);
-        console.log(">>> sendNotificationToUser: Supabase insert response error:", error); // Log error regardless
+         // Log error regardless
 
         if (error) {
-            console.error(">>> sendNotificationToUser: Error sending notification:", error);
+            
             showToast(`فشل إرسال الإشعار للمستخدم: ${error.message}`, 'error'); // Use error toast
         } else {
-             console.log(">>> sendNotificationToUser: Notification insert successful for message:", title);
+             
         }
     } catch(err: any) {
-         console.error(">>> sendNotificationToUser: Unexpected catch block error sending notification:", err);
+         
          showToast(`حدث خطأ غير متوقع أثناء إرسال الإشعار: ${err.message || 'خطأ غير معروف'}`, 'error');
     }
 }
@@ -385,7 +385,7 @@ const handleMessageSent = (success: boolean, sentMessage?: PrivateMessage, error
     } else if (!success) {
         showToast(`فشل إرسال الرسالة الخاصة: ${errorMsg || 'خطأ غير معروف'}`, 'error');
     } else {
-        console.warn('handleMessageSent: Message sent successfully but required data is missing for notification.', sentMessage);
+        
         showToast('تم إرسال الرسالة، لكن لا يمكن إرسال الإشعار (بيانات ناقصة).', 'warning');
     }
 };
@@ -401,7 +401,7 @@ const fetchMessages = async () => {
         if (error) throw error;
         userMessages.value = data ?? [];
     } catch (err: any) {
-        console.error("Error refreshing messages:", err);
+        
         showToast("فشل تحديث قائمة الرسائل.", "error");
     } finally { isLoadingMessages.value = false; }
 };
@@ -446,7 +446,7 @@ const getMessageSourceText = (source: string | null | undefined): string => {
 
 const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
     if ($toast && typeof $toast[type] === 'function') { $toast[type](message); }
-    else { console.log(`[Toast ${type.toUpperCase()}]: ${message}`); if (type === 'error' || type === 'warning') { alert(`[${type.toUpperCase()}] ${message}`); } }
+    else {  if (type === 'error' || type === 'warning') { alert(`[${type.toUpperCase()}] ${message}`); } }
 };
 
 // --- Watchers ---

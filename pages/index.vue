@@ -373,7 +373,7 @@ function getYoutubeThumbnailUrl(url: string | null | undefined): string | null {
         if (typeof url === 'string' && !url.includes('/') && url.length === 11) {
              videoId = url;
         } else {
-            // console.warn("Could not parse video URL:", url, e); // Keep commented for now unless needed
+            //  // Keep commented for now unless needed
              return null;
         }
     }
@@ -666,7 +666,7 @@ function formatDate(dateString: string | null | undefined): string {
     if (isNaN(date.getTime())) return '';
     return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
-      // console.error("Error formatting date:", dateString, e);
+      // 
       return dateString || '';
   }
 }
@@ -681,7 +681,7 @@ function isLiveNow(dateString: string | null | undefined): boolean {
         const eventEnd = new Date(eventDate.getTime() + eventDurationMs);
         return now >= eventDate && now < eventEnd;
     } catch (e) {
-        // console.error("Error checking if live now:", dateString, e);
+        // 
         return false;
     }
 }

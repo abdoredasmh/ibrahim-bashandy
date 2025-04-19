@@ -154,7 +154,7 @@ const { data: courseData, pending, error, refresh: refreshCourses } = useAsyncDa
             .select('*')
             .order('created_at', { ascending: false });
          if (fetchError) {
-            console.error('Error fetching courses (useAsyncData):', fetchError.message);
+            
             throw fetchError; // Let useAsyncData handle the error state
          }
          
@@ -178,7 +178,7 @@ const { data: courseData, pending, error, refresh: refreshCourses } = useAsyncDa
             .select('id, name')
             .order('name');
          if (fetchCatError) {
-             console.error('Error fetching categories (useAsyncData):', fetchCatError.message);
+             
              throw fetchCatError;
          }
          
@@ -237,7 +237,7 @@ async function toggleCourseStatus(courseId: number, newStatus: boolean) {
         // **Crucially, refresh the data provided by useAsyncData**
         await refreshCourses();
     } catch (err: any) {
-        console.error('Error toggling course status:', err.message);
+        
         showToast('error', `فشل تغيير حالة الدورة: ${err.message}`);
     } finally {
         isTogglingStatus.value = null;
@@ -282,7 +282,7 @@ async function handleCourseSaved() {
          // **Refresh the data provided by useAsyncData**
          await refreshCourses();
      } catch (err: any) {
-         console.error('Error deleting course:', err.message);
+         
          showToast('error', `فشل حذف الدورة: ${err.message}`);
      } finally {
          isDeleting.value = null;

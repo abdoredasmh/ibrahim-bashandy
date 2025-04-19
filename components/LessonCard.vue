@@ -89,7 +89,7 @@ const getYouTubeVideoId = (url: string | null | undefined): string | null => {
     const match = url.match(regex);
     return (match && match[1]) ? match[1] : null;
   } catch (e) {
-    console.error("Error processing YouTube URL:", url, e);
+    
     return null;
   }
 };
@@ -99,7 +99,7 @@ const videoId = computed(() => getYouTubeVideoId(props.lesson.youtube_url));
 
 // --- Image Error Handler ---
 const handleImageError = () => {
-  console.warn(`Failed to load YouTube thumbnail for video ID: ${videoId.value}`);
+  
   imageError.value = true; // Set error state to true to hide the broken image
 };
 

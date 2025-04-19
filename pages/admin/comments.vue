@@ -314,7 +314,7 @@ const loadComments = async (reset: boolean = false) => {
     
 
   } catch (err: any) {
-    console.error("Error loading comments:", err);
+    
     error.value = err;
     hasMore.value = false; // Stop trying to load more on error
     // toast.error('فشل تحميل التعليقات.'); // Example notification
@@ -346,7 +346,7 @@ const fetchUsers = async (term: string) => {
       filteredUsersList.value = data ?? [];
       
   } catch(err: any) {
-      console.error("Error searching users:", err);
+      
       filteredUsersList.value = [];
       // Consider showing an error message in the dropdown
   } finally {
@@ -440,7 +440,7 @@ const setupIntersectionObserver = () => {
     observer.observe(scrollTrigger.value);
     
   } else {
-      console.warn("Scroll trigger element not found for Intersection Observer.");
+      
   }
 };
 
@@ -457,14 +457,14 @@ onMounted(() => {
          
          supabase.from('profiles').select('full_name').eq('id', selectedUserId.value).maybeSingle().then(({ data, error: nameError }) => {
              if (nameError) {
-                 console.error(`Error fetching name for user ${selectedUserId.value}:`, nameError);
+                 
              } else if (data) {
                  
                  selectedUserName.value = data.full_name;
                  // Update the search input field to reflect the loaded user filter
                  userSearchTerm.value = data.full_name;
              } else {
-                 console.warn(`User with ID ${selectedUserId.value} not found.`);
+                 
                  // Optionally clear the invalid userId from state/URL if user not found
                  // clearUserSelection(); // Or handle differently
              }
@@ -551,7 +551,7 @@ const executeDeleteComment = async () => {
        
 
     } catch (err: any) {
-        console.error(`Error deleting comment ${comment.id}:`, err);
+        
        
         const commentInList = comments.value.find(c => c.id === comment.id);
         if(commentInList) {

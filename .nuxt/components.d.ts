@@ -24,6 +24,7 @@ interface _GlobalComponents {
     'LessonCard': typeof import("../components/LessonCard.vue")['default']
     'LoadingSpinner': typeof import("../components/LoadingSpinner.vue")['default']
     'NotificationsDropdown': typeof import("../components/NotificationsDropdown.vue")['default']
+    'PdfViewerModal': typeof import("../components/PdfViewerModal.client.vue")['default']
     'PdfViewerModal': typeof import("../components/PdfViewerModal.vue")['default']
     'ReplyItem': typeof import("../components/ReplyItem.vue")['default']
     'UserAvatar': typeof import("../components/UserAvatar.vue")['default']
@@ -67,6 +68,7 @@ interface _GlobalComponents {
     'Html': typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']
     'Body': typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']
     'NuxtIsland': typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
+    'PdfViewerModal': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
     'NuxtRouteAnnouncer': IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
       'LazyAppFooter': LazyComponent<typeof import("../components/AppFooter.vue")['default']>
     'LazyAppHeader': LazyComponent<typeof import("../components/AppHeader.vue")['default']>
@@ -80,6 +82,7 @@ interface _GlobalComponents {
     'LazyLessonCard': LazyComponent<typeof import("../components/LessonCard.vue")['default']>
     'LazyLoadingSpinner': LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
     'LazyNotificationsDropdown': LazyComponent<typeof import("../components/NotificationsDropdown.vue")['default']>
+    'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.client.vue")['default']>
     'LazyPdfViewerModal': LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
     'LazyReplyItem': LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
     'LazyUserAvatar': LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
@@ -123,6 +126,7 @@ interface _GlobalComponents {
     'LazyHtml': LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']>
     'LazyBody': LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']>
     'LazyNuxtIsland': LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']>
+    'LazyPdfViewerModal': LazyComponent<IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>>
     'LazyNuxtRouteAnnouncer': LazyComponent<IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>>
 }
 
@@ -142,6 +146,7 @@ export const CourseCard: typeof import("../components/CourseCard.vue")['default'
 export const LessonCard: typeof import("../components/LessonCard.vue")['default']
 export const LoadingSpinner: typeof import("../components/LoadingSpinner.vue")['default']
 export const NotificationsDropdown: typeof import("../components/NotificationsDropdown.vue")['default']
+export const PdfViewerModal: typeof import("../components/PdfViewerModal.client.vue")['default']
 export const PdfViewerModal: typeof import("../components/PdfViewerModal.vue")['default']
 export const ReplyItem: typeof import("../components/ReplyItem.vue")['default']
 export const UserAvatar: typeof import("../components/UserAvatar.vue")['default']
@@ -185,6 +190,7 @@ export const Head: typeof import("../node_modules/nuxt/dist/head/runtime/compone
 export const Html: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']
 export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
+export const PdfViewerModal: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const NuxtRouteAnnouncer: IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>
 export const LazyAppFooter: LazyComponent<typeof import("../components/AppFooter.vue")['default']>
 export const LazyAppHeader: LazyComponent<typeof import("../components/AppHeader.vue")['default']>
@@ -198,6 +204,7 @@ export const LazyCourseCard: LazyComponent<typeof import("../components/CourseCa
 export const LazyLessonCard: LazyComponent<typeof import("../components/LessonCard.vue")['default']>
 export const LazyLoadingSpinner: LazyComponent<typeof import("../components/LoadingSpinner.vue")['default']>
 export const LazyNotificationsDropdown: LazyComponent<typeof import("../components/NotificationsDropdown.vue")['default']>
+export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.client.vue")['default']>
 export const LazyPdfViewerModal: LazyComponent<typeof import("../components/PdfViewerModal.vue")['default']>
 export const LazyReplyItem: LazyComponent<typeof import("../components/ReplyItem.vue")['default']>
 export const LazyUserAvatar: LazyComponent<typeof import("../components/UserAvatar.vue")['default']>
@@ -241,6 +248,7 @@ export const LazyHead: LazyComponent<typeof import("../node_modules/nuxt/dist/he
 export const LazyHtml: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Html']>
 export const LazyBody: LazyComponent<typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']>
 export const LazyNuxtIsland: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']>
+export const LazyPdfViewerModal: LazyComponent<IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>>
 export const LazyNuxtRouteAnnouncer: LazyComponent<IslandComponent<typeof import("../node_modules/nuxt/dist/app/components/server-placeholder")['default']>>
 
 export const componentNames: string[]

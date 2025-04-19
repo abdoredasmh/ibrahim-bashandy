@@ -235,7 +235,7 @@ async function fetchSheikhInfo() {
       formData.value.contact_info = {};
     }
   } catch (error: any) {
-    console.error('Error fetching Sheikh info:', error);
+    
     loadError.value = error.message || 'فشل تحميل بيانات الشيخ.';
      // Initialize contact_info as empty object on error
      formData.value.contact_info = {};
@@ -287,7 +287,7 @@ async function handleImageUpload() {
       });
 
     if (uploadError) {
-      console.error('Supabase storage upload error:', uploadError);
+      
       throw uploadError;
     }
 
@@ -299,7 +299,7 @@ async function handleImageUpload() {
       .getPublicUrl(filePath);
 
     if (!urlData?.publicUrl) {
-      console.error('Could not get public URL after upload.');
+      
       throw new Error('لم يتمكن من الحصول على رابط الصورة بعد الرفع.');
     }
 
@@ -312,7 +312,7 @@ async function handleImageUpload() {
     selectedFile.value = null; // مسح الملف المختار بعد الرفع
 
   } catch (error: any) {
-    console.error('Error uploading image:', error);
+    
     uploadError.value = `فشل رفع الصورة: ${error.message}`;
   } finally {
     isUploading.value = false;
@@ -365,7 +365,7 @@ async function handleUpdate() {
     setTimeout(() => { successMessage.value = null; }, 3000);
 
   } catch (error: any) {
-    console.error('Error updating Sheikh info:', error);
+    
     updateError.value = error.message || 'حدث خطأ غير متوقع أثناء حفظ التعديلات.';
   } finally {
     isSaving.value = false;

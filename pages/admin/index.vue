@@ -218,12 +218,12 @@ async function fetchCount(
     const { count, error: countError } = await query;
 
     if (countError) {
-      console.error(`Supabase count error for table "${tableName}":`, countError.message);
+      
       throw countError; // Re-throw the error to be caught by Promise.allSettled
     }
     return count ?? 0;
   } catch (err: unknown) {
-    console.error(`Unexpected error fetching count for table "${tableName}":`, err);
+    
     // Ensure we throw an Error object
     throw err instanceof Error ? err : new Error(`Failed to fetch count for ${tableName}`);
   }
@@ -280,7 +280,7 @@ async function fetchAllStats(force = false) {
         stats.value[taskKey] = result.value;
       } else {
         // Log the specific error and set the stat value to null
-        console.error(`Failed to fetch statistic for "${taskKey}":`, result.reason);
+        
         stats.value[taskKey] = null; // Indicate failure for this specific stat
         allSucceeded = false;
         // Store the first error to display a general message
@@ -303,7 +303,7 @@ async function fetchAllStats(force = false) {
 
   } catch (err: unknown) {
      // Catch unexpected errors outside Promise.allSettled (less likely but possible)
-     console.error("An unexpected error occurred during the stats fetching process:", err);
+     
      if (!error.value) { // Avoid overwriting specific errors from allSettled
         error.value = err instanceof Error ? err : new Error("Unknown error during fetching process");
      }

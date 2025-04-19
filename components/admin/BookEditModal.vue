@@ -211,7 +211,7 @@ async function handleSubmit() {
                  .from(STORAGE_BUCKET_NAME)
                  .remove([oldStoragePath]);
              if (deleteError) {
-                 console.warn(`فشل حذف الملف القديم ${oldStoragePath}:`, deleteError.message);
+                 
                  // Show warning using toast
                  $toast.warning( // <-- استخدام toast
                     `تم تحديث الكتاب، لكن فشل حذف الملف القديم (${getFileName(oldStoragePath)}).`,
@@ -232,7 +232,7 @@ async function handleSubmit() {
 
     if (updateError) {
          if (newBookFile.value && updatedStoragePath) {
-             console.error(`CRITICAL: DB update failed after new file upload: ${updatedStoragePath}. Manual cleanup needed.`);
+             
          }
          // استخدم رسالة الخطأ من Supabase إن وجدت
          throw new Error(`فشل تحديث الكتاب: ${updateError.message || 'خطأ غير معروف'}`);
@@ -244,7 +244,7 @@ async function handleSubmit() {
     emit('close');
 
   } catch (err: any) {
-    console.error('Error during book update:', err);
+    
     // Show error using toast
     $toast.error( // <-- استخدام toast
         err.message || 'حدث خطأ غير متوقع أثناء حفظ التعديلات.',

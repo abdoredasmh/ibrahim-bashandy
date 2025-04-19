@@ -175,7 +175,7 @@ const fetchQuizDetails = async () => {
   try {
     const { data, error } = await supabase.from('quizzes').select(`*, lessons (title), study_courses (title)`).eq('id', quizIdNumber.value).single();
     if (error) throw error; if (!data) throw new Error('لم يتم العثور على الاختبار.'); quiz.value = data as QuizView;
-  } catch (err: any) { console.error("Error fetching quiz details:", err); fetchErrorQuiz.value = (err as PostgrestError) ?? { message: 'خطأ غير معروف.' };
+  } catch (err: any) {  fetchErrorQuiz.value = (err as PostgrestError) ?? { message: 'خطأ غير معروف.' };
   } finally { pendingQuiz.value = false; }
 };
 
@@ -187,7 +187,7 @@ const fetchQuestions = async () => {
   try {
      const { data, error } = await supabase.from('quiz_questions').select(`*, question_options (*)`).eq('quiz_id', quizIdNumber.value).order('question_order', { ascending: true, nulls: 'last' }).order('created_at', { ascending: true });
      if (error) throw error; questions.value = (data || []) as QuestionView[];
-  } catch (err: any) { console.error("Error fetching questions:", err); fetchErrorQuestions.value = err as PostgrestError;
+  } catch (err: any) {  fetchErrorQuestions.value = err as PostgrestError;
   } finally { pendingQuestions.value = false; }
 };
 
@@ -211,7 +211,7 @@ const deleteQuestion = async () => {
     try {
         const { error } = await supabase.from('quiz_questions').delete().eq('id', idToDelete); if (error) throw error;
         questions.value = questions.value.filter(q => q.id !== idToDelete); showToast(`تم حذف السؤال "${textToDelete}..." بنجاح.`, 'success');
-    } catch (err: any) { console.error("Error deleting question:", err); showActionMessage(`فشل حذف السؤال: ${err.message}`, 'error');
+    } catch (err: any) {  showActionMessage(`فشل حذف السؤال: ${err.message}`, 'error');
     } finally { questionToDelete.value = null; showDeleteQuestionConfirm.value = false; }
 };
 
@@ -219,7 +219,7 @@ const deleteQuestion = async () => {
 const formatDate = (dateString: string | null | undefined): string => { if (!dateString) return '--'; try { const d=new Date(dateString); return d.toLocaleString('ar-EG',{dateStyle:'short',timeStyle:'short'})} catch{return '!'}};
 const formatQuizType = (type: string | null | undefined): string => { switch (type) { case 'lesson': return 'اختبار درس'; case 'module': return 'اختبار وحدة'; case 'final': return 'اختبار نهائي'; case 'practice': return 'اختبار تدريبي'; default: return 'غير محدد'; }};
 const formatQuestionType = (type: string | null | undefined): string => { switch (type) { case 'mcq': return 'اختيار من متعدد'; case 'true_false': return 'صح / خطأ'; case 'written': return 'كتابي'; default: return 'غير محدد'; }};
-const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => { if ($toast?.[type]) $toast[type](message); else console.log(`[${type.toUpperCase()}] ${message}`); };
+const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => { if ($toast?.[type]) $toast[type](message); else  };
 const showActionMessage = (msg: string, type: 'success' | 'error') => { actionMessage.value = msg; actionMessageType.value = type; setTimeout(() => { actionMessage.value = null; }, 5000); };
 const clearActionMessage = () => { actionMessage.value = null; };
 const refreshQuestions = () => { fetchQuestions(); };

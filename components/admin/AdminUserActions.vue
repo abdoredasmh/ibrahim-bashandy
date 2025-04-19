@@ -152,7 +152,7 @@ const updateUserRole = async (newRole: 'user' | 'admin') => {
         emit('action-complete', true, `تم تغيير دور المستخدم إلى ${newRole}.`, { role: newRole });
 
     } catch (err: any) {
-        console.error("Error updating role:", err);
+        
          currentRole.value = props.userProfile.role;
         emit('action-complete', false, `فشل تغيير دور المستخدم: ${err.message}`);
     } finally {
@@ -177,7 +177,7 @@ const removeCommentSuspension = async () => {
           emit('action-complete', true, `تم إلغاء إيقاف التعليقات بنجاح.`, { comment_suspended_until: null });
 
      } catch (err: any) {
-         console.error("Error removing suspension:", err);
+         
          emit('action-complete', false, `فشل إلغاء إيقاف التعليقات: ${err.message}`);
      } finally {
          pendingAction.value = null;

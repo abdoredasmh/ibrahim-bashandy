@@ -160,7 +160,7 @@ const { data: sheikhInfo, pending, error: rawError, refresh } = await useAsyncDa
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching about sheikh data:', error);
+      
        throw error;
     }
     return data;
@@ -178,7 +178,7 @@ const { data: sheikhInfo, pending, error: rawError, refresh } = await useAsyncDa
           try {
               cleanData.contact_info = JSON.parse(JSON.stringify(rawData.contact_info));
           } catch (e) {
-              console.error("Failed to process contact_info, setting to null:", e);
+              
               cleanData.contact_info = null;
           }
       }
@@ -252,7 +252,7 @@ function getRawPhoneNumber(url: string): string {
     return url.substring(4);
   }
   // If it doesn't start with tel:, assume it's just the number
-  console.warn(`Phone URL "${url}" did not start with "tel:". Assuming it's the number directly.`);
+  
   return url;
 }
 
@@ -264,7 +264,7 @@ async function copyPhoneNumber(url: string, platform: string) {
   copyError.value = null;
 
   if (!navigator.clipboard) {
-    console.error('Clipboard API not available.');
+    
     copyError.value = 'عذراً، خاصية النسخ غير متاحة في متصفحك.';
     return;
   }
@@ -280,7 +280,7 @@ async function copyPhoneNumber(url: string, platform: string) {
     }, 2500);
 
   } catch (err) {
-    console.error('Failed to copy phone number:', err);
+    
     copyError.value = 'فشل نسخ الرقم. الرجاء المحاولة يدوياً.';
     copiedPlatform.value = null;
   }

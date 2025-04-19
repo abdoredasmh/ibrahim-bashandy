@@ -1,5 +1,0 @@
-const _id__vue_vue_type_style_index_0_scoped_aa34737d_lang = ".custom-scrollbar[data-v-aa34737d]::-webkit-scrollbar{width:6px}.custom-scrollbar[data-v-aa34737d]::-webkit-scrollbar-thumb{background-color:#9ca3af80;border-radius:3px}.custom-scrollbar[data-v-aa34737d]:hover::-webkit-scrollbar-thumb{background-color:#9ca3afcc}.custom-scrollbar[data-v-aa34737d]::-webkit-scrollbar-track{background:transparent}.whitespace-pre-wrap[data-v-aa34737d]{white-space:pre-wrap;word-wrap:break-word}.min-h-\\[50px\\][data-v-aa34737d]{min-height:50px}";
-export {
-  _id__vue_vue_type_style_index_0_scoped_aa34737d_lang as default
-};
-//# sourceMappingURL=_id_-styles-1.mjs4.mjs.map

@@ -80,7 +80,7 @@ const { data: aboutData, pending, error } = await useAsyncData<{ contact_info: J
       .maybeSingle();
 
     if (error) {
-      console.error("Error fetching about_sheikh data for footer:", error);
+      
       // لا ترمي خطأ فادحًا هنا
     }
     return data;

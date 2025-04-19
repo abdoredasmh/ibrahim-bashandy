@@ -143,7 +143,7 @@ const fetchCategories = async () => {
     if (error) throw error;
     categories.value = data;
   } catch (err: any) {
-    console.error("Error fetching categories:", err);
+    
     fetchError.value = err;
     categories.value = null;
   } finally {
@@ -181,7 +181,7 @@ const confirmDelete = async (category: Category) => {
          categories.value = categories.value?.filter(c => c.id !== category.id) ?? null;
          // await fetchCategories(); // اختياري
       } catch (err: any) {
-         console.error("Error deleting category:", err);
+         
          setActionError(`فشل حذف الفئة: ${err.message}. تحقق مما إذا كانت مرتبطة ببيانات أخرى.`);
       } finally {
          isProcessing.value = null;
@@ -200,7 +200,7 @@ const formatDate = (dateString: string | null): string => {
     }
     return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
-      console.error("Error formatting date:", dateString, e);
+      
       return 'خطأ في التنسيق';
   }
 };

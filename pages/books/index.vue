@@ -215,7 +215,7 @@ const isEndOfListState = computed(() => !pending.value && !loadingMore.value && 
  * @param page - The page number to fetch.
  */
 const fetchBooksBatch = async (page: number) => {
-  // console.log(`Fetching batch ${page}, Search: "${debouncedSearchQuery.value}", Category: ${selectedCategoryId.value}`);
+  // 
   const limit = BOOKS_PER_PAGE;
   const rangeFrom = (page - 1) * limit;
   const rangeTo = rangeFrom + limit - 1;
@@ -245,11 +245,11 @@ const fetchBooksBatch = async (page: number) => {
   const { data, error: fetchError, count } = await query;
 
   if (fetchError) {
-    console.error('Error fetching books batch:', fetchError);
+    
     throw fetchError; // Propagate error
   }
 
-  // console.log(`Fetched batch ${page}: ${data?.length ?? 0} books. Total count: ${count}`);
+  // 
   return { data: data || [], count: count ?? 0 };
 };
 
@@ -257,7 +257,7 @@ const fetchBooksBatch = async (page: number) => {
  * Loads the initial set of books, resetting state.
  */
 const loadInitialBooks = async () => {
-  // console.log("Loading initial books...");
+  // 
   pending.value = true;
   error.value = null;
   currentPage.value = 1;
@@ -295,10 +295,10 @@ const loadMoreBooks = async () => {
       totalBooksCount.value = count; // Update total count just in case
     }
     noMoreBooks.value = books.value.length >= totalBooksCount.value;
-    // if (noMoreBooks.value) console.log("All books loaded.");
+    // if (noMoreBooks.value) 
 
   } catch (err: any) {
-    console.error("Error loading more books:", err);
+    
     error.value = err; // Set error state to indicate failure
     // Potentially show a temporary error message near the trigger
   } finally {
@@ -324,9 +324,9 @@ const fetchFilterCategories = async () => {
 
         if (catError) throw catError;
         filterCategories.value = data || [];
-        // console.log("Filter categories loaded:", filterCategories.value);
+        // 
     } catch (err: any) {
-        console.error("Error fetching filter categories:", err);
+        
         filterError.value = err; // Capture error
     } finally {
         loadingFilters.value = false;
@@ -345,7 +345,7 @@ const handleSearchInput = (event: Event) => {
   searchTimeout.value = setTimeout(() => {
     const trimmedQuery = searchQuery.value.trim();
     if (debouncedSearchQuery.value !== trimmedQuery) {
-      // console.log('Debounced search triggered:', trimmedQuery);
+      // 
       debouncedSearchQuery.value = trimmedQuery;
       loadInitialBooks(); // Reset and fetch with new search
     }
@@ -371,7 +371,7 @@ const clearSearch = () => {
  */
 const selectCategory = (categoryId: number | null) => {
   if (selectedCategoryId.value === categoryId) return; // Avoid redundant fetch
-  // console.log(`Category selected: ${categoryId}`);
+  // 
   selectedCategoryId.value = categoryId;
   loadInitialBooks(); // Reset and fetch with new category
 };
@@ -409,7 +409,7 @@ const setupObserver = () => {
     (entries) => {
       // Load more only when the trigger element is intersecting (visible)
       if (entries[0]?.isIntersecting) {
-        // console.log("Intersection observer triggered loadMoreBooks");
+        // 
         loadMoreBooks();
       }
     },
@@ -421,13 +421,13 @@ const setupObserver = () => {
 
   if (infiniteScrollTrigger.value) {
     observer.observe(infiniteScrollTrigger.value);
-    // console.log("Infinite scroll observer attached.");
+    // 
   } else {
       // Fallback if element not ready immediately
        watch(infiniteScrollTrigger, (newEl) => {
            if (newEl && observer && !observer.takeRecords().length) { // Check if already observing
                observer.observe(newEl);
-               // console.log("Infinite scroll observer attached after element render.");
+               // 
            }
        }, { immediate: true }); // Check immediately
   }
@@ -443,7 +443,7 @@ onUnmounted(() => {
   // Cleanup observer and timer
   if (observer) {
     observer.disconnect();
-    // console.log("Infinite scroll observer disconnected.");
+    // 
   }
   if (searchTimeout.value) {
       clearTimeout(searchTimeout.value);
@@ -457,7 +457,7 @@ function openPdfModal(book: Book) {
     selectedBookTitle.value = book.title ?? 'مستند PDF';
     showPdfModal.value = true;
   } else {
-    console.warn(`Book "${book.title}" ID: ${book.id} missing storage_path.`);
+    
     // Use a more user-friendly alert or notification system
     alert(`عذرًا، الملف غير متوفر حاليًا لهذا الكتاب (${book.title}).`);
   }

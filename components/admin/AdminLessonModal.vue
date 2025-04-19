@@ -210,10 +210,10 @@ async function fetchCourseModules(courseId: number | null | undefined) {
     courseModules.value = [];
     loadingModules.value = false;
     modulesError.value = null;
-    console.log("No course ID provided, clearing modules.");
+    
     return;
   }
-  console.log(`Fetching modules for course ID: ${courseId}`);
+  
   loadingModules.value = true;
   modulesError.value = null;
   courseModules.value = []; // Clear previous modules
@@ -225,9 +225,9 @@ async function fetchCourseModules(courseId: number | null | undefined) {
       .order('module_number', { ascending: true });
     if (error) throw error;
     courseModules.value = data || [];
-    console.log(`Fetched ${courseModules.value.length} modules for course ${courseId}`);
+    
   } catch (err: any) {
-    console.error(`Error fetching modules for course ${courseId}:`, err);
+    
     modulesError.value = err.message || "فشل تحميل وحدات الدورة.";
   } finally {
     loadingModules.value = false;
@@ -236,7 +236,7 @@ async function fetchCourseModules(courseId: number | null | undefined) {
 
 // Reset form fields (مع إضافة category_id للتحقق)
 const resetForm = (initialCourseId: number | null = null) => {
-    console.log("Resetting form. Initial Course ID:", initialCourseId);
+    
     form.value = {
         title: '',
         description: null,
@@ -261,10 +261,10 @@ const resetForm = (initialCourseId: number | null = null) => {
 // Fetch static dropdown data (Categories and Courses) (الكود الأصلي بدون فلتر type)
 async function fetchStaticDropdownData() {
     if ((categories.value.length > 0 && courses.value.length > 0) || loadingCategories.value || loadingCourses.value) {
-      console.log('[fetchStaticDropdownData] Skipping fetch (already loaded or loading).');
+      
       return;
     }
-    console.log('[fetchStaticDropdownData] Starting...');
+    
     loadingCategories.value = true;
     loadingCourses.value = true;
     errorMessage.value = null;
@@ -281,9 +281,9 @@ async function fetchStaticDropdownData() {
         if (courseResult.error) throw new Error(`فشل تحميل الدورات: ${courseResult.error.message}`);
         courses.value = courseResult.data ?? [];
 
-        console.log(`[fetchStaticDropdownData] ${categories.value.length} categories, ${courses.value.length} courses loaded.`);
+        
     } catch (err: any) {
-        console.error("Error in fetchStaticDropdownData:", err);
+        
         categories.value = [];
         courses.value = [];
         errorMessage.value = err.message || "فشل تحميل بيانات القوائم.";
@@ -297,7 +297,7 @@ async function fetchStaticDropdownData() {
 // Handler for when the selected course changes (الكود الأصلي بدون تغيير)
 function handleCourseChange() {
   const selectedCourseId = form.value.course_id;
-  console.log("Course changed to:", selectedCourseId);
+  
   form.value.module_number = null;
   form.value.lesson_order = null;
   fetchCourseModules(selectedCourseId);
@@ -306,11 +306,11 @@ function handleCourseChange() {
 // --- Watchers --- (الكود الأصلي مع تعديل resetForm)
 watch(() => props.show, (newVal, oldVal) => {
     if (newVal && !oldVal) {
-        console.log("Modal opened. Fetching static data and initializing form.");
+        
         fetchStaticDropdownData();
 
         if (props.lessonData?.id) {
-            console.log("Watcher (show=true): Initializing for edit");
+            
             const { id, title, description, youtube_url, category_id, course_id, module_number, lesson_order } = props.lessonData;
             form.value = { id, title, description, youtube_url, category_id, course_id, module_number, lesson_order };
             if (course_id) {
@@ -319,7 +319,7 @@ watch(() => props.show, (newVal, oldVal) => {
                 courseModules.value = [];
             }
         } else {
-            console.log("Watcher (show=true): Initializing for add with preselected:", props.preselectedCourseId);
+            
             resetForm(props.preselectedCourseId ?? null);
         }
         errorMessage.value = null;
@@ -327,7 +327,7 @@ watch(() => props.show, (newVal, oldVal) => {
         validationErrors.youtube_url = '';
         validationErrors.category_id = ''; // التأكد من مسح خطأ الفئة عند الفتح
     } else if (!newVal && oldVal) {
-         console.log("Modal closed.");
+         
     }
 }, { immediate: true });
 
@@ -377,7 +377,7 @@ const validateForm = (): boolean => {
 async function sendNewLessonNotifications(lesson: Lesson) {
     // التأكد من وجود البيانات الأساسية للإشعار
     if (!lesson.course_id || !lesson.id || !lesson.title) {
-        console.warn('Notification skipped: Lesson missing course_id, id, or title.');
+        
         return;
     }
 
@@ -389,7 +389,7 @@ async function sendNewLessonNotifications(lesson: Lesson) {
     const course = courses.value.find(c => c.id === courseId);
     const courseTitle = course?.title ?? `الدورة #${courseId}`; // عنوان احتياطي
 
-    console.log(`Sending notifications for new lesson "${lessonTitle}" (ID: ${lessonId}) in course "${courseTitle}" (ID: ${courseId})`);
+    
 
     try {
         // 1. الحصول على المستخدمين المسجلين في هذه الدورة
@@ -399,13 +399,13 @@ async function sendNewLessonNotifications(lesson: Lesson) {
             .eq('course_id', courseId);
 
         if (enrollError) {
-            console.error('Error fetching enrollments for notification:', enrollError);
+            
             toast.warning(`تم حفظ الدرس، لكن فشل جلب الطلاب المسجلين لإرسال الإشعارات: ${enrollError.message}`);
             return; // التوقف هنا لأننا لا نعرف لمن نرسل
         }
 
         if (!enrollments || enrollments.length === 0) {
-            console.log('No users enrolled in this course. Skipping notifications.');
+            
             return;
         }
 
@@ -427,34 +427,34 @@ async function sendNewLessonNotifications(lesson: Lesson) {
         }).filter((n): n is NotificationInsert => n !== null); // تصفية أي إدخالات null
 
         if (notificationsToSend.length === 0) {
-             console.log('Filtered notifications array is empty. Skipping insert.');
+             
              return;
         }
 
         // 3. إدراج الإشعارات دفعة واحدة
-        console.log(`Attempting to insert ${notificationsToSend.length} notifications.`);
+        
         const { error: insertError } = await supabase
             .from('notifications')
             .insert(notificationsToSend);
 
         if (insertError) {
-            console.error('Error inserting notifications:', insertError);
+            
              toast.warning(`تم حفظ الدرس، لكن فشل إرسال بعض أو كل الإشعارات للطلاب: ${insertError.message}`);
         } else {
-            console.log(`${notificationsToSend.length} notifications sent successfully.`);
+            
             // toast.info(`تم إرسال ${notificationsToSend.length} إشعارًا للطلاب المسجلين.`); // اختياري
         }
 
     } catch (err: any) {
-        console.error('Unexpected error sending notifications:', err);
+        
          toast.error(`حدث خطأ غير متوقع أثناء محاولة إرسال الإشعارات: ${err.message}`);
     }
 }
 
 // Save Lesson (مع التعديلات للحصول على البيانات وإرسال الإشعارات)
 async function saveLesson() {
-  console.log('Attempting to save lesson...');
-  if (!validateForm()) { console.log('Validation failed.'); return; }
+  
+  if (!validateForm()) {  return; }
 
   isSaving.value = true;
   errorMessage.value = null;
@@ -475,14 +475,14 @@ async function saveLesson() {
       lessonPayload.lesson_order = null;
   }
 
-  console.log('Payload to send:', JSON.stringify(lessonPayload, null, 2));
+  
 
   try {
     let supabaseError: any = null;
     let savedLessonData: Lesson | null = null; // لتخزين بيانات الدرس المحفوظة/المحدثة
 
     if (isEditing.value && props.lessonData?.id) { // استخدام props.lessonData.id للتحقق والتحديث
-       console.log(`Attempting UPDATE for lesson ID: ${props.lessonData.id}`);
+       
        const result = await supabase.from('lessons')
          .update(lessonPayload as TablesUpdate<'lessons'>)
          .eq('id', props.lessonData.id)
@@ -491,7 +491,7 @@ async function saveLesson() {
        supabaseError = result.error;
        savedLessonData = result.data;
     } else {
-      console.log('Attempting INSERT for new lesson');
+      
       const result = await supabase.from('lessons')
         .insert(lessonPayload as TablesInsert<'lessons'>)
         .select() // اختيار الصف المُدرج حديثًا
@@ -500,8 +500,8 @@ async function saveLesson() {
       savedLessonData = result.data;
     }
 
-    console.log('Supabase response error:', JSON.stringify(supabaseError, null, 2));
-    console.log('Supabase response data:', JSON.stringify(savedLessonData, null, 2));
+    
+    
 
     if (supabaseError) throw supabaseError;
 
@@ -509,16 +509,16 @@ async function saveLesson() {
         throw new Error("تم الحفظ بنجاح ولكن لم يتم إرجاع بيانات الدرس.");
     }
 
-    console.log('Save successful.');
+    
     toast.success(isEditing.value ? 'تم تحديث الدرس بنجاح!' : 'تم إضافة الدرس بنجاح!');
 
     // --- إرسال الإشعارات فقط للدروس الجديدة المضافة إلى دورة ---
     if (!isEditing.value && savedLessonData.course_id && savedLessonData.id) {
-        console.log('Triggering notifications for new lesson in course...');
+        
         // انتظر اكتمال محاولة إرسال الإشعارات قبل الإغلاق
         await sendNewLessonNotifications(savedLessonData);
     } else {
-        console.log('Skipping notifications (editing or not a course lesson).');
+        
     }
     // --------------------------------------------------------------
 
@@ -526,7 +526,7 @@ async function saveLesson() {
     closeModal();
 
   } catch (err: any) {
-    console.error('Error during save operation:', JSON.stringify(err, null, 2));
+    
      let displayError = `فشل حفظ الدرس: ${err.message || 'خطأ غير متوقع'}`;
      if (err.message?.includes('violates foreign key constraint')) {
           // Check if it's category_id or course_id related
@@ -544,7 +544,7 @@ async function saveLesson() {
      toast.error(displayError); // عرض الخطأ في toast أيضًا
   } finally {
     isSaving.value = false;
-    console.log('saveLesson finished.');
+    
   }
 }
 

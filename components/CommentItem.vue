@@ -222,7 +222,7 @@ const isOwner = computed(() => user.value && user.value.id === props.comment.use
 const isCommentEdited = computed(() => props.comment.created_at !== props.comment.updated_at)
 const formattedTimestamp = computed(() => { /* ... as before ... */
    try { return formatDistanceToNowStrict(new Date(props.comment.created_at), { addSuffix: true, locale: ar }) }
-   catch (e) { console.error("Error formatting date:", e); return props.comment.created_at?.toString() }
+   catch (e) {  return props.comment.created_at?.toString() }
 })
 const fullTimestamp = computed(() => { /* ... as before ... */
     try { return new Date(props.comment.created_at).toLocaleString('ar-EG', {dateStyle: 'long', timeStyle: 'short'}); }
@@ -261,7 +261,7 @@ const saveEditComment = async () => { /* ... as before ... */
     const { data, error } = await supabase.from('comments').update({ content: contentToSave, updated_at: new Date().toISOString() }).eq('id', props.comment.id).select('id, content, updated_at').single()
     if (error) throw error; if (!data) throw new Error('لم يتم إرجاع بيانات التعليق المحدث.');
     emit('commentUpdated', { ...props.comment, content: data.content, updated_at: data.updated_at }); isEditingComment.value = false
-  } catch (err: any) { console.error('Error updating comment:', err); editCommentError.value = `فشل حفظ التعديل: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
+  } catch (err: any) {  editCommentError.value = `فشل حفظ التعديل: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
   } finally { isSavingCommentEdit.value = false }
 }
 
@@ -270,7 +270,7 @@ const requestDeleteComment = async () => { /* ... as before ... */
    if (!isOwner.value) return
    if (window.confirm('هل أنت متأكد من حذف هذا التعليق وكل ردوده؟')) {
      try { const { error } = await supabase.from('comments').delete().eq('id', props.comment.id); if (error) throw error; emit('commentDeleted', props.comment.id) }
-     catch (err: any) { console.error('Error deleting comment:', err); alert(`فشل حذف التعليق: (${(err as PostgrestError).message || 'خطأ غير معروف'})`) }
+     catch (err: any) {  alert(`فشل حذف التعليق: (${(err as PostgrestError).message || 'خطأ غير معروف'})`) }
    }
 }
 
@@ -293,7 +293,7 @@ const addReply = async () => {
       return;
   }
   if (!user.value || !userProfile.value || !newReplyContent.value.trim() || isSubmittingReply.value) return
-  if (!userProfile.value.id) { replyError.value = 'خطأ: لم يتم العثور على معرف الملف الشخصي.'; console.error('Profile ID missing'); return; }
+  if (!userProfile.value.id) { replyError.value = 'خطأ: لم يتم العثور على معرف الملف الشخصي.';  return; }
 
   isSubmittingReply.value = true; replyError.value = null
   const replyData = { /* ... as before ... */
@@ -302,13 +302,13 @@ const addReply = async () => {
     ...(props.contentId.book_id && { book_id: Number(props.contentId.book_id) }),
     ...(props.contentId.study_course_id && { study_course_id: Number(props.contentId.study_course_id) }),
   };
-   if (!replyData.lesson_id && !replyData.book_id && !replyData.study_course_id) { replyError.value = 'خطأ: يجب ربط الرد بمحتوى.'; console.error('Content ID missing'); isSubmittingReply.value = false; return; }
+   if (!replyData.lesson_id && !replyData.book_id && !replyData.study_course_id) { replyError.value = 'خطأ: يجب ربط الرد بمحتوى.';  isSubmittingReply.value = false; return; }
 
   try {
     const { data: newReply, error } = await supabase.from('comments').insert(replyData).select(`*, profiles!inner (id, full_name, avatar_url)`).single()
     if (error) throw error; if (!newReply || !newReply.profiles) throw new Error('فشل جلب بيانات الرد الجديد.');
     emit('replyAdded', newReply as CommentWithProfile); newReplyContent.value = ''; showReplyForm.value = false; repliesVisible.value = true
-  } catch (err: any) { console.error('Error adding reply:', err); replyError.value = `فشل إضافة الرد: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
+  } catch (err: any) {  replyError.value = `فشل إضافة الرد: (${(err as PostgrestError).message || 'خطأ غير معروف'})`
   } finally { isSubmittingReply.value = false }
 }
 

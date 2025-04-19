@@ -320,7 +320,7 @@ const { data: fetchedData, pending, error } = await useAsyncData<FetchedResultDa
 
     // Handle errors fetching the attempt
     if (attemptError) {
-        console.error("Error fetching quiz attempt:", attemptError);
+        
         throw createError({ statusCode: 500, message: `خطأ في جلب بيانات المحاولة: ${attemptError.message}`, fatal: false });
     }
     // Handle attempt not found
@@ -329,7 +329,7 @@ const { data: fetchedData, pending, error } = await useAsyncData<FetchedResultDa
      }
       // Security check: Ensure the fetched attempt belongs to the logged-in user
      if (attemptData.user_id !== currentUserId) {
-         console.warn(`Attempt ${currentAttemptId} access denied: attempt user ${attemptData.user_id}, logged in user ${currentUserId}`);
+         
          throw createError({ statusCode: 403, message: 'ليس لديك الصلاحية لعرض نتيجة هذه المحاولة.', fatal: false });
      }
 
@@ -366,7 +366,7 @@ const { data: fetchedData, pending, error } = await useAsyncData<FetchedResultDa
                .order('id', { referencedTable: 'question_options', ascending: true }) // Order options consistently by ID
     ]).catch(err => {
          // Catch potential errors during the parallel fetch
-         console.error("Error during parallel fetches (quiz/questions/options):", err);
+         
          throw createError({ statusCode: 500, message: 'خطأ في جلب تفاصيل الاختبار أو الأسئلة.', fatal: false });
     });
 
@@ -374,10 +374,10 @@ const { data: fetchedData, pending, error } = await useAsyncData<FetchedResultDa
     // Process quiz results, handling potential failure to fetch course details gracefully
     let processedQuizData: QuizFull | null = null;
     if (quizRes.error) {
-        console.error("Error fetching quiz details:", quizRes.error);
+        
         // Check if the error is specifically about the 'study_courses' relation failing
         if (quizRes.error.message.includes('relation') && quizRes.error.message.includes('study_courses')) {
-             console.warn("Could not fetch related course details. Relation might be missing or named differently. Proceeding without course info.");
+             
              // Attempt to fetch just the quiz data without the relation as a fallback
              const { data: quizOnlyData, error: quizOnlyError } = await supabase.from('quizzes').select('*').eq('id', quizId).single();
              if (quizOnlyError) {
@@ -395,7 +395,7 @@ const { data: fetchedData, pending, error } = await useAsyncData<FetchedResultDa
 
     // Handle errors fetching questions
     if (questionsRes.error) {
-      console.error("Error fetching questions:", questionsRes.error);
+      
       throw createError({ statusCode: 500, message: `خطأ في جلب أسئلة الاختبار: ${questionsRes.error.message}`, fatal: false });
     }
 
@@ -460,7 +460,7 @@ const formatDate = (dateString: string | null | undefined): string => {
         hour: 'numeric', minute: '2-digit', hour12: true
       });
    } catch (e) {
-     console.error("Error formatting date:", e);
+     
      return dateString; // Return original string if formatting fails
    }
 };
@@ -530,7 +530,7 @@ const isAutoQuestionCorrect = (question: QuestionWithOptions): boolean => {
     if (!question.options || !Array.isArray(question.options)) {
         // Log a warning if options are missing for an auto-gradable question type
         if(question.type === 'mcq' || question.type === 'true_false') {
-           console.warn(`Question ${question.id} (type: ${question.type}) is missing or has invalid options array.`, question);
+           
         }
         return false; // Cannot be correct if options are missing/invalid
     }
@@ -546,7 +546,7 @@ const isAutoQuestionCorrect = (question: QuestionWithOptions): boolean => {
     if (studentAnswer === null || studentAnswer === undefined) return false;
     // If the question definition is flawed (no correct answer defined), it cannot be correct
     if (correctAnswerIds.length === 0) {
-      // console.warn(`Question ${question.id} has no correct option defined.`);
+      // 
       return false;
     }
 

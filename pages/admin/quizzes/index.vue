@@ -202,7 +202,7 @@ const fetchCourses = async () => {
         if (error) throw error;
         courses.value = data || [];
     } catch (err: any) {
-        console.error("Error fetching courses:", err);
+        
         courseFetchError.value = err as PostgrestError;
         courses.value = []; // Clear courses on error
     } finally {
@@ -239,7 +239,7 @@ const fetchQuizzes = async () => {
     quizzes.value = (data || []) as QuizView[];
 
   } catch (err: any) {
-    console.error("Error fetching quizzes:", err);
+    
     quizFetchError.value = err as PostgrestError;
     quizzes.value = []; // Clear quizzes on error
   } finally {
@@ -301,7 +301,7 @@ const deleteQuiz = async () => {
         showToast(`تم حذف الاختبار "${titleToDelete}" بنجاح.`, 'success');
 
     } catch (err: any) {
-        console.error("Error deleting quiz:", err);
+        
         showActionMessage(`فشل حذف الاختبار: ${err.message}`, 'error');
         // Optional: Re-fetch quizzes if optimistic update failed or is not desired
         // refreshQuizzes();
@@ -351,7 +351,7 @@ const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info')
     if ($toast && typeof $toast[type] === 'function') {
         $toast[type](message);
     } else {
-        console.log(`[${type.toUpperCase()}] ${message}`);
+        
     }
 };
 
