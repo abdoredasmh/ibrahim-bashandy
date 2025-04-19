@@ -212,7 +212,7 @@ import { useUserStore } from '~/stores/user';
 import { storeToRefs } from 'pinia';
 import LoadingSpinner from '~/components/LoadingSpinner.vue';
 import CommentSection from '~/components/CommentSection.vue';
-const LazyPdfViewerModal = defineAsyncComponent(() => import('~/components/PdfViewerModal.vue'));
+const LazyPdfViewerModal = defineAsyncComponent(() => import('~/components/PdfViewerModal.client.vue'));
 
 // --- Composables & Store ---
 const route = useRoute();
