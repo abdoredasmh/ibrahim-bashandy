@@ -343,12 +343,12 @@ function getVerbosityLevel() {
 }
 function info(msg) {
   if (verbosity >= VerbosityLevel.INFOS) {
-    
+    console.log(`Info: ${msg}`);
   }
 }
 function warn(msg) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
-    
+    console.log(`Warning: ${msg}`);
   }
 }
 function unreachable(msg) {
@@ -1748,7 +1748,7 @@ async function __wbg_load(module, imports) {
         return await WebAssembly.instantiateStreaming(module, imports);
       } catch (e) {
         if (module.headers.get('Content-Type') != 'application/wasm') {
-          
+          console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
         } else {
           throw e;
         }
@@ -1807,7 +1807,7 @@ function initSync(module) {
         module
       } = module);
     } else {
-      
+      console.warn('using deprecated parameters for `initSync()`; pass a single object instead');
     }
   }
   const imports = __wbg_get_imports();
@@ -1826,7 +1826,7 @@ async function __wbg_init(module_or_path) {
         module_or_path
       } = module_or_path);
     } else {
-      
+      console.warn('using deprecated parameters for the initialization function; pass a single object instead');
     }
   }
   if (typeof module_or_path === 'undefined') {
