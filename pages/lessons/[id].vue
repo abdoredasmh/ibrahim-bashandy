@@ -165,7 +165,7 @@ import { useRoute } from 'vue-router';
 import type { Database, Tables } from '~/types/database.types';
 import LoadingSpinner from '~/components/LoadingSpinner.vue';
 import CommentSection from '~/components/CommentSection.vue';
-const LazyPdfViewerModal = defineAsyncComponent(() => import('~/components/PdfViewerModal.vue'));
+const LazyPdfViewerModal = defineAsyncComponent(() => import('~/components/PdfViewerModal.client.vue'));
 
 // --- Type definitions remain the same ---
 type Lesson = Omit<Tables<'lessons'>, 'audio_url' | 'pdf_transcript_url'>;
