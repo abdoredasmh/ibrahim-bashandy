@@ -285,7 +285,7 @@ const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageDa
         const currentCourseId = courseId.value;
         if (isNaN(currentCourseId)) { throw createError({ statusCode: 400, message: 'معرف الدورة غير صالح.', fatal: true }); }
         const currentUserId = profile.value?.id;
-        
+        console.log(`[AsyncData] Fetching data for course ${currentCourseId}, User ${currentUserId ?? 'Guest'}`);
         try {
             const { data: courseBaseData, error: courseFetchError } = await supabase.from('study_courses').select(`*, category:categories(name), modules:course_modules!course_id(id, title, module_number), lessons:lessons!course_id(id, title, lesson_order, module_number, created_at)`).eq('id', currentCourseId).eq('is_active', true).single();
             if (courseFetchError) { throw createError({ statusCode: 500, statusMessage: `فشل جلب الدورة: ${courseFetchError.message}`, fatal: true }); }
@@ -297,10 +297,10 @@ const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageDa
             const lessonIds = fetchedLessons.map(l => l.id);
             let fetchedQuizzes: QuizInfo[] = [];
             const { data: courseOrModuleQuizzes, error: cqError } = await supabase.from('quizzes').select('id, title, lesson_id, module_number, course_id, is_active').eq('course_id', currentCourseId).eq('is_active', true);
-            if (cqError)  else fetchedQuizzes = fetchedQuizzes.concat(courseOrModuleQuizzes ?? []);
+            if (cqError) console.error("[AsyncData] Error fetching course/module quizzes:", cqError.message); else fetchedQuizzes = fetchedQuizzes.concat(courseOrModuleQuizzes ?? []);
             if (lessonIds.length > 0) {
                 const { data: lessonQuizzes, error: lqError } = await supabase.from('quizzes').select('id, title, lesson_id, module_number, course_id, is_active').in('lesson_id', lessonIds).eq('is_active', true);
-                if (lqError)  else fetchedQuizzes = fetchedQuizzes.concat(lessonQuizzes ?? []);
+                if (lqError) console.error("[AsyncData] Error fetching lesson quizzes:", lqError.message); else fetchedQuizzes = fetchedQuizzes.concat(lessonQuizzes ?? []);
             }
             fetchedQuizzes = Array.from(new Map(fetchedQuizzes.map(q => [q.id, q])).values());
             let fetchedEnrollment: CourseEnrollment | null = null; let fetchedCompletions: LessonCompletionInfo[] = []; let fetchedAttempts: QuizAttemptInfo[] = [];
@@ -311,13 +311,13 @@ const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageDa
                     lessonIds.length > 0 ? supabase.from('lesson_completions').select('lesson_id').eq('user_id', currentUserId).in('lesson_id', lessonIds) : Promise.resolve({ data: [], error: null }),
                     quizIds.length > 0 ? supabase.from('quiz_attempts').select('id, quiz_id, passed, submitted_at').eq('user_id', currentUserId).in('quiz_id', quizIds) : Promise.resolve({ data: [], error: null })
                 ]);
-                if (enrollRes.error)  else fetchedEnrollment = enrollRes.data;
-                if (compRes.error)  else fetchedCompletions = compRes.data ?? [];
-                if (attRes.error)  else fetchedAttempts = attRes.data ?? [];
+                if (enrollRes.error) console.error("[AsyncData] Enrollment fetch error:", enrollRes.error.message); else fetchedEnrollment = enrollRes.data;
+                if (compRes.error) console.error("[AsyncData] Completions fetch error:", compRes.error.message); else fetchedCompletions = compRes.data ?? [];
+                if (attRes.error) console.error("[AsyncData] Attempts fetch error:", attRes.error.message); else fetchedAttempts = attRes.data ?? [];
             }
             return { course: fetchedCourse, modules: fetchedModules, lessons: fetchedLessons, quizzes: fetchedQuizzes, categoryName: fetchedCategoryName, enrollment: fetchedEnrollment, completions: fetchedCompletions, attempts: fetchedAttempts };
         } catch (err: any) {
-            
+            console.error("[useAsyncData] CRITICAL FETCH ERROR:", err);
              showError({ statusCode: err.statusCode || 500, statusMessage: `خطأ في تحميل بيانات الدورة`, message: `حدث خطأ أثناء محاولة تحميل تفاصيل الدورة. ${err.message || ''}`, fatal: true });
              return { course: null, modules: [], lessons: [], quizzes: [], attempts: [], categoryName: null, enrollment: null, completions: [] };
         }
@@ -327,7 +327,7 @@ const { data, pending, error, refresh } = await useAsyncData<FetchedCoursePageDa
 
 // --- Watcher to update local reactive state ---
  watch(data, (newData) => {
-   
+   console.log("[Watcher] Updating local state from fetched data.");
     course.value = newData?.course ?? null;
     courseModulesData.value = Array.isArray(newData?.modules) ? newData.modules : [];
     courseLessonsData.value = Array.isArray(newData?.lessons) ? newData.lessons : [];
@@ -345,7 +345,7 @@ const completedLessonsCount = computed(() => new Set(completedLessonIds.value).s
 const progressPercentage = computed(() => { if (totalLessonsCount.value === 0) return 0; const validCompletedCount = Math.min(completedLessonsCount.value, totalLessonsCount.value); return Math.round((validCompletedCount / totalLessonsCount.value) * 100); });
 const lessonQuizzesMap = computed(() => { const map = new Map<number, QuizInfo[]>(); for (const quiz of courseQuizzesData.value) { if (quiz.lesson_id !== null && !isNaN(Number(quiz.lesson_id))) { const lid = Number(quiz.lesson_id); if (!map.has(lid)) map.set(lid, []); map.get(lid)!.push(quiz); } } map.forEach(qs => qs.sort((a, b) => (a.title || '').localeCompare(b.title || ''))); return map; });
 const courseLevelQuizzes = computed(() => courseQuizzesData.value.filter(q => q.lesson_id === null && q.module_number === null).sort((a, b) => (a.title || '').localeCompare(b.title || '')));
-const groupedContent = computed<ModuleGroup[]>(() => { const map = new Map<number | string, ModuleGroup>(); courseModulesData.value.forEach(m => { if (m.module_number !== null) map.set(m.module_number, { moduleNumber: m.module_number, moduleTitle: m.title || `الوحدة ${m.module_number}`, lessons: [], quizzes: [] }); }); const generalModuleKey = 'general'; map.set(generalModuleKey, { moduleNumber: null, moduleTitle: 'محتويات عامة أو بدون وحدة', lessons: [], quizzes: [] }); courseLessonsData.value.forEach(l => { const key = l.module_number ?? generalModuleKey; const group = map.get(key); if (group) group.lessons.push(l); else {  map.get(generalModuleKey)?.lessons.push(l); } }); courseQuizzesData.value.forEach(q => { if (q.module_number !== null && q.lesson_id === null) { const group = map.get(q.module_number); if (group) group.quizzes.push(q); else {  map.get(generalModuleKey)?.quizzes.push(q); } } }); map.forEach(g => g.quizzes.sort((a, b) => (a.title || '').localeCompare(b.title || ''))); const generalGroup = map.get(generalModuleKey); if (generalGroup && generalGroup.lessons.length === 0 && generalGroup.quizzes.length === 0) map.delete(generalModuleKey); return Array.from(map.values()).sort((a, b) => { if (a.moduleNumber === null) return -1; if (b.moduleNumber === null) return 1; return a.moduleNumber - b.moduleNumber; }); });
+const groupedContent = computed<ModuleGroup[]>(() => { const map = new Map<number | string, ModuleGroup>(); courseModulesData.value.forEach(m => { if (m.module_number !== null) map.set(m.module_number, { moduleNumber: m.module_number, moduleTitle: m.title || `الوحدة ${m.module_number}`, lessons: [], quizzes: [] }); }); const generalModuleKey = 'general'; map.set(generalModuleKey, { moduleNumber: null, moduleTitle: 'محتويات عامة أو بدون وحدة', lessons: [], quizzes: [] }); courseLessonsData.value.forEach(l => { const key = l.module_number ?? generalModuleKey; const group = map.get(key); if (group) group.lessons.push(l); else { console.warn(`Lesson ${l.id} has module number ${l.module_number} but no matching module found. Assigning to general.`); map.get(generalModuleKey)?.lessons.push(l); } }); courseQuizzesData.value.forEach(q => { if (q.module_number !== null && q.lesson_id === null) { const group = map.get(q.module_number); if (group) group.quizzes.push(q); else { console.warn(`Quiz ${q.id} has module number ${q.module_number} but no matching module found. Assigning to general.`); map.get(generalModuleKey)?.quizzes.push(q); } } }); map.forEach(g => g.quizzes.sort((a, b) => (a.title || '').localeCompare(b.title || ''))); const generalGroup = map.get(generalModuleKey); if (generalGroup && generalGroup.lessons.length === 0 && generalGroup.quizzes.length === 0) map.delete(generalModuleKey); return Array.from(map.values()).sort((a, b) => { if (a.moduleNumber === null) return -1; if (b.moduleNumber === null) return 1; return a.moduleNumber - b.moduleNumber; }); });
 
  // --- Helper Functions ---
 const isLessonCompleted = (lessonId: number | undefined | null): boolean => { if (lessonId === null || lessonId === undefined) return false; return completedLessonIds.value.includes(lessonId); };
@@ -366,7 +366,7 @@ const handleEnroll = async (id: number | undefined | null) => {
       $toast.success('تم الانتساب بنجاح!');
       await refresh();
   } catch (err:any) {
-      
+      console.error("Enrollment error:", err);
       $toast.error(`فشل الانتساب: ${err.message || 'حدث خطأ غير متوقع.'}`);
   } finally {
       enrollLoading.value = false;
@@ -400,7 +400,7 @@ const executeUnenroll = async () => {
         $toast.success('تم إلغاء الانتساب بنجاح.');
         await refresh();
     } catch (err: any) {
-        
+        console.error("Unenrollment error:", err);
         $toast.error(`فشل إلغاء الانتساب: ${err.message || 'حدث خطأ غير متوقع.'}`);
     } finally {
         enrollLoading.value = false; showConfirmUnenroll.value = false; confirmationConfig.value = null; unenrollCourseId.value = null;
@@ -433,12 +433,12 @@ const handleLessonClick = async (lessonId: number | undefined | null) => {
     if (isNaN(numLid) || isNaN(numCid)) return;
     navigateTo(lessonLink(numLid));
     if (uid && isEnrolled.value) {
-      
+      console.log(`Updating last accessed lesson to ${numLid} for user ${uid} in course ${numCid}`);
       try {
           const { error } = await supabase.from('course_enrollments').update({ last_accessed_lesson_id: numLid }).eq('user_id', uid).eq('course_id', numCid);
-          if (error) {  }
-          else { if(enrollment.value) enrollment.value.last_accessed_lesson_id = numLid;  }
-      } catch (err) {  }
+          if (error) { console.error("Failed to update last accessed lesson:", error.message); }
+          else { if(enrollment.value) enrollment.value.last_accessed_lesson_id = numLid; console.log(`Last accessed lesson updated successfully.`); }
+      } catch (err) { console.error("Error during last accessed update call:", err); }
     }
 };
 
