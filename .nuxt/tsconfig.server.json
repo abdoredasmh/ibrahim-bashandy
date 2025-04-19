@@ -77,7 +77,7 @@
         "../node_modules/@nuxt/schema"
       ],
       "nuxt": [
-        "../node_modules/nuxt"
+        "../node_modules/.pnpm/nuxt@3.16.2_@parcel+watcher_202260b4ad80513664e8a42424ac5d44/node_modules/nuxt"
       ],
       "vite/client": [
         "../node_modules/vite/client"
@@ -104,28 +104,28 @@
         "./*"
       ],
       "#internal/nuxt/paths": [
-        "../node_modules/nuxt/dist/core/runtime/nitro/utils/paths"
+        "../node_modules/.pnpm/nuxt@3.16.2_@parcel+watcher_202260b4ad80513664e8a42424ac5d44/node_modules/nuxt/dist/core/runtime/nitro/utils/paths"
       ],
       "pinia": [
-        "../node_modules/pinia/dist/pinia"
+        "../node_modules/.pnpm/pinia@2.3.1_vue@3.5.13/node_modules/pinia/dist/pinia"
       ],
       "#color-mode-options": [
         "./color-mode-options.mjs"
       ],
       "#image": [
-        "../node_modules/@nuxt/image/dist/runtime"
+        "../node_modules/.pnpm/@nuxt+image@1.10.0_db0@0.3.1_ioredis@5.6.0_magicast@0.3.5/node_modules/@nuxt/image/dist/runtime"
       ],
       "#image/*": [
-        "../node_modules/@nuxt/image/dist/runtime/*"
+        "../node_modules/.pnpm/@nuxt+image@1.10.0_db0@0.3.1_ioredis@5.6.0_magicast@0.3.5/node_modules/@nuxt/image/dist/runtime/*"
       ],
       "#unhead/composables": [
-        "../node_modules/nuxt/dist/head/runtime/composables/v3"
+        "../node_modules/.pnpm/nuxt@3.16.2_@parcel+watcher_202260b4ad80513664e8a42424ac5d44/node_modules/nuxt/dist/head/runtime/composables/v3"
       ],
       "#supabase/server": [
-        "../node_modules/@nuxtjs/supabase/dist/runtime/server/services"
+        "../node_modules/.pnpm/@nuxtjs+supabase@1.5.0/node_modules/@nuxtjs/supabase/dist/runtime/server/services"
       ],
       "#supabase/server/*": [
-        "../node_modules/@nuxtjs/supabase/dist/runtime/server/services/*"
+        "../node_modules/.pnpm/@nuxtjs+supabase@1.5.0/node_modules/@nuxtjs/supabase/dist/runtime/server/services/*"
       ],
       "#supabase/database": [
         "./types/supabase-database"
@@ -139,11 +139,11 @@
   },
   "include": [
     "./types/nitro-nuxt.d.ts",
-    "../node_modules/@nuxtjs/tailwindcss/runtime/server",
-    "../node_modules/@nuxtjs/supabase/runtime/server",
-    "../node_modules/@pinia/nuxt/runtime/server",
-    "../node_modules/@nuxtjs/color-mode/runtime/server",
-    "../node_modules/@nuxt/image/runtime/server",
+    "../node_modules/.pnpm/@nuxtjs+tailwindcss@6.13.2_magicast@0.3.5/node_modules/@nuxtjs/tailwindcss/runtime/server",
+    "../node_modules/.pnpm/@nuxtjs+supabase@1.5.0/node_modules/@nuxtjs/supabase/runtime/server",
+    "../node_modules/.pnpm/@pinia+nuxt@0.4.11_magicast@0.3.5_vue@3.5.13/node_modules/@pinia/nuxt/runtime/server",
+    "../node_modules/.pnpm/@nuxtjs+color-mode@3.5.2_magicast@0.3.5/node_modules/@nuxtjs/color-mode/runtime/server",
+    "../node_modules/.pnpm/@nuxt+image@1.10.0_db0@0.3.1_ioredis@5.6.0_magicast@0.3.5/node_modules/@nuxt/image/runtime/server",
     "../node_modules/@nuxt/devtools/runtime/server",
     "../node_modules/@nuxt/telemetry/runtime/server",
     "./types/nitro.d.ts",
@@ -152,12 +152,12 @@
   ],
   "exclude": [
     "../node_modules",
-    "../node_modules/nuxt/node_modules",
-    "../node_modules/@nuxtjs/tailwindcss/node_modules",
-    "../node_modules/@nuxtjs/supabase/node_modules",
-    "../node_modules/@pinia/nuxt/node_modules",
-    "../node_modules/@nuxtjs/color-mode/node_modules",
-    "../node_modules/@nuxt/image/node_modules",
+    "../node_modules/.pnpm/nuxt@3.16.2_@parcel+watcher_202260b4ad80513664e8a42424ac5d44/node_modules/nuxt/node_modules",
+    "../node_modules/.pnpm/@nuxtjs+tailwindcss@6.13.2_magicast@0.3.5/node_modules/@nuxtjs/tailwindcss/node_modules",
+    "../node_modules/.pnpm/@nuxtjs+supabase@1.5.0/node_modules/@nuxtjs/supabase/node_modules",
+    "../node_modules/.pnpm/@pinia+nuxt@0.4.11_magicast@0.3.5_vue@3.5.13/node_modules/@pinia/nuxt/node_modules",
+    "../node_modules/.pnpm/@nuxtjs+color-mode@3.5.2_magicast@0.3.5/node_modules/@nuxtjs/color-mode/node_modules",
+    "../node_modules/.pnpm/@nuxt+image@1.10.0_db0@0.3.1_ioredis@5.6.0_magicast@0.3.5/node_modules/@nuxt/image/node_modules",
     "../node_modules/@nuxt/devtools/node_modules",
     "../node_modules/@nuxt/telemetry/node_modules",
     "../dist"

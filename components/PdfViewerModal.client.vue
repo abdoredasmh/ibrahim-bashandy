@@ -117,9 +117,10 @@ import LoadingSpinner from '~/components/LoadingSpinner.vue';
 // --- PDF.js Worker Configuration ---
 const WORKER_URL = '/pdf.worker.mjs';
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL;
+   pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.mjs';
+  
 }
-// ---
+
 
 const props = defineProps({
   show: Boolean,
