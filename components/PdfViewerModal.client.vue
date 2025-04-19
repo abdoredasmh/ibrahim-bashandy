@@ -202,7 +202,7 @@ async function fetchPdfData() {
 async function getViewport(pageNumber: number, scale: number): Promise<PDFPageViewport | null> {
     if (!pdfDoc.value) return null;
     try { const page = await pdfDoc.value.getPage(pageNumber); return page.getViewport({ scale: scale, rotation: currentRotation.value }); }
-    catch (error) {  return null; }
+    catch (error) { console.error("Error getting viewport:", error); return null; }
 }
 
 // --- Calculate Scale Function ---
@@ -288,7 +288,7 @@ async function calculateScale(level: ZoomLevel): Promise<number> {
 async function loadPdfDocument(blob: Blob) {
   if (!blob) return;
   loading.value = true; loadingMessage.value = 'جارٍ تحليل الملف...'; pdfError.value = null;
-  if (pdfDoc.value) { await pdfDoc.value.destroy().catch(e =>  pdfDoc.value = null; }
+  if (pdfDoc.value) { await pdfDoc.value.destroy().catch(e => console.error("Error destroying previous doc:", e)); pdfDoc.value = null; }
 
   try {
     const arrayBuffer = await blob.arrayBuffer();
@@ -330,7 +330,7 @@ setTimeout(async () => {
 }, 100); // تأخير 100ms (أو قيمة مناسبة أخرى)
 // *** نهاية الكود المضاف ***
 
-  } catch (err: any) {  pdfError.value = getUserFriendlyErrorMessage(err); resetViewerState(false); }
+  } catch (err: any) { console.error("Error loading PDF:", err); pdfError.value = getUserFriendlyErrorMessage(err); resetViewerState(false); }
   finally { loading.value = false; loadingMessage.value = 'جارٍ تحميل الملف...'; }
 }
 
@@ -753,7 +753,7 @@ onUnmounted(() => {
 // Optional resize handler (example)
 // const handleResize = () => {
 //   if (props.show && pdfDoc.value && !isRenderingPage.value && zoomLevel.value === 'auto' || zoomLevel.value === 'page-width' || zoomLevel.value === 'page-height' || zoomLevel.value === 'page-fit') {
-//     
+//     console.log("Window resized, recalculating scale and re-rendering for adaptive zoom levels.");
 //     // Debounce this function in a real application
 //     applyZoomLevel();
 //   }
