@@ -154,7 +154,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useHead, useSupabaseClient } from '#imports';
 import BookCard from '~/components/BookCard.vue';
-import LazyPdfViewerModal from '~/components/PdfViewerModal.vue';
+import LazyPdfViewerModal from '~/components/PdfViewerModal.client.vue';
 import LoadingSpinner from '~/components/LoadingSpinner.vue'; // Assuming you have this
 import type { Database, Tables } from '~/types/database.types';
 
