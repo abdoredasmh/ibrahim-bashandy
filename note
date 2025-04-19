@@ -344,7 +344,7 @@ site_stats: (اختياري، بسيط جدًا) لتتبع عدد مرات ال
 
 
 const { $toast } = useNuxtApp();
-
+ConfirmationModal.vue
 
 SELECT 
   table_name,

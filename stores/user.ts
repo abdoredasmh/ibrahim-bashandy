@@ -44,7 +44,7 @@ export const useUserStore = defineStore('user', {
             // قارن تاريخ الانتهاء بالتاريخ الحالي
             return new Date(state.profile.comment_suspended_until) > new Date();
         } catch {
-            console.error("Error parsing comment_suspended_until date:", state.profile.comment_suspended_until);
+
             return false; // اعتبره غير موقوف إذا كان التاريخ غير صالح
         }
     },
@@ -99,7 +99,7 @@ export const useUserStore = defineStore('user', {
 
         if (error && status !== 406) { // 406 means row not found (for .single())
             // Handle specific errors like RLS violation if needed
-            console.error('[UserStore] Supabase error fetching profile:', error);
+
             throw error;
         }
 
@@ -107,12 +107,12 @@ export const useUserStore = defineStore('user', {
           
           this.profile = data; // النوع يجب أن يتطابق الآن بفضل الأنواع المنشأة
         } else {
-          console.warn('[UserStore] No profile found for user (or RLS prevented fetch):', user.id);
+
           this.profile = null;
           // Don't necessarily set an error here, profile might genuinely not exist yet
         }
       } catch (error: any) {
-        console.error('[UserStore] Catch block error fetching profile:', error.message);
+
         this.profile = null; // Ensure profile is null on error
         this.fetchProfileError = error.message || 'Failed to fetch profile.';
       } finally {
@@ -132,7 +132,7 @@ export const useUserStore = defineStore('user', {
 
         const { error } = await client.auth.signOut();
         if (error) {
-            console.error('Error logging out:', error.message);
+
             // Maybe show toast error to user
         } else {
             

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="book-card group block bg-beige-light dark:bg-cream-gray rounded-lg shadow-md overflow-hidden transition-shadow duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 cursor-pointer"
+    class="book-card group block bg-white dark:bg-cream-gray rounded-lg shadow-md overflow-hidden transition-shadow duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 cursor-pointer"
     role="link"
     tabindex="0"
     @click="goToBook"

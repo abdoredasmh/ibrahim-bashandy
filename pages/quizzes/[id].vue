@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-8 md:py-12">
 
-    <!-- 1. Loading State (Covers Initial Load & Redirect Check) -->
+    <!-- 1. Loading State (Includes Redirect Check) -->
     <div v-if="pending || isRedirecting" class="text-center py-20">
       <LoadingSpinner class="w-12 h-12 mx-auto text-primary" />
       <p class="mt-4 text-gray-600 dark:text-gray-400">
@@ -9,122 +9,133 @@
       </p>
     </div>
 
-    <!-- 2. Error / Authorization Failed State -->
+    <!-- 2. Error State -->
     <div v-else-if="loadError" class="error-display">
-       <div class="flex justify-center items-center text-red-500 dark:text-red-400 mb-4">
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-7 h-7" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
-           <h2 class="text-2xl font-semibold ms-2">
-            {{ loadError.message || 'لا يمكن الوصول للاختبار' }}
-           </h2>
-       </div>
+      <div class="flex justify-center items-center text-red-600 dark:text-red-400 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-7 h-7" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
+        <h2 class="text-xl font-semibold ms-2">
+          {{ loadError.message || 'لا يمكن الوصول للاختبار' }}
+        </h2>
+      </div>
       <p class="text-sm text-red-700 dark:text-red-300 mb-6">
         {{ loadError.details || 'تعذر تحميل الاختبار المطلوب أو أنك لا تملك الصلاحية اللازمة لبدئه.' }}
       </p>
-       <NuxtLink :to="getBackLink()" class="button-secondary error-button">
-         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 me-2" aria-hidden="true"><path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.878a.75.75 0 0 1 0 1.5H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.086l-5.5-5.25a.75.75 0 0 1 0-1.086l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" /></svg>
+      <NuxtLink :to="getBackLink()" class="button-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 me-2" aria-hidden="true"><path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.878a.75.75 0 0 1 0 1.5H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.086l-5.5-5.25a.75.75 0 0 1 0-1.086l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" /></svg>
         <span>العودة</span>
       </NuxtLink>
     </div>
 
-    <!-- 3. Quiz Taking Interface (Only shown if authorized and no existing attempt) -->
+    <!-- 3. Quiz Interface -->
     <div v-else-if="quizData.quiz && quizData.questions && quizData.isAuthorized" class="quiz-interface max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="mb-6 pb-4 border-b border-cream-gray dark:border-gray-700">
-            <div v-if="quizData.relatedLink" class="text-sm text-center sm:text-right mb-2">
-                <NuxtLink :to="quizData.relatedLink.to" class="text-gray-500 dark:text-gray-400 hover:text-primary transition-colors">
-                    ← العودة إلى: {{ quizData.relatedLink.text }}
-                </NuxtLink>
-            </div>
-            <h1 class="text-3xl font-bold text-brown-dark dark:text-beige-light mb-2 text-center sm:text-right">
-                {{ quizData.quiz.title }}
-            </h1>
-            <p v-if="quizData.quiz.description" class="text-gray-600 dark:text-gray-400 text-center sm:text-right">
-                {{ quizData.quiz.description }}
-            </p>
-        </div>
 
-        <!-- Timer (Conditional) -->
-         <div v-if="isTimerActive" class="timer-display">
-             الوقت المتبقي: <span class="font-semibold tabular-nums">{{ formattedTimeRemaining }}</span>
-         </div>
+      <!-- Quiz Header -->
+      <div class="quiz-header">
+        <!-- Related Link (Course/Lesson) -->
+        <div v-if="quizData.relatedLink" class="related-link-container">
+          <NuxtLink :to="quizData.relatedLink.to" class="related-link">
+            ← العودة إلى: {{ quizData.relatedLink.text }}
+          </NuxtLink>
+        </div>
+        <!-- Title & Description -->
+        <h1 class="quiz-title">{{ quizData.quiz.title }}</h1>
+        <p v-if="quizData.quiz.description" class="quiz-description">
+          {{ quizData.quiz.description }}
+        </p>
+      </div>
+
+      <!-- Timer Display (Sticky) -->
+      <div v-if="isTimerActive" class="timer-display" :class="{ 'low-time': isTimeLow }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block me-1.5 relative -top-px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+        الوقت المتبقي: <span class="font-semibold tabular-nums">{{ formattedTimeRemaining }}</span>
+      </div>
 
       <!-- Quiz Form -->
-      <form @submit.prevent="() => handleSubmitAttempt(false)" class="space-y-8">
-        <!-- Questions Loop -->
+      <form @submit.prevent="() => handleSubmitAttempt(false)" class="space-y-6 md:space-y-8">
+
+        <!-- Loop Through Questions -->
         <div v-for="(question, index) in quizData.questions" :key="question.id" class="question-block">
-          <p class="question-number">
-            السؤال {{ index + 1 }}
-            <span class="text-xs">({{ question.points ?? 1 }} نقطة)</span>
-          </p>
-          <!-- Securely render question text -->
-          <div class="question-text prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(question.question_text ?? '')"></div>
+          <div class="question-header">
+              <p class="question-number">
+                  السؤال {{ index + 1 }} <span class="text-gray-400 dark:text-gray-500">/ {{ quizData.questions.length }}</span>
+              </p>
+              <span v-if="question.points && question.points > 1" class="question-points">({{ question.points }} نقاط)</span>
+              <span v-else class="question-points">(نقطة واحدة)</span>
+          </div>
+
+          <!-- Question Text (Rendered Markdown) -->
+          <div class="question-text" v-html="renderMarkdown(question.question_text ?? '')"></div>
 
           <!-- Answer Area -->
           <div class="answer-area">
-            <!-- MCQ -->
-            <!-- SECURITY WARNING: Fetching options with is_correct is insecure client-side for students -->
+
+            <!-- Multiple Choice (MCQ) -->
             <fieldset v-if="question.type === 'mcq'" class="space-y-3">
               <legend class="sr-only">خيارات السؤال {{ index + 1 }}</legend>
               <div v-if="question.question_options && question.question_options.length > 0">
-                   <label
-                     v-for="option in question.question_options"
-                     :key="option.id"
-                     :for="`option-${option.id}`"
-                     class="option-wrapper border rounded-md p-3 flex items-center cursor-pointer hover:bg-cream-gray/40 dark:hover:bg-gray-700/40 dark:border-gray-600 transition-colors duration-150"
-                     :class="{ 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-500': userAnswers[question.id] === option.id }"
-                    >
-                      <div class="radio-input-wrapper">
-                       <input
-                         type="radio"
-                         :id="`option-${option.id}`"
-                         :name="`question-${question.id}`"
-                         :value="option.id"
-                         v-model="userAnswers[question.id]"
-                         :disabled="isSubmitting"
-                         required
-                         class="radio-input"
-                       />
-                      </div>
-                      <div class="option-label-wrapper">
-                        <span class="option-label">{{ option.option_text }}</span>
-                      </div>
-                   </label>
+                <label
+                  v-for="option in question.question_options"
+                  :key="option.id"
+                  :for="`option-${option.id}`"
+                  class="option-wrapper"
+                  :class="{ 'selected-option': userAnswers[question.id] === option.id }"
+                >
+                  <div class="radio-input-wrapper">
+                    <input
+                      type="radio"
+                      :id="`option-${option.id}`"
+                      :name="`question-${question.id}`"
+                      :value="option.id"
+                      v-model="userAnswers[question.id]"
+                      :disabled="isSubmitting"
+                      required
+                      class="radio-input"
+                    />
+                  </div>
+                  <div class="option-label-wrapper">
+                    <span class="option-label">{{ option.option_text }}</span>
+                  </div>
+                </label>
               </div>
               <p v-else class="text-sm text-red-600 dark:text-red-400 italic">(لا توجد خيارات لهذا السؤال)</p>
             </fieldset>
 
-            <!-- True/False -->
+            <!-- True/False (TF) -->
             <fieldset v-else-if="question.type === 'true_false' || question.type === 'tf'" class="space-y-3">
-               <legend class="sr-only">اختر صح أو خطأ للسؤال {{ index + 1 }}</legend>
-               <label
-                 :for="`tf-${question.id}-true`"
-                 class="option-wrapper border rounded-md p-3 flex items-center cursor-pointer hover:bg-cream-gray/40 dark:hover:bg-gray-700/40 dark:border-gray-600 transition-colors duration-150"
-                 :class="{ 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-500': userAnswers[question.id] === true }"
+              <legend class="sr-only">اختر صح أو خطأ للسؤال {{ index + 1 }}</legend>
+              <template v-if="question.question_options && question.question_options.length === 2">
+                <label
+                  v-for="option in question.question_options"
+                  :key="option.id"
+                  :for="`option-${option.id}`"
+                  class="option-wrapper"
+                  :class="{ 'selected-option': userAnswers[question.id] === option.id }"
                 >
-                 <div class="radio-input-wrapper">
-                   <input :id="`tf-${question.id}-true`" :name="`question-${question.id}`" type="radio" :value="true" v-model="userAnswers[question.id]" :disabled="isSubmitting" required class="radio-input"/>
-                 </div>
-                 <div class="option-label-wrapper">
-                   <span class="option-label">صح</span>
-                 </div>
-               </label>
-               <label
-                 :for="`tf-${question.id}-false`"
-                 class="option-wrapper border rounded-md p-3 flex items-center cursor-pointer hover:bg-cream-gray/40 dark:hover:bg-gray-700/40 dark:border-gray-600 transition-colors duration-150"
-                 :class="{ 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-500': userAnswers[question.id] === false }"
-                >
-                 <div class="radio-input-wrapper">
-                   <input :id="`tf-${question.id}-false`" :name="`question-${question.id}`" type="radio" :value="false" v-model="userAnswers[question.id]" :disabled="isSubmitting" required class="radio-input"/>
-                 </div>
-                 <div class="option-label-wrapper">
-                   <span class="option-label">خطأ</span>
-                 </div>
-               </label>
+                  <div class="radio-input-wrapper">
+                    <input
+                      type="radio"
+                      :id="`option-${option.id}`"
+                      :name="`question-${question.id}`"
+                      :value="option.id"
+                      v-model="userAnswers[question.id]"
+                      :disabled="isSubmitting"
+                      required
+                      class="radio-input"
+                    />
+                  </div>
+                  <div class="option-label-wrapper">
+                    <span class="option-label">{{ option.option_text }}</span>
+                  </div>
+                </label>
+              </template>
+              <p v-else class="text-sm text-red-600 dark:text-red-400 italic">
+                (خطأ في تكوين السؤال: يجب أن يحتوي سؤال الصح/الخطأ على خيارين بالضبط مُعرفين في قاعدة البيانات)
+              </p>
             </fieldset>
 
-            <!-- Written -->
+            <!-- Written Answer -->
             <div v-else-if="question.type === 'written'">
-               <label :for="`written-${question.id}`" class="sr-only">إجابة السؤال {{ index + 1 }}</label>
+              <label :for="`written-${question.id}`" class="sr-only">إجابة السؤال {{ index + 1 }}</label>
               <textarea
                 :id="`written-${question.id}`"
                 rows="5"
@@ -135,37 +146,37 @@
                 placeholder="اكتب إجابتك هنا..."
               ></textarea>
             </div>
-             <!-- Placeholder for other question types -->
-             <div v-else class="text-sm text-gray-500 italic">(نوع سؤال غير مدعوم حالياً: {{ question.type }})</div>
+
+            <!-- Unsupported Question Type -->
+            <div v-else class="text-sm text-gray-500 dark:text-gray-400 italic">(نوع سؤال غير مدعوم حالياً: {{ question.type }})</div>
           </div>
         </div>
 
-        <!-- Submission Area -->
+        <!-- Submission Section -->
         <div class="submit-section">
-           <p v-if="submitError" class="submit-error">{{ submitError }}</p>
+          <p v-if="submitError" class="submit-error">{{ submitError }}</p>
           <button type="submit" :disabled="isSubmitting || !allQuestionsAnswered" class="button-submit">
             <LoadingSpinner v-if="isSubmitting" class="w-5 h-5 me-2 animate-spin" />
             <span>{{ isSubmitting ? 'جارٍ الإرسال...' : 'إرسال الإجابات النهائية' }}</span>
           </button>
-           <p v-if="!allQuestionsAnswered && !isSubmitting" class="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-               * يرجى الإجابة على جميع الأسئلة قبل الإرسال.
-           </p>
+          <p v-if="!allQuestionsAnswered && !isSubmitting" class="unanswered-prompt">
+            * يرجى الإجابة على جميع الأسئلة قبل الإرسال.
+          </p>
         </div>
       </form>
     </div>
 
-    <!-- Fallback if no data but no error -->
-     <div v-else-if="!pending && !loadError && !isRedirecting" class="text-center py-10 text-gray-500 dark:text-gray-400">
-         لا توجد بيانات لعرضها أو أن الاختبار غير متاح حاليًا.
-     </div>
+    <!-- 4. Fallback: No Data State (after loading finished, no error, not redirecting) -->
+    <div v-else-if="!pending && !loadError && !isRedirecting" class="text-center py-10 text-gray-500 dark:text-gray-400">
+      لا توجد بيانات لعرضها أو أن الاختبار غير متاح حاليًا.
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 // --- Imports ---
 import { ref, computed, watch, shallowRef, nextTick, onUnmounted, onMounted } from 'vue';
-import { useRoute, useRouter, navigateTo, createError, useError, useHead } from '#app';
-// No need for manual Supabase imports thanks to Nuxt auto-imports
+import { useRoute, useRouter, navigateTo, createError, useError, useHead, showError } from '#app';
 import type { Database, Tables, Enums, Json } from '~/types/database.types';
 import { useUserStore } from '~/stores/user';
 import { storeToRefs } from 'pinia';
@@ -177,11 +188,12 @@ import DOMPurify from 'dompurify';
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient<Database>();
-const user = useSupabaseUser();
+// const user = useSupabaseUser(); // profile.value.id is used instead
 const userStore = useUserStore();
 const { profile, isLoggedIn } = storeToRefs(userStore);
 
-console.log(`--- QUIZ TAKE PAGE [${route.params.id}] SETUP STARTED ---`);
+// --- Constants ---
+const LOCAL_STORAGE_TIMER_KEY_PREFIX = 'quizTimer_'; // Prefix for localStorage key
 
 // --- Types ---
 type OptionPojo = Pick<Tables<'question_options'>, 'id' | 'question_id' | 'option_text' | 'is_correct' | 'option_order'>;
@@ -191,259 +203,712 @@ type QuizPojo = Pick<Tables<'quizzes'>, 'id' | 'title' | 'description' | 'is_act
     course?: Pick<Tables<'study_courses'>, 'id' | 'title'> | null;
     lesson?: Pick<Tables<'lessons'>, 'id' | 'title' | 'course_id'> | null;
 };
+type RelatedLink = { to: string; text: string } | null;
 type QuizTakeData = {
   quiz: QuizPojo | null;
   questions: QuestionWithOptionsPojo[] | null;
   isEnrolled: boolean;
   existingAttemptId: number | null;
-  relatedLink: { to: string; text: string } | null;
+  relatedLink: RelatedLink;
   isAuthorized: boolean;
   authFailReason: string;
 };
 type LoadError = { message: string; details?: string; statusCode?: number };
+// Type for timer data stored in localStorage
+type TimerStorageData = {
+    startTime: number;      // Timestamp when timer was first started
+    durationSeconds: number; // Original duration
+    userId: string;         // User ID associated with this timer
+};
 
 // --- Route Param Validation ---
 const quizIdParam = computed<number | null>(() => {
     const rawParam = route.params.id as string;
-    if (!rawParam) { console.error("Quiz ID missing."); return null; }
+    if (!rawParam) { return null; }
     const id = parseInt(rawParam, 10);
-    if (isNaN(id) || id <= 0) { console.error(`Invalid Quiz ID: "${rawParam}"`); return null; }
+    if (isNaN(id) || id <= 0) { return null; }
     return id;
 });
 
 // --- State ---
 const quizData = shallowRef<Partial<QuizTakeData>>({});
-// Use Record<number, ...> for keys derived from question.id
-const userAnswers = ref<Record<number, number | string | boolean | null>>({});
+const userAnswers = ref<Record<number, number | string | null>>({});
 const isSubmitting = ref(false);
 const submitError = ref<string | null>(null);
 const loadError = ref<LoadError | null>(null);
 const isRedirecting = ref(false);
 
 // --- Timer State ---
-const timerInterval = ref<NodeJS.Timeout | null>(null);
+const timerInterval = ref<NodeJS.Timeout | number | null>(null);
 const timeRemainingSeconds = ref(0);
 const isTimerActive = ref(false);
-let quizStartTime: number | null = null;
+// let quizStartTime: number | null = null; // Replaced by logic using localStorage
 
-// ***** START: Moved Timer Functions & Handler *****
+// --- Timer Functions & Handler ---
+
+/** Generates the localStorage key for the timer data. */
+function getTimerStorageKey(quizId: number, userId: string): string {
+    return `${LOCAL_STORAGE_TIMER_KEY_PREFIX}${userId}_${quizId}`;
+}
+
+/** Clears timer data from localStorage. */
+function clearTimerFromStorage(quizId: number, userId: string) {
+    if (process.client) {
+        const key = getTimerStorageKey(quizId, userId);
+        localStorage.removeItem(key);
+        console.log(`[Timer Storage] Cleared data for key: ${key}`);
+    }
+}
+
+/** Saves timer start time and duration to localStorage. */
+function saveTimerToStorage(quizId: number, userId: string, durationMinutes: number) {
+    if (process.client && durationMinutes > 0) {
+        const key = getTimerStorageKey(quizId, userId);
+        const data: TimerStorageData = {
+            startTime: Date.now(), // Record the exact start moment
+            durationSeconds: durationMinutes * 60,
+            userId: userId
+        };
+        localStorage.setItem(key, JSON.stringify(data));
+        console.log(`[Timer Storage] Saved data for key: ${key}`, data);
+    }
+}
+
+/** Attempts to initialize and start the timer based on localStorage data. */
+function initializeTimerFromStorage(quizId: number, userId: string): boolean {
+    if (!process.client) return false; // Can't access localStorage on server
+
+    const key = getTimerStorageKey(quizId, userId);
+    const storedDataRaw = localStorage.getItem(key);
+
+    if (storedDataRaw) {
+        try {
+            const storedData: TimerStorageData = JSON.parse(storedDataRaw);
+
+            // Validate stored data (basic check)
+            if (storedData.startTime && storedData.durationSeconds && storedData.userId === userId) {
+                const elapsedTimeSeconds = Math.floor((Date.now() - storedData.startTime) / 1000);
+                const remaining = storedData.durationSeconds - elapsedTimeSeconds;
+
+                console.log(`[Timer Storage] Resuming timer. Stored:`, storedData, `Elapsed: ${elapsedTimeSeconds}s, Remaining: ${remaining}s`);
+
+                if (remaining > 0) {
+                    // Start timer with remaining time
+                    startTimerInternal(remaining);
+                    return true; // Timer resumed successfully
+                } else {
+                    // Time already expired while user was away
+                    console.log("[Timer Storage] Time expired while page was closed. Auto-submitting.");
+                    timeRemainingSeconds.value = 0; // Ensure UI shows 00:00
+                    isTimerActive.value = true; // Briefly set active for UI consistency before submit
+                    handleSubmitAttempt(true); // Trigger auto-submission immediately
+                    // Don't clear storage here, handleSubmitAttempt will call stopTimer which clears it
+                    return true; // Indicate timer logic was handled (even if expired)
+                }
+            } else {
+                 console.warn("[Timer Storage] Invalid data found, clearing.", storedDataRaw);
+                 clearTimerFromStorage(quizId, userId); // Clear invalid data
+            }
+        } catch (e) {
+            console.error("[Timer Storage] Error parsing stored timer data, clearing.", e);
+            clearTimerFromStorage(quizId, userId); // Clear corrupted data
+        }
+    }
+     console.log("[Timer Storage] No valid existing timer data found.");
+    return false; // No timer resumed
+}
+
+/** Handles browser 'beforeunload' event. */
 const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   if (isTimerActive.value && !isSubmitting.value) {
+    const message = 'هل أنت متأكد أنك تريد مغادرة الصفحة؟ سيستمر وقت الاختبار بالعد وقد لا يتم حفظ تقدمك إذا أغلقت الصفحة قبل انتهاء الوقت أو الإرسال.';
     event.preventDefault();
-    event.returnValue = 'هل أنت متأكد أنك تريد مغادرة الصفحة؟ سيستمر وقت الاختبار بالعد، وقد تفقد تقدمك.';
-    return event.returnValue;
+    event.returnValue = message;
+    return message;
   }
 };
-function stopTimer() {
-    if (timerInterval.value) { clearInterval(timerInterval.value); timerInterval.value = null; }
-    isTimerActive.value = false; quizStartTime = null;
+
+/** Stops the timer interval and removes the 'beforeunload' listener. Does NOT clear localStorage here. */
+function stopTimerInterval() {
+    if (timerInterval.value) { clearInterval(timerInterval.value as any); timerInterval.value = null; }
+    isTimerActive.value = false;
     if (process.client) { window.removeEventListener('beforeunload', handleBeforeUnload); }
-    console.log("[Timer] Stopped.");
+    console.log("[Timer] Interval stopped, listener removed.");
 }
-function startTimer(minutes: number) {
-    stopTimer(); timeRemainingSeconds.value = minutes * 60; isTimerActive.value = true; quizStartTime = Date.now();
-    console.log(`[Timer] Started: ${minutes} mins.`);
+
+/** Main function to stop the timer, including clearing storage. */
+function stopTimerAndClearStorage() {
+    stopTimerInterval();
+    // Clear storage only if quiz ID and user ID are available
+    const currentQuizId = quizData.value.quiz?.id;
+    const currentUserId = profile.value?.id;
+    if (currentQuizId && currentUserId) {
+         clearTimerFromStorage(currentQuizId, currentUserId);
+    } else {
+        console.warn("[Timer] Could not clear storage on stop: Missing quiz/user ID.");
+    }
+}
+
+
+/** Internal function to set up and start the timer interval. */
+function startTimerInternal(initialSeconds: number) {
+    stopTimerInterval(); // Clear any existing interval first
+    if (initialSeconds <= 0) return; // Don't start if time is already zero or less
+
+    timeRemainingSeconds.value = initialSeconds;
+    isTimerActive.value = true;
+    console.log(`[Timer] Internal start with ${initialSeconds} seconds.`);
     timerInterval.value = setInterval(tickTimer, 1000);
     if (process.client) { window.addEventListener('beforeunload', handleBeforeUnload); }
 }
-function tickTimer() {
-    if (timeRemainingSeconds.value > 0) { timeRemainingSeconds.value--; }
-    else { console.log("[Timer] Time up! Auto-submitting."); stopTimer(); handleSubmitAttempt(true); }
-}
-// ***** END: Moved Timer Functions & Handler *****
 
-// --- Initial Auth Check (Client-Side) ---
+
+/** Main function called to initiate the timer for a new session. Saves initial state. */
+function startNewTimerSession(durationMinutes: number) {
+    if (!durationMinutes || durationMinutes <= 0) return;
+
+    const currentQuizId = quizData.value.quiz?.id;
+    const currentUserId = profile.value?.id;
+
+    if (currentQuizId && currentUserId && process.client) {
+        // Save the *start* of this new session to localStorage
+        saveTimerToStorage(currentQuizId, currentUserId, durationMinutes);
+        // Start the interval countdown
+        startTimerInternal(durationMinutes * 60);
+    } else {
+         console.error("[Timer] Cannot start new timer session: Missing quiz/user ID or not on client.");
+    }
+}
+
+/** Decrements the timer; auto-submits when time runs out. */
+function tickTimer() {
+    if (timeRemainingSeconds.value > 0) {
+        timeRemainingSeconds.value--;
+    } else {
+        console.log("[Timer] Time up! Auto-submitting.");
+        stopTimerInterval(); // Stop the interval first
+        handleSubmitAttempt(true); // Auto-submit (this will eventually call clear storage)
+    }
+}
+
+// --- Initial Client-Side Checks ---
 onMounted(() => {
-    if (!isLoggedIn.value) { navigateTo(`/login?redirect=${encodeURIComponent(route.fullPath)}`, { replace: true }); return; }
-    if (quizIdParam.value === null) { showError({ statusCode: 400, statusMessage: 'معرف اختبار غير صالح.', fatal: true }); }
+    if (!isLoggedIn.value) {
+      navigateTo(`/login?redirect=${encodeURIComponent(route.fullPath)}`, { replace: true });
+      return;
+    }
+    if (quizIdParam.value === null) {
+      showError({ statusCode: 400, statusMessage: 'معرف اختبار غير صالح.', fatal: true });
+    }
 });
 
-// --- Data Fetching & Authorization (Simplified Query Approach) ---
+// --- Data Fetching & Authorization Logic (useAsyncData) ---
 const { data, pending, error: asyncDataError, refresh } = await useAsyncData<QuizTakeData>(
     `quizTakeData-${quizIdParam.value}-${profile.value?.id ?? 'guest'}`,
     async () => {
-        isRedirecting.value = true; loadError.value = null;
-        const currentQuizId = quizIdParam.value; const currentUser = profile.value;
-        if (!currentUser?.id || currentQuizId === null) throw createError({ statusCode: 400, statusMessage: 'بيانات غير كافية.', fatal: true });
-        console.log(`Checking attempt: Q${currentQuizId}, U${currentUser.id}`);
+        isRedirecting.value = true;
+        loadError.value = null;
+        const currentQuizId = quizIdParam.value;
+        const currentUser = profile.value;
+
+        // --- Input Validation ---
+        if (!currentUser?.id) { throw createError({ statusCode: 401, statusMessage: 'المستخدم غير مسجل الدخول.', fatal: true }); }
+        if (currentQuizId === null) { throw createError({ statusCode: 400, statusMessage: 'معرف الاختبار غير صالح.', fatal: true }); }
+
+        console.log(`[AsyncData] Fetch/Check: Quiz ${currentQuizId}, User ${currentUser.id}`);
+
         try {
-            const { data: existingAttempt, error: attemptCheckError } = await supabase.from('quiz_attempts').select('id').eq('quiz_id', currentQuizId).eq('user_id', currentUser.id).limit(1).maybeSingle();
-            if (attemptCheckError) throw createError({ statusCode: 500, statusMessage: 'فشل التحقق.' });
+            // --- Step 1: Check Existing Submitted Attempts ---
+            const { data: existingAttempt, error: attemptCheckError } = await supabase
+                .from('quiz_attempts').select('id').eq('quiz_id', currentQuizId).eq('user_id', currentUser.id)
+                .not('submitted_at', 'is', null).limit(1).maybeSingle();
+
+            if (attemptCheckError) { throw createError({ statusCode: 500, statusMessage: 'فشل التحقق من المحاولات السابقة.' }); }
+
             const existingAttemptId = existingAttempt?.id ?? null;
-            if (existingAttemptId !== null) { console.log(`Attempt ${existingAttemptId} found.`); return { quiz: null, questions: null, isEnrolled: false, existingAttemptId, relatedLink: null, isAuthorized: false, authFailReason: 'Exist' }; }
+            if (existingAttemptId !== null) {
+                console.log(`[AsyncData] Existing submitted attempt found (ID: ${existingAttemptId}). Redirecting.`);
+                return { quiz: null, questions: null, isEnrolled: false, existingAttemptId, relatedLink: null, isAuthorized: false, authFailReason: 'Attempt exists' };
+            }
 
-            console.log(`No attempt found. Fetching details...`);
-            const { data: fetchedQuiz, error: quizFetchError } = await supabase.from('quizzes').select(`*, course:study_courses!course_id(id, title), lesson:lessons!lesson_id(id, title, course_id)`).eq('id', currentQuizId).single();
-            if (quizFetchError || !fetchedQuiz) throw createError({ statusCode: quizFetchError?.code === 'PGRST116' ? 404 : 500, statusMessage: 'الاختبار غير موجود.', fatal: true });
-            let relatedLink: RelatedLink = null; if (fetchedQuiz.lesson?.id && fetchedQuiz.lesson.course_id) relatedLink = { to: `/study/courses/${fetchedQuiz.lesson.course_id}/lessons/${fetchedQuiz.lesson.id}`, text: `درس: ${fetchedQuiz.lesson.title}` }; else if (fetchedQuiz.course?.id) relatedLink = { to: `/study/courses/${fetchedQuiz.course.id}`, text: `دورة: ${fetchedQuiz.course.title}` };
-            let isAuthorized = true; let authFailReason = ''; let isEnrolled = true; if (!fetchedQuiz.is_active) { authFailReason = 'الاختبار غير نشط.'; isAuthorized = false; }
-            if (fetchedQuiz.course_id && isAuthorized) { const { count, error } = await supabase.from('course_enrollments').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id).eq('course_id', fetchedQuiz.course_id); if (error) { authFailReason = 'فشل التحقق.'; isAuthorized = false; } else { isEnrolled = (count ?? 0) > 0; if (!isEnrolled) { authFailReason = 'غير منتسب.'; isAuthorized = false; } } }
-            if (!isAuthorized) throw createError({ statusCode: 403, statusMessage: authFailReason, fatal: true });
+            // --- Step 2: Fetch Quiz Details ---
+             console.log(`[AsyncData] Fetching quiz details...`);
+            const { data: fetchedQuiz, error: quizFetchError } = await supabase
+                .from('quizzes').select(`*, course:study_courses(id, title), lesson:lessons(id, title, course_id)`)
+                .eq('id', currentQuizId).single();
 
-            // **** Fetch questions and options separately ****
+            if (quizFetchError || !fetchedQuiz) {
+                const statusCode = quizFetchError?.code === 'PGRST116' ? 404 : 500;
+                const message = statusCode === 404 ? 'الاختبار المطلوب غير موجود.' : 'فشل تحميل بيانات الاختبار.';
+                throw createError({ statusCode, statusMessage: message, fatal: true });
+            }
+
+            // --- Step 3: Determine Related Link ---
+            let relatedLink: RelatedLink = null;
+            if (fetchedQuiz.lesson?.id && fetchedQuiz.lesson.course_id) {
+                relatedLink = { to: `/study/courses/${fetchedQuiz.lesson.course_id}/lessons/${fetchedQuiz.lesson.id}`, text: `درس: ${fetchedQuiz.lesson.title}` };
+            } else if (fetchedQuiz.course?.id) {
+                relatedLink = { to: `/study/courses/${fetchedQuiz.course.id}`, text: `دورة: ${fetchedQuiz.course.title}` };
+            }
+
+            // --- Step 4: Authorization Checks ---
+             console.log(`[AsyncData] Performing authorization checks...`);
+            let isAuthorized = true;
+            let authFailReason = '';
+            let isEnrolled = true; // Assume true, verify if course-linked
+
+            if (!fetchedQuiz.is_active) {
+                authFailReason = 'هذا الاختبار غير نشط حاليًا.'; isAuthorized = false;
+            }
+
+            if (fetchedQuiz.course_id && isAuthorized) {
+                 console.log(`[AsyncData] Checking enrollment for Course ID: ${fetchedQuiz.course_id}`);
+                const { count, error: enrollError } = await supabase
+                    .from('course_enrollments').select('*', { count: 'exact', head: true })
+                    .eq('user_id', currentUser.id).eq('course_id', fetchedQuiz.course_id);
+
+                if (enrollError) { authFailReason = 'خطأ عند التحقق من الانتساب.'; isAuthorized = false; }
+                else {
+                    isEnrolled = (count ?? 0) > 0;
+                    if (!isEnrolled) { authFailReason = 'يجب الانتساب للدورة المرتبطة أولاً.'; isAuthorized = false; }
+                     else { console.log(`[AsyncData] User is enrolled.`); }
+                }
+            }
+
+            if (!isAuthorized) { throw createError({ statusCode: 403, statusMessage: authFailReason, fatal: true }); }
+
+            // --- Step 5: Fetch Questions ---
+             console.log(`[AsyncData] Fetching questions...`);
             const { data: fetchedQuestionsData, error: questionsFetchError } = await supabase
-                .from('quiz_questions').select(`id, quiz_id, question_text, type, question_order, points`).eq('quiz_id', currentQuizId).order('question_order');
-            if (questionsFetchError) throw questionsFetchError;
-            if (!fetchedQuestionsData || fetchedQuestionsData.length === 0) { console.warn("No questions found!"); return { quiz: null, questions: [], isEnrolled, existingAttemptId: null, relatedLink, isAuthorized: true, authFailReason: 'No questions' }; }
-            const questionIds = fetchedQuestionsData.map(q => q.id);
+                .from('quiz_questions').select(`id, quiz_id, question_text, type, question_order, points`)
+                .eq('quiz_id', currentQuizId).order('question_order', { ascending: true, nullsFirst: false });
 
+            if (questionsFetchError) { throw createError({ statusCode: 500, statusMessage: 'فشل تحميل أسئلة الاختبار.', details: questionsFetchError.message }); }
+            if (!fetchedQuestionsData || fetchedQuestionsData.length === 0) {
+                 console.warn("[AsyncData] No questions found for this quiz!");
+                return { quiz: fetchedQuiz as QuizPojo, questions: [], isEnrolled, existingAttemptId: null, relatedLink, isAuthorized: true, authFailReason: '' };
+            }
+
+            // --- Step 6: Fetch Options ---
+            const questionIds = fetchedQuestionsData.map(q => q.id);
+             console.log(`[AsyncData] Fetching options for ${questionIds.length} questions...`);
             let fetchedOptionsData: OptionPojo[] = [];
             if (questionIds.length > 0) {
                 const { data: options, error: optionsFetchError } = await supabase
-                    .from('question_options').select(`id, question_id, option_text, is_correct, option_order`).in('question_id', questionIds).order('option_order');
-                if (optionsFetchError) console.error("Error fetching options:", optionsFetchError);
-                else fetchedOptionsData = (options || []).map(opt => ({ // Ensure POJO structure
-                    id: opt.id, question_id: opt.question_id, option_text: opt.option_text,
-                    is_correct: opt.is_correct, option_order: opt.option_order
-                }));
+                    .from('question_options').select(`id, question_id, option_text, is_correct, option_order`)
+                    .in('question_id', questionIds).order('option_order', { ascending: true, nullsFirst: false });
+
+                if (optionsFetchError) { throw createError({ statusCode: 500, statusMessage: 'فشل تحميل خيارات الأسئلة.', details: optionsFetchError.message }); }
+                fetchedOptionsData = (options || []).map(opt => ({ ...opt }));
             }
-            console.log(`Fetched ${fetchedOptionsData.length} options for ${questionIds.length} questions.`);
+             console.log(`[AsyncData] Fetched ${fetchedOptionsData.length} options.`);
 
+            // --- Step 7: Map Options to Questions ---
             const optionsMap = new Map<number, OptionPojo[]>();
-            fetchedOptionsData.forEach(opt => { if (opt.question_id !== null) { const existing = optionsMap.get(opt.question_id) || []; existing.push(opt); optionsMap.set(opt.question_id, existing); } });
+            fetchedOptionsData.forEach(opt => {
+                if (opt.question_id !== null) {
+                    const existing = optionsMap.get(opt.question_id) || [];
+                    existing.push(opt);
+                    optionsMap.set(opt.question_id, existing);
+                }
+            });
 
-            const sanitizedQuestions: QuestionWithOptionsPojo[] = fetchedQuestionsData.map(q => ({
-                id: q.id, quiz_id: q.quiz_id, question_text: q.question_text, type: q.type, question_order: q.question_order, points: q.points,
-                question_options: optionsMap.get(q.id) || [] // Assign mapped options
+            // --- Step 8: Combine Questions with Options ---
+            const questionsWithMappedOptions: QuestionWithOptionsPojo[] = fetchedQuestionsData.map(q => ({
+                ...q, question_options: optionsMap.get(q.id) || []
             }));
-            const sanitizedQuiz: QuizPojo = { id: fetchedQuiz.id, title: fetchedQuiz.title, description: fetchedQuiz.description, is_active: fetchedQuiz.is_active, course_id: fetchedQuiz.course_id, lesson_id: fetchedQuiz.lesson_id, time_limit_minutes: fetchedQuiz.time_limit_minutes, type: fetchedQuiz.type, pass_mark_percentage: fetchedQuiz.pass_mark_percentage, course: fetchedQuiz.course ? { id: fetchedQuiz.course.id, title: fetchedQuiz.course.title } : null, lesson: fetchedQuiz.lesson ? { id: fetchedQuiz.lesson.id, title: fetchedQuiz.lesson.title, course_id: fetchedQuiz.lesson.course_id } : null, };
 
-            console.log(`Fetch successful.`); return { quiz: sanitizedQuiz, questions: sanitizedQuestions, isEnrolled, existingAttemptId: null, relatedLink, isAuthorized: true, authFailReason: '' };
-        } catch (err: any) { console.error('!!! ASYNC DATA ERROR !!!:', err); loadError.value = { message: err.data?.message || err.message || 'خطأ غير معروف', details: err.data?.details, statusCode: err.statusCode || 500 }; return { quiz: null, questions: null, isEnrolled: false, existingAttemptId: null, relatedLink: null, isAuthorized: false, authFailReason: loadError.value.message }; }
-        finally { isRedirecting.value = false; }
+             // --- Step 9: Prepare Final Data ---
+            const sanitizedQuiz: QuizPojo = { ...fetchedQuiz };
+             console.log(`[AsyncData] Fetch successful.`);
+            return { quiz: sanitizedQuiz, questions: questionsWithMappedOptions, isEnrolled, existingAttemptId: null, relatedLink, isAuthorized: true, authFailReason: '' };
+
+        } catch (err: any) {
+            console.error('[AsyncData] CAUGHT ERROR:', err);
+            const statusCode = err.statusCode || err.code || 500;
+            const message = err.data?.message || err.statusMessage || err.message || 'خطأ غير متوقع.';
+            const details = err.data?.details || err.details;
+            loadError.value = { message, details, statusCode };
+            return { quiz: null, questions: null, isEnrolled: false, existingAttemptId: null, relatedLink: null, isAuthorized: false, authFailReason: message };
+        } finally {
+            isRedirecting.value = false;
+             console.log(`[AsyncData] Fetch/Check complete.`);
+        }
     },
     { watch: [quizIdParam, () => profile.value?.id] }
 );
 
-// --- Watcher for Redirection & State Initialization ---
+// --- Watcher for Data Updates, Redirection, State Initialization ---
 watch(data, async (newData) => {
-    stopTimer();
+    console.log('[Watcher] Processing data update...');
+    stopTimerInterval(); // Stop any existing interval immediately
+
+    // Priority 1: Handle Redirection
     if (newData?.existingAttemptId) {
-        isRedirecting.value = true; console.log(`Redirecting to results for attempt ${newData.existingAttemptId}...`); await nextTick();
-        try { await navigateTo(`/quizzes/results/${newData.existingAttemptId}`, { replace: true }); }
-        catch (navError) { console.error("Nav error:", navError); loadError.value = { message: 'فشل توجيهك لصفحة النتائج.' }; isRedirecting.value = false; }
+        if (!isRedirecting.value) {
+            isRedirecting.value = true;
+            console.log(`[Watcher] Redirecting to results page: ${newData.existingAttemptId}...`);
+            await nextTick();
+            try {
+                await navigateTo(`/quizzes/results/${newData.existingAttemptId}`, { replace: true });
+            } catch (navError) {
+                console.error("[Watcher] Navigation error:", navError);
+                loadError.value = { message: 'فشل التوجيه لصفحة النتائج.', details: (navError as Error).message };
+                isRedirecting.value = false;
+            }
+        }
         return;
     }
-    if (newData?.quiz && newData.questions && newData.isAuthorized && !loadError.value) {
-        console.log("[Watch] Setting up quiz taking state. Questions:", newData.questions.length);
-        if(newData.questions.length > 0 && newData.questions[0].question_options) { console.log("[Watch] Opts[0]:", JSON.stringify(newData.questions[0].question_options)); } // Log options
-        quizData.value = newData; userAnswers.value = {}; isSubmitting.value = false; submitError.value = null;
-        newData.questions.forEach(q => { userAnswers.value[q.id] = null; });
-        if (newData.quiz.time_limit_minutes && newData.quiz.time_limit_minutes > 0) startTimer(newData.quiz.time_limit_minutes);
-        else isTimerActive.value = false;
-        isRedirecting.value = false;
-    } else if (!pending.value && !isRedirecting.value) {
-         console.warn("[Watch] Invalid data after load/no redirect.");
-         if (!loadError.value) loadError.value = { message: 'فشل تحميل بيانات الاختبار.' };
-         quizData.value = {}; userAnswers.value = {}; isRedirecting.value = false;
+
+    // Priority 2: Handle Loading Errors
+    if (loadError.value) {
+      console.warn("[Watcher] Load error detected.");
+      quizData.value = {};
+      userAnswers.value = {};
+      isRedirecting.value = false;
+      return;
     }
+
+    // Priority 3: Setup Quiz State
+    if (newData?.quiz && newData.questions && newData.isAuthorized) {
+        console.log("[Watcher] Setting up quiz state. Questions:", newData.questions.length);
+        quizData.value = newData;
+
+        // Reset answers
+        const initialAnswers: Record<number, null> = {};
+        (newData.questions || []).forEach(q => { initialAnswers[q.id] = null; });
+        userAnswers.value = initialAnswers;
+
+        isSubmitting.value = false;
+        submitError.value = null;
+
+        // --- Initialize or Resume Timer ---
+        const currentQuizId = newData.quiz.id;
+        const currentUserId = profile.value?.id;
+        const timeLimit = newData.quiz.time_limit_minutes;
+
+        if (timeLimit && timeLimit > 0 && currentUserId) {
+             // Attempt to resume timer from storage first
+            const resumed = initializeTimerFromStorage(currentQuizId, currentUserId);
+            if (!resumed) {
+                 // If not resumed (no valid data in storage), start a new timer session
+                 console.log("[Watcher] No timer resumed from storage, starting new session.");
+                 startNewTimerSession(timeLimit);
+             }
+        } else {
+             isTimerActive.value = false; // Ensure timer is off if no time limit
+        }
+
+        isRedirecting.value = false;
+    }
+    // Priority 4: Handle Invalid State
+    else if (!pending.value && !isRedirecting.value && !loadError.value) {
+         console.warn("[Watcher] Data loaded but state is invalid/unauthorized.");
+         loadError.value = { message: 'فشل تحميل الاختبار أو أنك غير مصرح بالدخول.' };
+         quizData.value = {};
+         userAnswers.value = {};
+         isRedirecting.value = false;
+    }
+
 }, { immediate: true });
 
 // --- Computed Properties ---
+
+/** Checks if all questions have been answered. */
 const allQuestionsAnswered = computed(() => {
-    if (!quizData.value?.questions) return false;
-    return quizData.value.questions.every(q => userAnswers.value[q.id] !== null && userAnswers.value[q.id] !== undefined && String(userAnswers.value[q.id]).trim() !== '');
+    const questions = quizData.value?.questions;
+    if (!questions || questions.length === 0) return true;
+    return questions.every(q => {
+      const answer = userAnswers.value[q.id];
+      return answer !== null && answer !== undefined && String(answer).trim() !== '';
+    });
 });
+
+/** Formats the remaining time in MM:SS. */
 const formattedTimeRemaining = computed(() => {
-    const minutes = Math.floor(timeRemainingSeconds.value / 60); const seconds = timeRemainingSeconds.value % 60;
+    const minutes = Math.floor(timeRemainingSeconds.value / 60);
+    const seconds = timeRemainingSeconds.value % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 });
 
+/** Checks if the time remaining is low (e.g., less than 1 minute). */
+const isTimeLow = computed(() => isTimerActive.value && timeRemainingSeconds.value < 60);
+
 // --- Helper Functions ---
-const renderMarkdown = (text: string): string => { if (!text) return ''; marked.setOptions({ breaks: true, gfm: true }); if (process.client) return DOMPurify.sanitize(marked.parse(text), { USE_PROFILES: { html: true } }); return marked.parse(text); };
-const getBackLink = (): string => quizData.value?.relatedLink?.to ?? (quizData.value?.quiz?.course_id ? `/study/courses/${quizData.value.quiz.course_id}` : '/study');
+
+/** Renders Markdown text to safe HTML. */
+const renderMarkdown = (text: string | null | undefined): string => {
+  if (!text) return '';
+  marked.setOptions({ breaks: true, gfm: true, smartypants: true });
+  const dirtyHTML = marked.parse(text);
+  if (process.client && typeof window !== 'undefined') {
+    return DOMPurify.sanitize(dirtyHTML, { USE_PROFILES: { html: true } });
+  }
+  return String(dirtyHTML).replace(/<script.*?>.*?<\/script>/gis, '');
+};
+
+/** Determines the appropriate back link. */
+const getBackLink = (): string => {
+  if (quizData.value?.relatedLink?.to) return quizData.value.relatedLink.to;
+  if (quizData.value?.quiz?.course_id) return `/study/courses/${quizData.value.quiz.course_id}`;
+  return '/study'; // Fallback link
+};
 
 // --- Submission Action ---
+
+/** Handles the submission of the quiz attempt. */
 async function handleSubmitAttempt(autoSubmitted: boolean = false) {
-    if (!quizData.value?.quiz || !profile.value?.id || isSubmitting.value) return;
-    stopTimer();
+    if (isSubmitting.value || !quizData.value?.quiz || !profile.value?.id) return;
+
+    // Stop the timer interval BUT DON'T CLEAR STORAGE YET
+    // Storage will be cleared upon successful submission or if submission fails definitively.
+    stopTimerInterval();
+
     if (!autoSubmitted && !allQuestionsAnswered.value) {
-        submitError.value = `يرجى الإجابة على جميع الأسئلة.`;
-        const firstUnanswered = quizData.value.questions?.find(q => userAnswers.value[q.id] === null || String(userAnswers.value[q.id]).trim() === '');
-        if (firstUnanswered) { document.querySelector(`#written-${firstUnanswered.id}, [name="question-${firstUnanswered.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        submitError.value = `يرجى الإجابة على جميع الأسئلة قبل الإرسال.`;
+        // Scroll to first unanswered question (client-side only)
+        if (process.client) {
+           const firstUnanswered = quizData.value.questions?.find(q => {
+              const answer = userAnswers.value[q.id];
+              return answer === null || answer === undefined || String(answer).trim() === '';
+           });
+           if (firstUnanswered) {
+               document.querySelector<HTMLElement>(`#written-${firstUnanswered.id}, [name="question-${firstUnanswered.id}"]`)
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+           }
+        }
+        // If validation fails, potentially restart the timer *if* it was active
+        // This is complex, for now, we just leave it stopped. User needs to fix answers.
+        // if (isTimerActive.value) { /* Logic to restart with remaining time if needed */ }
         return;
     }
-    isSubmitting.value = true; submitError.value = null;
-    const currentQuiz = quizData.value.quiz; const currentUserId = profile.value.id;
+
+    isSubmitting.value = true;
+    submitError.value = null;
+    const currentQuiz = quizData.value.quiz;
+    const currentUserId = profile.value.id;
     const needsManualGrading = quizData.value.questions?.some(q => q.type === 'written') ?? false;
     const initialGradingStatus: Enums<'grading_status_enum'> = needsManualGrading ? 'pending_manual' : 'pending';
+
     const attemptPayload: Omit<Tables<'quiz_attempts'>, 'id' | 'created_at' | 'started_at'> = {
         user_id: currentUserId, quiz_id: currentQuiz.id, submitted_at: new Date().toISOString(),
-        answers: userAnswers.value as unknown as Json, attempt_number: 1, grading_status: initialGradingStatus,
-        score: null, manual_score: null, total_score: null, passed: null,
+        answers: userAnswers.value as unknown as Json, attempt_number: 1, // TODO: Handle attempt numbers if needed
+        grading_status: initialGradingStatus, score: null, manual_score: null, total_score: null, passed: null,
     };
-    console.log("Submitting quiz attempt:", attemptPayload);
+
+    console.log("Submitting attempt:", attemptPayload);
+
     try {
-        const { data: newAttempt, error: insertError } = await supabase.from('quiz_attempts').insert(attemptPayload).select('id').single();
-        if (insertError) throw insertError; if (!newAttempt?.id) throw new Error("Failed to get new attempt ID.");
-        console.log(`Submitted! New Attempt ID: ${newAttempt.id}. Redirecting...`);
+        const { data: newAttempt, error: insertError } = await supabase
+            .from('quiz_attempts').insert(attemptPayload).select('id').single();
+
+        if (insertError) { throw insertError; }
+        if (!newAttempt?.id) { throw new Error("لم يتم استلام معرف المحاولة الجديدة بعد الإرسال."); }
+
+        // --- Submission Successful ---
+        console.log(`Submission successful! Attempt ID: ${newAttempt.id}. Redirecting...`);
+        // Clear timer storage ON SUCCESS before navigating away
+        clearTimerFromStorage(currentQuiz.id, currentUserId);
+
         await navigateTo(`/quizzes/results/${newAttempt.id}`, { replace: true });
+        // isSubmitting remains true because we are navigating away
+
     } catch (err: any) {
         console.error("Error submitting quiz attempt:", err);
-        submitError.value = `فشل إرسال الإجابات: ${err.message || 'حدث خطأ غير متوقع.'}`;
-        isSubmitting.value = false;
+        submitError.value = `فشل إرسال الإجابات: ${err.message || 'خطأ غير متوقع.'}`;
+        isSubmitting.value = false; // Re-enable button on failure
+        // Decide if timer should be restarted here if it failed? For now, keep it stopped.
+        // Clear storage on definitive failure? Maybe not, user might fix and retry.
+        // Let's NOT clear storage here, allowing potential resume if user fixes submit issue.
     }
 }
 
-// --- Cleanup ---
-onUnmounted(() => { stopTimer(); });
+// --- Cleanup Logic ---
+onUnmounted(() => {
+  // Stop the interval and remove listener, but DON'T clear storage
+  // This allows resuming if user navigates away and comes back before time expires / submission
+  stopTimerInterval();
+  console.log("Quiz take component unmounted.");
+});
 
 // --- SEO Meta Tags ---
-watch([quizData, pending, loadError, isRedirecting], ([newQuizData, loadingState, errorState, redirectState]) => {
-    let pageTitle = 'الاختبار'; let description = 'قم بحل أسئلة الاختبار.';
-    if (loadingState || redirectState) { pageTitle = 'جارٍ التحميل...'; }
-    else if (errorState || !newQuizData?.quiz) { pageTitle = 'خطأ في الاختبار'; description = errorState?.message || 'تعذر الوصول للاختبار.'; }
-    else { pageTitle = newQuizData.quiz.title || 'اختبار'; description = newQuizData.quiz.description?.substring(0, 160) || `اختبار بعنوان "${pageTitle}"`; }
-    useHead({ title: pageTitle, meta: [ { name: 'description', content: description } ] });
- }, { immediate: true });
+watch([() => quizData.value?.quiz, pending, loadError, isRedirecting],
+ ([currentQuiz, loadingState, errorState, redirectState]) => {
+    let pageTitle = 'الاختبار';
+    let description = 'قم بحل أسئلة الاختبار.';
 
+    if (loadingState || redirectState) { pageTitle = 'جارٍ التحميل...'; description = 'يتم الآن تحميل الاختبار أو التحقق.'; }
+    else if (errorState || !currentQuiz) { pageTitle = 'خطأ في الاختبار'; description = errorState?.message || 'تعذر الوصول للاختبار.'; }
+    else if (currentQuiz) {
+      pageTitle = currentQuiz.title ? `اختبار: ${currentQuiz.title}` : 'اختبار بدون عنوان';
+      description = currentQuiz.description?.substring(0, 160) || `اختبر معلوماتك مع اختبار "${pageTitle}".`;
+    }
+
+    useHead({
+      title: pageTitle,
+      meta: [{ name: 'description', content: description }]
+    });
+ },
+ { immediate: true }
+);
 </script>
 
 <style scoped>
-/* Styles from previous version, refined */
-
-.quiz-interface { @apply space-y-6 md:space-y-8; }
-.error-display { @apply text-center py-10 px-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg max-w-lg mx-auto shadow-md; }
-.timer-display { @apply text-center font-semibold text-lg p-3 mb-4 rounded-md bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100 border border-yellow-300 dark:border-yellow-600 shadow sticky top-0 z-10; }
-
-/* Question Block */
-.question-block { @apply p-5 bg-beige-light dark:bg-gray-800 rounded-lg shadow border border-cream-gray dark:border-gray-700 transition-shadow duration-200; }
-.question-block:focus-within { @apply ring-2 ring-primary ring-offset-2 dark:ring-offset-gray-800; }
-.question-number { @apply text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1; }
-.question-text { @apply text-lg font-medium text-brown-dark dark:text-beige-light mb-4 whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none; }
-.question-text :deep(p) { @apply mb-2 last:mb-0; }
-.answer-area { @apply mt-4; }
-
-/* Options (MCQ/TF) */
-.option-wrapper { @apply relative flex items-start p-3 rounded-md border transition-colors duration-150; }
-.radio-input-wrapper { @apply flex items-center h-5; }
-.radio-input { @apply focus:ring-primary h-4 w-4 text-primary border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-primary dark:focus:ring-primary dark:focus:ring-offset-gray-800 disabled:opacity-70 disabled:cursor-not-allowed; }
-.option-label-wrapper { @apply ms-3 text-sm flex-grow; }
-.option-label { @apply font-medium text-gray-700 dark:text-gray-300; }
-
-/* Written Answer */
-.textarea-input {
-    @apply shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-cream-gray dark:border-gray-600 rounded-md dark:bg-gray-900 dark:text-beige-light dark:placeholder-gray-500
-           disabled:opacity-70 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:cursor-not-allowed min-h-[8rem];
+/* --- Base & Layout --- */
+.container {
+    /* Standard container, potentially add max-width if needed */
+}
+.quiz-interface {
+    @apply space-y-6 md:space-y-8; /* Vertical spacing for sections */
 }
 
-/* Buttons & Submission */
-.submit-section { @apply pt-6 border-t border-cream-gray dark:border-gray-700 text-center; }
-.submit-error { @apply text-red-600 dark:text-red-400 text-sm mb-4; }
-.button-submit { @apply inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-60 dark:focus:ring-offset-gray-900; }
+/* --- Loading & Error --- */
+.error-display {
+    @apply text-center py-10 px-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-700/30 rounded-lg max-w-lg mx-auto shadow-md;
+}
+.error-display h2 { @apply text-red-700 dark:text-red-300; }
+.error-display p { @apply text-red-600 dark:text-red-400; }
 
-/* Base button styles */
-.button-base { @apply inline-flex items-center justify-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-150; }
-.button-secondary { @apply button-base border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-blue-muted; }
-.error-button { @apply border-red-300 dark:border-red-600 text-red-700 dark:text-red-200 bg-red-100 dark:bg-red-800/60 hover:bg-red-200 dark:hover:bg-red-700/70 focus:ring-red-500; }
+/* --- Quiz Header --- */
+.quiz-header {
+    @apply mb-6 pb-4 border-b border-gray-200 dark:border-gray-700;
+}
+.related-link-container {
+    @apply text-sm text-center sm:text-right mb-3;
+}
+.related-link {
+     @apply text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150;
+}
+.quiz-title {
+    @apply text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center sm:text-right;
+}
+.quiz-description {
+    @apply text-gray-600 dark:text-gray-400 text-center sm:text-right text-sm md:text-base;
+}
 
-/* Ensure focus states are clearly visible */
-*:focus-visible { outline: 2px solid var(--color-primary, #4f46e5); outline-offset: 2px; }
+/* --- Timer --- */
+.timer-display {
+    @apply text-center font-medium text-base md:text-lg p-3 mb-6 rounded-md shadow
+           bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-800 border border-indigo-200
+           dark:from-gray-700 dark:to-gray-800 dark:text-indigo-200 dark:border-indigo-700/40
+           sticky top-4 z-20 transition-colors duration-300;
+}
+.timer-display.low-time {
+     /* Style for low time warning */
+    @apply !from-red-50 !to-orange-50 !text-red-800 !border-red-200
+           dark:!from-red-700/30 dark:!to-orange-700/30 dark:!text-red-200 dark:!border-red-600/40
+           animate-pulse; /* Optional pulse effect */
+}
 
-/* Markdown styles */
-.question-text :deep(strong) { @apply font-semibold; }
+/* --- Question Block --- */
+.question-block {
+    @apply p-5 md:p-6 bg-white dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-md border border-gray-200 dark:border-gray-700/60 transition-all duration-200 hover:shadow-lg;
+}
+.question-block:focus-within {
+    @apply ring-2 ring-primary-400 dark:ring-primary-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
+}
+.question-header {
+    @apply flex justify-between items-baseline mb-3 pb-2 border-b border-dashed border-gray-200 dark:border-gray-700/50;
+}
+.question-number {
+    @apply text-base font-semibold text-primary-700 dark:text-primary-400;
+}
+.question-points {
+    @apply text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded;
+}
+.question-text {
+    @apply text-base md:text-lg font-normal text-gray-800 dark:text-gray-100 mb-5 leading-relaxed prose prose-sm sm:prose-base dark:prose-invert max-w-none;
+}
+.question-text :deep(p) { @apply mb-3 last:mb-0; }
+.answer-area {
+    @apply mt-5 pt-5 border-t border-gray-100 dark:border-gray-700/50;
+}
+
+/* --- Options (MCQ/TF) --- */
+.option-wrapper {
+    @apply relative flex items-start p-3.5 rounded-lg border-2 border-gray-200 dark:border-gray-600/80
+           transition-all duration-150 cursor-pointer bg-white dark:bg-gray-700/30
+           hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50/30 dark:hover:bg-primary-900/10;
+}
+
+.option-wrapper.selected-option .option-label {
+    @apply text-primary-800 dark:text-primary-100 font-semibold;
+}
+.radio-input-wrapper { @apply flex items-center h-5 flex-shrink-0; }
+.radio-input {
+    @apply focus:ring-primary-600 h-4 w-4 text-primary-600 border-gray-400 dark:border-gray-500
+           dark:bg-gray-600 dark:checked:bg-primary-500 dark:focus:ring-offset-gray-800
+           disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer;
+}
+.option-label-wrapper { @apply ms-3 text-sm md:text-base flex-grow; }
+.option-label { @apply font-medium text-gray-700 dark:text-gray-200; }
+
+/* --- Written Answer Textarea --- */
+.textarea-input {
+    @apply shadow-sm block w-full text-sm md:text-base rounded-md min-h-[10rem]
+           border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700
+           text-gray-900 dark:text-gray-100
+           placeholder-gray-400 dark:placeholder-gray-500
+           focus:ring-primary-500 focus:border-primary-500
+           dark:focus:ring-primary-500 dark:focus:border-primary-500
+           disabled:opacity-70 disabled:bg-gray-100 dark:disabled:bg-gray-700/50 disabled:cursor-not-allowed;
+}
+
+/* --- Submission Section --- */
+.submit-section {
+    @apply pt-6 mt-8 border-t border-gray-200 dark:border-gray-700 text-center space-y-3;
+}
+.submit-error {
+    @apply text-red-600 dark:text-red-400 text-sm font-medium p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-600/30 rounded-md;
+}
+.button-submit {
+    @apply inline-flex items-center justify-center px-10 py-3 border border-transparent
+           text-base font-medium rounded-md shadow-lg text-white transform transition hover:scale-105
+           bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500
+           dark:focus:ring-offset-gray-900
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:bg-gradient-to-r disabled:from-gray-500 disabled:to-gray-600;
+}
+.unanswered-prompt {
+     @apply text-xs text-yellow-600 dark:text-yellow-400;
+}
+
+/* --- Base Buttons (for Error Block) --- */
+.button-base {
+    @apply inline-flex items-center justify-center px-4 py-2 border text-sm font-medium rounded-md shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
+           disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-150;
+}
+.button-secondary {
+    @apply button-base border-gray-300 dark:border-gray-600
+           text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700
+           hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-primary-500;
+}
+
+/* --- General Focus Visible --- */
+*:focus-visible {
+    outline: 2px solid theme('colors.primary.500'); outline-offset: 2px;
+}
+
+/* --- Markdown Content Styles --- */
+.question-text :deep(strong) { @apply font-semibold text-gray-900 dark:text-gray-50; }
 .question-text :deep(em) { @apply italic; }
-.question-text :deep(ul), .question-text :deep(ol) { @apply my-2 ms-5 list-outside; }
-.question-text :deep(li) { @apply mb-1; }
-
+.question-text :deep(ul), .question-text :deep(ol) { @apply my-4 ms-6 list-outside space-y-1.5; }
+/* Removed specific li styling, rely on prose defaults */
+.question-text :deep(a) { @apply text-primary-600 dark:text-primary-400 hover:underline font-medium; }
+.question-text :deep(code):not(pre code) {
+    @apply px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono text-red-600 dark:text-red-400;
+}
+.question-text :deep(pre) {
+    @apply bg-gray-800 dark:bg-gray-900 p-4 rounded-md overflow-x-auto text-sm my-4 shadow-inner;
+}
+.question-text :deep(pre code) {
+    @apply bg-transparent text-gray-200 dark:text-gray-300 p-0 font-mono text-sm;
+}
+.question-text :deep(blockquote) {
+    @apply border-s-4 border-gray-300 dark:border-gray-500 ps-4 my-4 text-gray-600 dark:text-gray-400 italic;
+}
+.question-text :deep(hr) {
+    @apply my-6 border-gray-200 dark:border-gray-700;
+}
 </style>

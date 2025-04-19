@@ -52,7 +52,7 @@ export const useNotificationStore = defineStore('notifications', {
         
 
       } catch (err: any) {
-        console.error("Error fetching notifications:", err);
+
         this.error = "فشل تحميل الإشعارات.";
         this.notifications = [];
         this.unreadCount = 0;
@@ -82,7 +82,7 @@ export const useNotificationStore = defineStore('notifications', {
           // يمكنك إضافة .eq('user_id', userId) إذا كانت الإشعارات دائمًا خاصة بالمستخدم
 
         if (error) {
-          console.error(`Error marking notification ${notificationId} as read:`, error);
+
           // إعادة الحالة الأصلية في حالة الفشل (Rollback Optimistic Update)
           if (notification) {
             notification.is_read = false;
@@ -93,7 +93,7 @@ export const useNotificationStore = defineStore('notifications', {
              
         }
       } catch (err) {
-        console.error("Unexpected error marking notification as read:", err);
+
          if (notification) { // Rollback on unexpected errors too
             notification.is_read = false;
             this.unreadCount++;
@@ -121,7 +121,7 @@ export const useNotificationStore = defineStore('notifications', {
           .eq('is_read', false); // فقط غير المقروءة
 
         if (error) {
-          console.error("Error marking all notifications as read:", error);
+
           // إعادة الحالة الأصلية في حالة الفشل
            this.notifications.forEach(n => { if (previouslyUnreadIds.includes(n.id)) n.is_read = false; });
            this.unreadCount = oldUnreadCount;
@@ -130,7 +130,7 @@ export const useNotificationStore = defineStore('notifications', {
              
         }
       } catch (err) {
-        console.error("Unexpected error marking all notifications as read:", err);
+
          this.notifications.forEach(n => { if (previouslyUnreadIds.includes(n.id)) n.is_read = false; });
          this.unreadCount = oldUnreadCount;
          // TODO: Show error notification
@@ -175,10 +175,10 @@ export const useNotificationStore = defineStore('notifications', {
                     
                  }
                  if (status === 'CHANNEL_ERROR' || err) {
-                    console.error('[Notifications] Realtime subscription error:', err || 'Channel Error');
+
                  }
                   if (status === 'TIMED_OUT') {
-                    console.warn('[Notifications] Realtime subscription timed out.');
+
                   }
             });
     },

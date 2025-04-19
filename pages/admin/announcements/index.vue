@@ -6,13 +6,21 @@
       <h1 class="text-2xl font-bold text-brown-dark dark:text-beige-light">
         إدارة المواعيد والإعلانات
       </h1>
-      <button
-        @click="openAddModal"
-        class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-gray-800 flex-shrink-0"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 me-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-        إضافة جديد
-      </button>
+      <div class="flex-shrink-0 relative">
+        <button
+          @click="openAddModal"
+          :disabled="isAddDisabled"
+          :title="addButtontitle"
+          class="inline-flex items-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-gray-800 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 me-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          إضافة جديد
+        </button>
+        <!-- Optional: Display a message when disabled -->
+        <p v-if="isAddDisabled" class="text-xs text-red-600 dark:text-red-400 mt-1 absolute -bottom-4 right-0 whitespace-nowrap">
+          تم الوصول للحد الأقصى ({{ MAX_ANNOUNCEMENTS }}).
+        </p>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -136,6 +144,9 @@ type AnnouncementType = Enums<'announcement_type'>;
 type Announcement = Omit<Tables<'announcements'>, 'type'> & { type: AnnouncementType };
 type NotificationInsert = Omit<Tables<'notifications'>, 'id' | 'created_at'>;
 
+// --- Constants ---
+const MAX_ANNOUNCEMENTS = 9; // Define the maximum limit
+
 // --- Supabase Client & Nuxt App ---
 const client = useSupabaseClient<Database>();
 const { $toast } = useNuxtApp();
@@ -167,6 +178,21 @@ const isFormValid = computed(() => {
   return formData.value.title.trim() !== '';
 });
 
+// --- Computed Property for Add Button Disabling ---
+const isAddDisabled = computed(() => {
+  // Disable if loading OR if the limit is reached
+  return isLoadingList.value || announcements.value.length >= MAX_ANNOUNCEMENTS;
+});
+
+// --- Computed Property for Add Button Title (Tooltip) ---
+const addButtontitle = computed(() => {
+    if (announcements.value.length >= MAX_ANNOUNCEMENTS) {
+        return `لا يمكن الإضافة، تم الوصول إلى الحد الأقصى (${MAX_ANNOUNCEMENTS} إعلانات).`;
+    }
+    return 'إضافة إعلان أو موعد جديد';
+});
+
+
 // --- Helper Functions ---
 function formatDate(dateString: string | null): string | null {
   if (!dateString) return null;
@@ -191,9 +217,16 @@ async function fetchAnnouncements() {
   isLoadingList.value = true;
   listError.value = null;
   try {
+    // Fetch data
     const { data, error } = await client.from('announcements').select('*').order('date', { ascending: false, nullsFirst: false });
     if (error) throw error;
     announcements.value = (data || []) as Announcement[];
+    // Check count after fetching
+    if (announcements.value.length > MAX_ANNOUNCEMENTS) {
+      console.warn(`تجاوز عدد الإعلانات (${announcements.value.length}) الحد الأقصى (${MAX_ANNOUNCEMENTS}). لن تتمكن من إضافة المزيد حتى يتم الحذف.`);
+      // Optionally show a persistent warning message to the user
+      // showToast('warning', `تجاوز عدد الإعلانات الحد الأقصى (${MAX_ANNOUNCEMENTS}).`);
+    }
   } catch (error: any) {
     console.error('Error fetching announcements:', error);
     listError.value = error.message || 'فشل تحميل قائمة الإعلانات.';
@@ -205,17 +238,23 @@ async function fetchAnnouncements() {
 // --- Lifecycle Hook ---
 onMounted(() => {
   console.log('Checking $toast on mount:', $toast);
-  fetchAnnouncements();
+  fetchAnnouncements(); // Fetch data on mount, which also checks the limit
 });
 
 // --- Modal Management ---
 function openAddModal() {
+  // Double check the limit before opening the modal, though the button should be disabled
+  if (isAddDisabled.value) {
+    showToast('warning', `لا يمكن الإضافة، تم الوصول إلى الحد الأقصى (${MAX_ANNOUNCEMENTS} إعلانات).`);
+    return;
+  }
   editingAnnouncement.value = null;
   formData.value = { ...initialFormData };
   errorMessage.value = null;
   isModalOpen.value = true;
 }
 function openEditModal(announcement: Announcement) {
+  // Editing is always allowed regardless of the count
   editingAnnouncement.value = announcement;
   formData.value = {
     title: announcement.title, details: announcement.details ?? '', type: announcement.type, date: formatISOForInput(announcement.date),
@@ -260,6 +299,15 @@ const handleSubmit = async () => {
     errorMessage.value = 'الرجاء ملء حقل العنوان.';
     return;
   }
+
+  // Add check here specifically for ADDING a new item
+  if (!editingAnnouncement.value && announcements.value.length >= MAX_ANNOUNCEMENTS) {
+      errorMessage.value = `لا يمكن الإضافة، تم الوصول إلى الحد الأقصى (${MAX_ANNOUNCEMENTS} إعلانات).`;
+      showToast('error', errorMessage.value);
+      isSaving.value = false; // Ensure saving state is reset
+      return; // Prevent submission
+  }
+
   isSaving.value = true;
   try {
     const dataToSubmit = {
@@ -272,9 +320,14 @@ const handleSubmit = async () => {
     const shouldNotify = formData.value.sendNotification;
 
     if (editingAnnouncement.value) {
+      // Editing doesn't need the count check
       const { error } = await client.from('announcements').update(dataToSubmit).eq('id', editingAnnouncement.value.id);
       operationError = error; if (!error) savedAnnouncementId = editingAnnouncement.value.id;
     } else {
+       // Adding needs the check (already performed above, but double-checking is safe)
+       if (announcements.value.length >= MAX_ANNOUNCEMENTS) {
+           throw new Error(`Attempted to add beyond the limit of ${MAX_ANNOUNCEMENTS}.`);
+       }
       const { data: insertedData, error } = await client.from('announcements').insert(dataToSubmit).select('id').single();
       operationError = error; if (!error && insertedData) savedAnnouncementId = insertedData.id;
     }
@@ -282,12 +335,12 @@ const handleSubmit = async () => {
 
     if (savedAnnouncementId && wasPublished && shouldNotify) {
         notifyAllUsersAboutAnnouncement(savedAnnouncementId, formData.value.title.trim(), formData.value.type);
-        formData.value.sendNotification = false;
+        formData.value.sendNotification = false; // Reset after sending
     }
 
     const successText = editingAnnouncement.value ? 'تم التحديث بنجاح!' : 'تمت الإضافة بنجاح!';
     closeModal();
-    await fetchAnnouncements();
+    await fetchAnnouncements(); // Re-fetch to update the list and the count
     showToast('success', successText);
 
   } catch (error: any) {
@@ -295,6 +348,8 @@ const handleSubmit = async () => {
     let specificErrorMsg = error.message || 'حدث خطأ غير متوقع أثناء الحفظ.';
     if (error.message?.includes('violates check constraint')) specificErrorMsg = 'خطأ في البيانات المدخلة.';
     else if (error.message?.includes('violates row-level security policy')) specificErrorMsg = 'فشل الحفظ بسبب قيود الأمان.';
+    else if (error.message?.includes(`beyond the limit of ${MAX_ANNOUNCEMENTS}`)) specificErrorMsg = `لا يمكن الإضافة، تم الوصول للحد الأقصى (${MAX_ANNOUNCEMENTS}).`;
+
     errorMessage.value = specificErrorMsg;
     showToast('error', `خطأ في الحفظ: ${specificErrorMsg}`);
   } finally { isSaving.value = false; }
@@ -324,7 +379,7 @@ async function handleDelete(id: number) {
   try {
     const { error } = await client.from('announcements').delete().eq('id', id);
     if (error) throw error;
-    await fetchAnnouncements();
+    await fetchAnnouncements(); // Re-fetch to update the list and count
     showToast('success', 'تم حذف الإعلان بنجاح.');
   } catch (error: any) { console.error('Error deleting announcement:', error); showToast('error', `فشل حذف الإعلان: ${error.message || 'خطأ غير معروف'}`);
   } finally { isDeleting.value = null; }
@@ -338,7 +393,16 @@ async function togglePublish(announcement: Announcement) {
     try {
         const { error } = await client.from('announcements').update({ is_published: newStatus }).eq('id', announcement.id);
         if (error) throw error;
-        await fetchAnnouncements();
+        // Find the announcement in the local array and update its status
+        // This avoids a full re-fetch just for toggling publish status, making it faster
+        const index = announcements.value.findIndex(a => a.id === announcement.id);
+        if (index !== -1) {
+            announcements.value[index].is_published = newStatus;
+        } else {
+            // Fallback to re-fetch if not found locally (shouldn't happen often)
+            await fetchAnnouncements();
+        }
+        // await fetchAnnouncements(); // Optionally keep re-fetch if simpler
         showToast('success', `تم ${actionText} الإعلان "${announcement.title}" بنجاح.`);
     } catch (error: any) { console.error('Error toggling publish status:', error); showToast('error', `فشل ${actionText} الإعلان: ${error.message || 'خطأ غير معروف'}`);
     } finally { isTogglingPublish.value = null; }

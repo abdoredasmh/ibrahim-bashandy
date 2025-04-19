@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-beige-light text-brown-dark font-sans">
+  <div class="flex flex-col min-h-screen bg-beige-light dark:bg-gray-950 text-brown-dark font-sans">
     <!-- 1. رأس الصفحة -->
     <AppHeader /> 
 
