@@ -280,7 +280,7 @@ const { data: fetchedData, pending, error: loadError } = await useAsyncData<Fetc
       .maybeSingle();
 
     if (attemptError) {
-        
+        console.error("Error fetching attempt:", attemptError);
         loadErrorReason.value = 'فشل في جلب بيانات المحاولة من قاعدة البيانات.';
         // Throw non-fatal error to show error box in the component
         throw createError({ statusCode: 500, message: loadErrorReason.value, fatal: false });
@@ -296,7 +296,7 @@ const { data: fetchedData, pending, error: loadError } = await useAsyncData<Fetc
       // Shallow copy is usually sufficient here
       parsedAnswers = { ...(attempt.answers as Record<string, any>) };
     } else if (attempt.answers) {
-        
+        console.warn(`Attempt ${attempt.id} has non-object 'answers' field:`, attempt.answers);
     }
     (attempt as QuizAttemptFull).answers_parsed = parsedAnswers;
 
@@ -308,26 +308,26 @@ const { data: fetchedData, pending, error: loadError } = await useAsyncData<Fetc
       supabase.from('profiles').select('id, full_name').eq('id', attempt.user_id).maybeSingle(),
       supabase.from('quiz_questions').select('*').eq('quiz_id', attempt.quiz_id).order('question_order'),
     ]).catch(err => {
-        
+        console.error("Error during parallel fetches:", err);
         loadErrorReason.value = 'حدث خطأ أثناء جلب البيانات المرتبطة (الاختبار، الطالب، أو الأسئلة).';
         throw createError({ statusCode: 500, message: loadErrorReason.value, fatal: false });
     });
 
     // Handle results and potential errors/null data gracefully
     const quizData = quizRes?.data ?? null;
-    if (quizRes?.error) 
+    if (quizRes?.error) console.error("Error fetching quiz:", quizRes.error);
 
     const studentProfile = studentRes?.data ?? null;
-    if (studentRes?.error) 
+    if (studentRes?.error) console.error("Error fetching student profile:", studentRes.error);
 
     const questionsList = questionsRes?.data ?? [];
-    if (questionsRes?.error) 
+    if (questionsRes?.error) console.error("Error fetching questions:", questionsRes.error);
 
     // Extract course data (already selected via the quiz query)
     const courseInfo = quizData?.study_courses ?? null;
 
-    if (!quizData) 
-    if (!studentProfile) 
+    if (!quizData) console.warn(`Quiz data not found for quiz ID: ${attempt.quiz_id}`);
+    if (!studentProfile) console.warn(`Student profile not found for user ID: ${attempt.user_id}`);
 
     return {
       attempt: attempt as QuizAttemptFull,
@@ -373,7 +373,7 @@ watch(fetchedData, (newData) => {
                 manualScores[q.id] = typeof existingScores[q.id] === 'number' ? existingScores[q.id] : null;
                 scoreErrors[q.id] = null; // Reset potential errors
             } else {
-                 
+                 console.warn("Watcher: Question found without a valid ID during score initialization:", q);
             }
         });
         
@@ -466,7 +466,7 @@ const formatDate = (dateString: string | null | undefined): string => {
         hour: 'numeric', minute: '2-digit', hour12: true // Example options
       });
    } catch {
-      
+      console.warn("Failed to format date:", dateString);
       return dateString; // Fallback to original string if formatting fails
    }
 };
@@ -583,7 +583,7 @@ const validateAllScoresForSubmit = (): boolean => {
              } else {
                  // This case (already graded but score removed) might need specific handling
                  // depending on desired behavior (allow un-grading?). For now, assume we only submit valid scores.
-                 
+                 console.warn(`Question ${q.id} was likely graded but score is now empty. Ignoring for submission.`);
                  // Ensure no error is set for this case if we ignore it
                  scoreErrors[q.id] = null;
              }
@@ -597,7 +597,7 @@ const validateAllScoresForSubmit = (): boolean => {
 const submitManualGrades = async () => {
   // Ensure essential data is loaded and not already saving
   if (!attemptData.value || !quizData.value || isSaving.value) {
-      
+      console.warn("Submission blocked: Missing data or already saving.");
       return;
   }
   // Prevent submission if already fully graded
@@ -709,7 +709,7 @@ const submitManualGrades = async () => {
                 .insert(notificationPayload);
 
             if (notificationError) {
-                
+                console.error("Error creating grading notification:", notificationError);
                 // Handle notification error - maybe show a warning, but don't stop the flow
                 // Using alert as placeholder - replace with your notification system
                 alert("تم حفظ التصحيح بنجاح، لكن فشل إرسال الإشعار للطالب. الخطأ: " + notificationError.message);
@@ -719,7 +719,7 @@ const submitManualGrades = async () => {
                 alert("تم حفظ التصحيح بنجاح وتم إرسال إشعار للطالب."); // Placeholder
             }
         } else {
-             
+             console.warn("Could not send notification: attemptData or user_id missing after update success.");
              // Success message without notification confirmation
              alert("تم حفظ التصحيح بنجاح (لم يتم إرسال إشعار - بيانات الطالب مفقودة)."); // Placeholder
         }
@@ -730,7 +730,7 @@ const submitManualGrades = async () => {
         await navigateTo('/admin/grading');
 
     } catch (err: any) {
-      
+      console.error("Error saving manual grades:", err);
       saveError.value = `فشل حفظ التصحيح: ${err.message || 'حدث خطأ غير متوقع في الاتصال بالخادم.'}`;
       // Consider more specific error handling based on err.code or err.details if needed
       // e.g., check for permission errors (403), network errors, etc.
