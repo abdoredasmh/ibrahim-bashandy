@@ -198,7 +198,6 @@ import { ref, computed, shallowRef, watch, reactive } from 'vue';
 import { useRoute, useSupabaseClient, useAsyncData, definePageMeta, createError, navigateTo, useHead } from '#imports';
 import type { Database, Tables, Json, Enums } from '~/types/database.types';
 import LoadingSpinner from '~/components/LoadingSpinner.vue'; // تأكد من المسار الصحيح
-import InfoItem from '~/components/admin/InfoItem.vue'; // تأكد من المسار الصحيح
 // Use DOMPurify for safer HTML rendering if markdown source is potentially untrusted
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
