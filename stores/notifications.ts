@@ -236,7 +236,9 @@ export const useNotificationStore = defineStore('notifications', {
             }
 
             console.log(`NotificationStore: Subscribing to shared channel '${this._fixedChannelName}' for all user notifications.`);
-            const channel = client.channel(this._fixedChannelName); // ✅ استخدام اسم القناة الثابت
+            const channelName = `user_notifications_${userId}`;
+            const channel = client.channel(channelName);
+
 
             // قم بتخزين القناة على الفور حتى يتمكن إلغاء الاشتراك من العثور عليها حتى لو فشل الاشتراك
             this.subscriptionChannel = channel;
@@ -247,7 +249,7 @@ export const useNotificationStore = defineStore('notifications', {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'notifications',
-                    // ✅ لا يوجد فلتر user_id هنا. تتم الفلترة في الكولباك.
+                    filter: `user_id=eq.${userId}`
                 },
                 (payload) => {
                     // console.log('NotificationStore: Realtime INSERT received on shared channel:', payload.new);
@@ -333,7 +335,7 @@ export const useNotificationStore = defineStore('notifications', {
                         .then(removeStatus => console.log(`NotificationStore: removeChannel '${channelName}' status:`, removeStatus))
                         .catch(removeErr => console.error(`NotificationStore: removeChannel '${channelName}' error:`, removeErr));
 
-                    // قم بتصفير المرجع فقط إذا كان هو نفس القناة التي قصدنا إزالتها
+                    // قم بتصفير المرجع فقط إذا كان هو نفس القناة التي قصدنا إزالتهاش
                     // هذا يحمي من حالات السباق إذا تم إنشاء قناة جديدة بسرعة
                     if (this.subscriptionChannel === channelToUnsubscribe) {
                         this.subscriptionChannel = null;
