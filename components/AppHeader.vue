@@ -2,7 +2,7 @@
   <header class="bg-white dark:bg-gray-900 shadow-md sticky top-0 z-50">
     <nav class="container mx-auto px-4 py-5 flex items-center justify-between">
       <NuxtLink to="/" class="text-xl font-bold text-olive-green dark:text-yellow-400 hover:opacity-80 transition-opacity">
-        الشيخ إبراهيم بشندي
+        معهد الحمد
       </NuxtLink>
 
       <!-- روابط سطح المكتب -->
