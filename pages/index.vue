@@ -6,7 +6,7 @@
         <div class="md:w-2/3 z-10">
           <!-- العنوان يستخدم اللون الأساسي الذي يتغير تلقائياً عبر متغيرات CSS -->
           <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-olive-green mb-4">
-             فضيلة الشيخ إبراهيم بشندي
+             معهد الحمد
           </h1>
           <p v-if="pending && !aboutData" class="text-lg text-brown-dark dark:text-gray-300 leading-relaxed mb-6">
             جاري تحميل النبذة...
