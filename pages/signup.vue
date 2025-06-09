@@ -123,7 +123,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue' // تم حذف computed لأنه لم يعد مستخدماً هنا
 import { useSupabaseClient, navigateTo } from '#imports'
 
 const client = useSupabaseClient()
@@ -134,26 +134,22 @@ const confirmPassword = ref('')
 const message = ref('')
 const isError = ref(false)
 const loading = ref(false)
-const showPassword = ref(false) // حالة إظهار/إخفاء كلمة المرور
-const showConfirmPassword = ref(false) // حالة إظهار/إخفاء تأكيد كلمة المرور
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
-// حالة لتتبع طول كلمة المرور فقط
 const passwordMeetsLength = ref(false)
 
-// دالة للتحقق من طول كلمة المرور وتحديث الحالة
 const validatePasswordLength = () => {
   passwordMeetsLength.value = password.value.length >= 8
 }
 
 const handleSignup = async () => {
-  // التحقق من تطابق كلمتي المرور
   if (password.value !== confirmPassword.value) {
     message.value = 'كلمتا المرور غير متطابقتين.'
     isError.value = true
     return
   }
 
-  // التحقق من طول كلمة المرور قبل الإرسال
   if (!passwordMeetsLength.value) {
      message.value = 'يجب أن تكون كلمة المرور 8 حروف على الأقل.'
      isError.value = true
@@ -167,19 +163,19 @@ const handleSignup = async () => {
   try {
       const { data, error } = await client.auth.signUp({
         email: email.value,
-        password: password.value, // استخدم كلمة المرور بعد التحقق
+        password: password.value,
         options: {
-          data: {
+          data: { // هذا هو app_metadata
             full_name: fullName.value,
+            user_role: 'user' //  <--- ⭐⭐ التعديل هنا: إضافة الدور الافتراضي ⭐⭐
           }
         }
       })
 
       if (error) {
         console.error('Signup Error:', error.message)
-        // تحسين رسالة الخطأ لضعف كلمة المرور إذا كانت من Supabase (احتياطي)
         if (error.message.includes('Password should be at least')) {
-             message.value = 'كلمة المرور ضعيفة جدًا بحسب سياسة الخادم. يرجى استخدام كلمة مرور أقوى.' // قد تحتاج لتعديلها بناءً على سياسة Supabase
+             message.value = 'كلمة المرور ضعيفة جدًا بحسب سياسة الخادم. يرجى استخدام كلمة مرور أقوى.'
         } else if (error.message.includes('User already registered')) {
              message.value = 'هذا البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.'
         }
@@ -188,22 +184,17 @@ const handleSignup = async () => {
         }
         isError.value = true
       } else if (data.user) {
-          // تحقق إذا كان يحتاج تأكيد البريد
-          // Supabase v2: data.user.identities is empty if email confirmation needed
-          // Supabase v2: data.session is null if email confirmation needed
           const needsConfirmation = !data.session;
 
           if (needsConfirmation) {
              message.value = 'تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى التحقق منه لتفعيل حسابك.';
              isError.value = false;
-             // توجيه المستخدم لصفحة التأكيد بعد لحظة لعرض الرسالة
              setTimeout(() => navigateTo('/confirm?email=' + encodeURIComponent(email.value)), 3000);
           } else if (data.session) {
               message.value = 'تم إنشاء الحساب وتسجيل الدخول بنجاح!';
               isError.value = false;
-              setTimeout(() => navigateTo('/profile'), 1500); // أو إلى لوحة التحكم
+              setTimeout(() => navigateTo('/profile'), 1500);
           } else {
-             // حالة غير متوقعة، ربما نعرض رسالة تأكيد عامة
              message.value = 'تم إنشاء الحساب بنجاح. قد تحتاج لتأكيد بريدك الإلكتروني.';
              isError.value = false;
              setTimeout(() => navigateTo('/confirm?email=' + encodeURIComponent(email.value)), 3000);
@@ -226,22 +217,18 @@ const handleSignup = async () => {
 <style scoped>
 /* يمكنك إضافة أي تنسيقات مخصصة هنا إذا لزم الأمر */
 
-/* تعديل بسيط لموضع أيقونة التحميل عند تعطيل الزر */
 button:disabled span:first-child {
     left: 0.75rem; /* pl-3 */
 }
 
-/* جعل أيقونات الإدخال غير قابلة للتحديد */
 .absolute span {
     pointer-events: none;
 }
 
-/* تأكد من أن زر العين قابل للنقر */
 .absolute button {
     cursor: pointer;
 }
 
-/* إخفاء أيقونة الإنشاء عند التعطيل */
 button:disabled span:last-child {
   opacity: 0;
 }

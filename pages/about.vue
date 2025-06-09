@@ -3,7 +3,7 @@
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
    
       <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-center text-brown-dark dark:text-brown-dark mb-12 md:mb-16 border-b-2 border-olive-green dark:border-golden-calm pb-5 max-w-3xl mx-auto">
-        عن الشيخ إبراهيم بشندي
+        عن معهد الحمد 
       </h1>
 
     
@@ -11,7 +11,7 @@
         <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
           <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
         </div>
-        <p class="mt-6 text-lg text-gray-500 dark:text-gray-400 font-medium">جاري تحميل بيانات الشيخ...</p>
+        <p class="mt-6 text-lg text-gray-500 dark:text-gray-400 font-medium">جاري تحميل بيانات المعهد...</p>
       </div>
 
       
@@ -22,7 +22,7 @@
            </svg>
         </div>
         <p class="text-xl font-semibold mb-3">عذراً، حدث خطأ</p>
-        <p class="text-base mb-6">{{ displayError?.message || 'لم نتمكن من تحميل بيانات الشيخ المطلوبة.' }}</p>
+        <p class="text-base mb-6">{{ displayError?.message || 'لم نتمكن من تحميل بيانات المعهد المطلوبة.' }}</p>
         <button @click="refresh" class="px-6 py-2.5 bg-primary hover:bg-opacity-90 text-white text-base font-medium rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-gray-950 shadow-md hover:shadow-lg">
           إعادة المحاولة
         </button>
@@ -37,7 +37,7 @@
             <div class="bg-beige-light/70 dark:bg-gray-800/80 rounded-xl shadow-xl overflow-hidden border border-cream-gray/50 dark:border-gray-700/60 p-6 md:p-7"> 
               <NuxtImg
                 :src="sheikhInfo.profile_image_url || '/images/placeholder-sheikh.jpg'"
-                alt="صورة الشيخ إبراهيم بشندي"
+               
                 class="rounded-lg w-full h-auto object-cover aspect-[4/3] transition-transform duration-500 ease-in-out hover:scale-105 shadow-lg ring-1 ring-black/5 dark:ring-white/10" 
                 sizes="sm:100vw md:300px lg:400px"
                 format="webp"
@@ -49,7 +49,7 @@
              
               <div v-if="contactLinks.length > 0" class="mt-8 pt-6 border-t border-cream-gray dark:border-gray-700/50 contact-links">
                  
-                  <h3 class="text-xl font-semibold text-brown-dark dark:text-brown-dark mb-5">للتواصل مع الشيخ:</h3>
+                  <h3 class="text-xl font-semibold text-brown-dark dark:text-brown-dark mb-5">للتواصل مع المعهد:</h3>
                   <ul class="space-y-2"> 
                       <li v-for="link in contactLinks" :key="link.platform"
                           class="flex items-center space-x-reverse space-x-4 group p-3 hover:bg-cream-gray/30 dark:hover:bg-gray-700/40 rounded-lg transition-colors duration-200"> 
@@ -190,8 +190,8 @@ const { data: sheikhInfo, pending, error: rawError, refresh } = await useAsyncDa
 );
 
 // --- SEO Meta ---
-const pageTitle = computed(() => sheikhInfo.value?.short_bio ? `عن الشيخ إبراهيم بشندي - ${sheikhInfo.value.short_bio.substring(0, 40)}...` : 'عن الشيخ إبراهيم بشندي');
-const pageDescription = computed(() => sheikhInfo.value?.short_bio || 'تعرف على سيرة الشيخ إبراهيم بشندي، نشأته العلمية، ومسيرته الدعوية من خلال موقعه الرسمي.');
+const pageTitle = computed(() => sheikhInfo.value?.short_bio ? `عن معهد الحمد - ${sheikhInfo.value.short_bio.substring(0, 40)}...` : 'عن معهد الحمد');
+const pageDescription = computed(() => sheikhInfo.value?.short_bio || 'تعرف على معهد الحمد، نشأته  من خلال موقعه الرسمي.');
 const pageImage = computed(() => sheikhInfo.value?.profile_image_url || '/images/placeholder-sheikh.jpg');
 
 useHead({

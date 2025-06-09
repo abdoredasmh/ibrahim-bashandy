@@ -10,7 +10,7 @@
             جميع الحقوق محفوظة © {{ currentYear }}
           </p>
           <!-- استخدام اسم الموقع الديناميكي -->
-          <p class="text-lg font-semibold">{{ "الشيخ ابراهيم بشندي "}}</p>
+          <p class="text-lg font-semibold">{{ "معهد الحمد"}}</p>
         </div>
 
         <!-- 2. روابط التواصل - استخدام v-for مع البيانات الديناميكية -->
@@ -86,7 +86,7 @@ const { data: aboutData, pending, error } = await useAsyncData<{ contact_info: J
     return data;
   },
   {
-    default: () => ({ contact_info: null, short_bio: 'موقع الشيخ إبراهيم بشندي' }),
+    default: () => ({ contact_info: null, short_bio: 'موقع معهد الحمد' }),
   }
 );
 
@@ -111,7 +111,7 @@ const socialLinks = computed<SocialLinks>(() => {
 });
 
 // --- خاصية محسوبة لاسم الموقع ---
-const siteName = computed(() => aboutData.value?.short_bio || 'موقع الشيخ إبراهيم بشندي');
+const siteName = computed(() => aboutData.value?.short_bio || 'موقع معهد الحمد');
 
 // --- أيقونات SVG ---
 // تعريف الأيقونات ككائنات بسيطة تحتوي على path data
