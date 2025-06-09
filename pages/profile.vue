@@ -204,6 +204,7 @@ import { useSupabaseClient, useSupabaseUser, useAsyncData, navigateTo } from '#i
 import type { Database, Tables, Json } from '~/types/database.types';
 import { formatDistanceToNow } from 'date-fns';
 import { arSA } from 'date-fns/locale';
+import imageCompression from 'browser-image-compression'; // <-- استيراد المكتبة
 
 // --- تعريف الأنواع المطلوبة ---
 type Profile = Tables<'profiles'>;
@@ -216,7 +217,6 @@ type Course = {
   last_accessed_lesson_id: number | null;
 };
 type PrivateMessage = Tables<'user_private_messages'>;
-// تم حذف نوع الشهادة/الدورة المكتملة
 
 // --- المكونات والمساعدات ---
 import BaseCard from '~/components/BaseCard.vue';
@@ -230,6 +230,11 @@ definePageMeta({
 const userStore = useUserStore();
 const client = useSupabaseClient<Database>();
 const user = useSupabaseUser();
+
+// --- ثوابت لرفع الصور ---
+const MAX_AVATAR_SIZE_MB_BEFORE_COMPRESSION = 5; // <-- الحد الأقصى للحجم المسموح به قبل محاولة الضغط (مثلاً 5 ميجابايت)
+const MAX_AVATAR_SIZE_MB_AFTER_COMPRESSION = 1; // <-- الحجم المستهدف بعد الضغط (مثلاً 1 ميجابايت)
+const AVATAR_MAX_WIDTH_OR_HEIGHT = 800; // <-- أقصى عرض أو ارتفاع للصورة بعد الضغط (بالبكسل)
 
 // --- حالة النموذج والتحديث ---
 const newFullName = ref('');
@@ -262,34 +267,28 @@ const genericReplyError = ref<string | null>(null);
 // --- جلب البيانات ---
 const { data: myCourses, pending: pendingCourses, error: errorCourses, refresh: refreshCourses } = useAsyncData<Course[]>(
   'myCourses',
-  () => $fetch('/api/my-courses'), // يفترض أن هذا الـ API يجلب الدورات مع التقدم
+  () => $fetch('/api/my-courses'),
   { lazy: true, server: false }
 );
 
-// تم حذف useAsyncData الخاص بالشهادات/الدورات المكتملة
-
-// --- جلب رسائل الإدارة فقط ---
 const { data: adminMessages, pending: pendingMessages, error: errorMessages, refresh: refreshMessages } = useAsyncData<PrivateMessage[]>(
   'adminMessages',
   async () => {
     if (!user.value) return [];
-    
     try {
         const { data, error } = await client
           .from('user_private_messages')
           .select('*')
           .eq('user_id', user.value.id)
-          .is('related_question_id', null) // الفلتر: جلب الرسائل التي ليست ردودًا على أسئلة
+          .is('related_question_id', null)
           .order('created_at', { ascending: false });
         if (error) {  throw error; }
-        
         return data || [];
     } catch (err) {  throw err; }
   },
   { lazy: true, server: false, watch: [user] }
 );
 
-// --- وظائف التحديث (كما هي في النسخة السابقة) ---
 watch(() => userStore.profile, (newProfile) => {
     if (newProfile) { newFullName.value = newProfile.full_name || ''; newBio.value = newProfile.bio || ''; }
 }, { immediate: true });
@@ -311,33 +310,96 @@ async function updateProfile() {
 function triggerFileInput() { fileInput.value?.click(); }
 
 async function handleAvatarUpload(event: Event) {
-  const input = event.target as HTMLInputElement; if (!input.files || input.files.length === 0 || !user.value) return;
-  const file = input.files[0]; const fileExt = file.name.split('.').pop()?.toLowerCase(); const filePath = `${user.value.id}/avatar.${fileExt}`;
+  const input = event.target as HTMLInputElement;
+  if (!input.files || input.files.length === 0 || !user.value) return;
+
+  let file = input.files[0];
+  const fileExt = file.name.split('.').pop()?.toLowerCase();
+  const filePath = `${user.value.id}/avatar.${fileExt}`; // استخدام نفس الامتداد الأصلي أو امتداد الصورة المضغوطة (عادة jpg أو webp)
+
   const allowedTypes = ['png', 'jpg', 'jpeg', 'gif'];
-  if (!fileExt || !allowedTypes.includes(fileExt)) { avatarError.value = 'نوع الملف غير مدعوم.'; return; }
-  if (file.size > 2 * 1024 * 1024) { avatarError.value = 'حجم الملف كبير جدًا (الحد الأقصى 2 ميجابايت).'; return; }
-  isUploadingAvatar.value = true; avatarError.value = null;
+  if (!fileExt || !allowedTypes.includes(fileExt)) {
+    avatarError.value = 'نوع الملف غير مدعوم.';
+    return;
+  }
+
+  // التحقق من الحجم الأولي قبل الضغط
+  if (file.size > MAX_AVATAR_SIZE_MB_BEFORE_COMPRESSION * 1024 * 1024) {
+    avatarError.value = `حجم الملف كبير جدًا (الحد الأقصى المسموح به ${MAX_AVATAR_SIZE_MB_BEFORE_COMPRESSION} ميجابايت).`;
+    if (input) input.value = ''; // إعادة تعيين حقل الإدخال
+    return;
+  }
+
+  isUploadingAvatar.value = true;
+  avatarError.value = null;
+
   try {
-    const { error: uploadError } = await client.storage.from('avatars').upload(filePath, file, { upsert: true }); if (uploadError) throw uploadError;
-    const { data: urlData } = client.storage.from('avatars').getPublicUrl(filePath); if (!urlData?.publicUrl) throw new Error("لم يتم العثور على رابط الصورة بعد الرفع.");
-    const publicUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`;
-    const { error: updateError } = await client.from('profiles').update({ avatar_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', user.value.id); if (updateError) throw updateError;
+    console.log(`Original file size: ${file.size / 1024 / 1024} MB`);
+
+    // ضغط الصورة إذا كانت من الأنواع المدعومة للضغط (png, jpg, jpeg)
+    // GIF المتحركة قد تفقد الحركة عند الضغط بهذه الطريقة، يمكن استثناؤها أو التعامل معها بشكل مختلف
+    if (['png', 'jpg', 'jpeg'].includes(fileExt)) {
+        const options = {
+          maxSizeMB: MAX_AVATAR_SIZE_MB_AFTER_COMPRESSION,
+          maxWidthOrHeight: AVATAR_MAX_WIDTH_OR_HEIGHT,
+          useWebWorker: true,
+          // يمكنك تعديل هذه الخيارات للحصول على جودة/حجم مختلف
+          // initialQuality: 0.7, 
+          // fileType: 'image/webp', // يمكنك التحويل إلى WEBP لضغط أفضل
+        };
+        try {
+          console.log('Attempting to compress image...');
+          const compressedFile = await imageCompression(file, options);
+          console.log(`Compressed file size: ${compressedFile.size / 1024 / 1024} MB`);
+          // قد ترغب في التحقق من أن حجم الملف المضغوط لا يزال ضمن حدود معقولة
+          // أو إذا كان الضغط لم يقلل الحجم بشكل كافٍ
+          file = compressedFile; // استخدم الملف المضغوط للرفع
+        } catch (compressionError) {
+          console.error('Image compression failed:', compressionError);
+          avatarError.value = 'فشل ضغط الصورة. سيتم محاولة رفع الصورة الأصلية إذا كانت ضمن الحدود.';
+          // إذا فشل الضغط، يمكنك اختيار رفع الملف الأصلي إذا كان ضمن حدود المخزن
+          // أو عرض خطأ ومنع الرفع. هنا سنستمر بالملف الأصلي (الذي تم التحقق من حجمه الأولي).
+        }
+    }
+    
+    // تأكد من أن اسم الملف ومساره يستخدمان الامتداد الصحيح بعد الضغط المحتمل
+    // (إذا قمت بالتحويل إلى webp مثلاً، يجب تحديث fileExt و filePath)
+    // في هذا المثال، نفترض أن الامتداد لم يتغير بشكل كبير أو أن Supabase Storage يتعامل معه.
+
+    const { error: uploadError } = await client.storage.from('avatars').upload(filePath, file, { upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = client.storage.from('avatars').getPublicUrl(filePath);
+    if (!urlData?.publicUrl) throw new Error("لم يتم العثور على رابط الصورة بعد الرفع.");
+
+    const publicUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`; // إضافة timestamp لمنع التخزين المؤقت القديم
+
+    const { error: updateError } = await client.from('profiles').update({ avatar_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', user.value.id);
+    if (updateError) throw updateError;
+
     await userStore.fetchProfile();
+    avatarError.value = null; // مسح أي أخطاء سابقة عند النجاح
   } catch (err: any) {
      avatarError.value = err.message || 'فشل رفع الصورة.';
     if (err.message?.includes("Bucket not found")) avatarError.value = 'خطأ إعداد: مخزن الصور غير موجود.';
     else if (err.message?.includes("mime type not supported")) avatarError.value = 'نوع الملف غير مسموح به في المخزن.';
     else if (err.message?.includes("exceeds the maximum allowed size")) avatarError.value = 'حجم الملف يتجاوز الحد المسموح به في المخزن.';
     else if (err.message?.includes("duplicate key value violates unique constraint") || err.message?.includes("The resource already exists")) {
+        // هذا المنطق لمعالجة الملفات الموجودة بالفعل جيد، يمكن الإبقاء عليه
         try {
              const { data: urlData } = client.storage.from('avatars').getPublicUrl(filePath);
              if (urlData?.publicUrl) { const publicUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`;
                  const { error: updateRetryError } = await client.from('profiles').update({ avatar_url: publicUrl, updated_at: new Date().toISOString() }).eq('id', user.value.id);
-                 if (updateRetryError) throw updateRetryError; await userStore.fetchProfile();
+                 if (updateRetryError) throw updateRetryError;
+                 await userStore.fetchProfile();
+                 avatarError.value = null;
              } else { throw new Error("الملف موجود ولكن لا يمكن الحصول على الرابط العام."); }
         } catch(retryErr: any) {  avatarError.value = retryErr.message || 'فشل تحديث رابط الصورة الموجودة.'; }
      }
-  } finally { isUploadingAvatar.value = false; if (input) input.value = ''; }
+  } finally {
+    isUploadingAvatar.value = false;
+    if (input) input.value = ''; // إعادة تعيين حقل الإدخال لمسح الملف المختار
+  }
 }
 
 async function changePassword() {
@@ -372,10 +434,9 @@ async function markMessageAsRead(messageId: number) {
         const { error } = await client.from('user_private_messages').update({ is_read: true }).match({ id: messageId, user_id: user.value.id }); if (error) throw error;
         const msgIndex = adminMessages.value?.findIndex(m => m.id === messageId);
         if (msgIndex !== undefined && msgIndex !== -1 && adminMessages.value) { adminMessages.value[msgIndex].is_read = true; }
-    } catch (err: any) {  } finally { isMarkingRead.value = false; }
+    } catch (err: any) {  /* يمكنك إضافة معالجة خطأ هنا إذا أردت */ } finally { isMarkingRead.value = false; }
 }
 
-// --- وظائف الرد ---
 function showReplyForm(messageId: number) { replyingTo.value = messageId; replyText.value = ''; replyError.value = null; genericReplyError.value = null; }
 function cancelReply() { replyingTo.value = null; replyText.value = ''; replyError.value = null; genericReplyError.value = null; }
 
@@ -393,7 +454,6 @@ async function submitReply(messageId: number, messageIndex: number) {
     } finally { isSubmittingReply.value = false; }
 }
 
-// --- تسجيل الخروج ---
 async function logout() { await userStore.logout(); await navigateTo('/'); }
 
 </script>
