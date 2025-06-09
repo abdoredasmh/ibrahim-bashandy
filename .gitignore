@@ -1,6 +1,24 @@
+# Node.js dependencies
 node_modules/
+
+# Build artifacts / Distribution folder
 dist/
 .output/
+
+# Log files
 *.log
+
+# Environment variables
 .env
+
+# Notes or scratch files (if you use this extension)
 .note
+
+# Supabase CLI temporary files
+supabase/.temp/
+# أو بشكل أكثر تحديدًا إذا كنت تفضل، لكن الأول يغطي كل شيء بداخله:
+# supabase/.temp/*
+
+# Operating System generated files
+.DS_Store
+Thumbs.db
